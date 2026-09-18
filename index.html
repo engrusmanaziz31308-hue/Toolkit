@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ٹول کِٹ — All-in-One Toolbox</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#191D22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ٹول کِٹ">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.12.3/JsBarcode.all.min.js"></script>
+<style>
+  :root{
+    --bg:#E7E9EC;
+    --surface:#FFFFFF;
+    --surface-2:#F1F2F5;
+    --text:#191D22;
+    --text-muted:#5B6472;
+    --border:#D3D7DC;
+    --shadow: 0 1px 0 rgba(20,24,28,.04);
+
+    --amber:#B8791E;
+    --amber-bg:#F4E3C4;
+    --blue:#2E6DA4;
+    --blue-bg:#D6E6F5;
+    --green:#2F8A5B;
+    --green-bg:#D3ECDE;
+    --coral:#C24B4B;
+    --coral-bg:#F5D9D9;
+    --violet:#6E4FA8;
+    --violet-bg:#E5DCF4;
+
+    --radius: 10px;
+    --font-head: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-ur: 'Noto Nastaliq Urdu', 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171B;
+      --surface:#1D2127;
+      --surface-2:#242931;
+      --text:#ECEEF1;
+      --text-muted:#98A1AD;
+      --border:#33393F;
+      --shadow: 0 1px 0 rgba(0,0,0,.2);
+
+      --amber-bg:#3A2E17;
+      --blue-bg:#1B2E3E;
+      --green-bg:#173A29;
+      --coral-bg:#3A1E1E;
+      --violet-bg:#2A2038;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171B;
+    --surface:#1D2127;
+    --surface-2:#242931;
+    --text:#ECEEF1;
+    --text-muted:#98A1AD;
+    --border:#33393F;
+    --shadow: 0 1px 0 rgba(0,0,0,.2);
+
+    --amber-bg:#3A2E17;
+    --blue-bg:#1B2E3E;
+    --green-bg:#173A29;
+    --coral-bg:#3A1E1E;
+    --violet-bg:#2A2038;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-mono);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  html[lang="ur"] body{ font-family: var(--font-ur), var(--font-mono); }
+  html[lang="ur"] input, html[lang="ur"] textarea, html[lang="ur"] select, html[lang="ur"] .btn, html[lang="ur"] .theme-btn{
+    font-family: var(--font-ur), var(--font-mono);
+  }
+  ::selection{ background: var(--blue-bg); }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:20px 16px 60px; }
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--border);
+  }
+  header.top .brand{ display:flex; align-items:center; gap:10px; }
+  header.top .mark{
+    width:34px; height:34px; border-radius:8px; background:var(--text);
+    color:var(--bg); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-head); font-weight:700; font-size:15px; flex:none;
+  }
+  header.top h1{
+    font-family:var(--font-head); font-size:19px; font-weight:700; margin:0;
+    letter-spacing:-0.01em;
+  }
+  html[lang="ur"] header.top h1{ font-family: var(--font-ur); font-size:22px; }
+  header.top .tag{ font-size:11px; color:var(--text-muted); margin-top:2px; }
+  html[lang="ur"] header.top .tag{ font-size:12px; }
+  .top-actions{ display:flex; gap:6px; flex:none; }
+  .theme-btn, .lang-btn{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    border-radius:7px; padding:6px 10px; font-family:var(--font-mono); font-size:11px;
+    cursor:pointer;
+  }
+
+  nav.cats{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:22px;
+    scrollbar-width:none;
+  }
+  nav.cats::-webkit-scrollbar{ display:none; }
+  nav.cats button{
+    flex:none; display:flex; align-items:center; gap:7px;
+    background:var(--surface); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-family:var(--font-mono); font-size:12px;
+    cursor:pointer; white-space:nowrap;
+  }
+  html[lang="ur"] nav.cats button{ font-family: var(--font-ur); font-size:13px; }
+  nav.cats button .dot{ width:8px; height:8px; border-radius:2px; flex:none; }
+  nav.cats button.active{ box-shadow: inset 0 0 0 1px var(--text); }
+
+  section.category{ display:none; margin-bottom:8px; }
+  section.category.active{ display:block; }
+
+  .cat-head{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .cat-head .badge{
+    font-family:var(--font-mono); font-size:11px; font-weight:600; padding:3px 8px;
+    border-radius:5px; letter-spacing:.02em;
+  }
+  .cat-head h2{ font-family:var(--font-head); font-size:16px; margin:0; font-weight:600; }
+  html[lang="ur"] .cat-head h2{ font-family: var(--font-ur); font-size:19px; }
+  .cat-desc{ color:var(--text-muted); font-size:12px; margin:6px 0 16px; line-height:1.6; text-align:start; }
+  html[lang="ur"] .cat-desc{ font-size:13px; line-height:2; }
+
+  .tool{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    margin-bottom:10px; overflow:hidden; box-shadow:var(--shadow);
+  }
+  .tool-head{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:none; border:none; padding:13px 14px; cursor:pointer; text-align:start;
+    color:var(--text); font-family:var(--font-head); font-size:14px; font-weight:600;
+  }
+  html[lang="ur"] .tool-head{ font-family: var(--font-ur); font-size:16px; }
+  .tool-head .plus{
+    font-family:var(--font-mono); font-size:16px; color:var(--text-muted); flex:none;
+    margin-inline-start:10px; width:18px; text-align:center;
+  }
+  .tool.open .plus{ transform:rotate(45deg); }
+  .tool-body{ display:none; padding:2px 14px 16px; border-top:1px solid var(--border); }
+  .tool.open .tool-body{ display:block; padding-top:14px; }
+
+  label{ display:block; font-size:11px; color:var(--text-muted); margin:10px 0 5px; text-align:start; }
+  html[lang="ur"] label{ font-size:12.5px; }
+  label:first-child{ margin-top:0; }
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:7px; color:var(--text); font-family:var(--font-mono); font-size:13px;
+    padding:9px 10px; outline:none; text-align:start;
+  }
+  input:focus, textarea:focus, select:focus{ border-color:var(--text); }
+  textarea{ resize:vertical; min-height:80px; }
+  .row{ display:flex; gap:8px; }
+  .row > *{ flex:1; min-width:0; }
+  .btn{
+    font-family:var(--font-mono); font-size:12px; font-weight:600; cursor:pointer;
+    border-radius:7px; padding:9px 14px; border:1px solid var(--text); background:var(--text);
+    color:var(--bg);
+  }
+  html[lang="ur"] .btn, html[lang="ur"] .btn.secondary, html[lang="ur"] .btn.ghost{ font-size:13px; }
+  .btn.secondary{ background:var(--surface); color:var(--text); border:1px solid var(--border); }
+  .btn.ghost{ background:none; color:var(--text-muted); border:1px dashed var(--border); }
+  .btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .result{
+    margin-top:12px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:7px; padding:10px 12px; font-size:13px; line-height:1.7; text-align:start;
+  }
+  .result .big{ font-family:var(--font-head); font-size:22px; font-weight:700; }
+  .muted{ color:var(--text-muted); font-size:11px; }
+  .swatches{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .swatch{
+    width:64px; text-align:center; cursor:pointer; font-size:10px;
+  }
+  .swatch .chip{ height:44px; border-radius:6px; border:1px solid var(--border); margin-bottom:4px; }
+  #qrbox{ margin-top:12px; display:flex; justify-content:center; }
+  #qrbox img, #qrbox canvas{ border-radius:6px; background:#fff; padding:8px; }
+  .color-row{ display:flex; gap:8px; }
+  .color-row > div{ flex:1; }
+  input[type=color]{ height:42px; padding:4px; cursor:pointer; }
+  .todo-item, .note-list li{
+    display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);
+    font-size:13px;
+  }
+  .todo-item:last-child{ border-bottom:none; }
+  .todo-item .txt{ flex:1; text-align:start; }
+  .todo-item.done .txt{ text-decoration:line-through; color:var(--text-muted); }
+  .todo-item button, .icon-x{
+    background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px;
+  }
+  .timer-display{
+    font-family:var(--font-head); font-size:44px; font-weight:700; text-align:center;
+    padding:14px 0 4px;
+  }
+  .mode-row{ display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+  .mode-row button{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-muted);
+    font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:6px; cursor:pointer;
+  }
+  html[lang="ur"] .mode-row button{ font-family: var(--font-ur); font-size:12.5px; }
+  .mode-row button.active{ color:var(--text); border-color:var(--text); }
+  .range-row{ display:flex; align-items:center; gap:10px; }
+  input[type=range]{ flex:1; accent-color: var(--text); }
+  .check-row{ display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:12px; }
+  .check-row label{ display:flex; align-items:center; gap:5px; color:var(--text); margin:0; }
+  img.preview{ max-width:100%; border-radius:7px; margin-top:10px; display:block; }
+  .img-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(86px,1fr)); gap:10px; margin-top:12px; }
+  .img-result-item{ background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:6px; text-align:center; font-size:10px; }
+  .img-result-item img.thumb{ width:100%; height:60px; object-fit:cover; border-radius:5px; margin-bottom:4px; display:block; }
+  .img-result-item .meta{ color:var(--text-muted); margin-bottom:6px; line-height:1.4; word-break:break-word; }
+  .btn.small{ padding:5px 8px; font-size:10px; width:100%; }
+  footer{ text-align:center; color:var(--text-muted); font-size:11px; margin-top:30px; }
+  html[lang="ur"] footer{ font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark">TK</div>
+      <div>
+        <h1 data-i18n="brand_title">ٹول کِٹ</h1>
+        <div class="tag" data-i18n="brand_tag">روزمرہ کے کام کے لیے آل اِن ون ٹولز</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="lang-btn" id="langToggle">EN / اردو</button>
+      <button class="theme-btn" id="themeToggle" data-i18n="theme_btn">تھیم</button>
+    </div>
+  </header>
+
+  <nav class="cats" id="catNav">
+    <button data-cat="text" class="active"><span class="dot" style="background:var(--amber)"></span><span data-i18n="nav_text">ٹیکسٹ</span></button>
+    <button data-cat="calc"><span class="dot" style="background:var(--blue)"></span><span data-i18n="nav_calc">کیلکولیٹرز</span></button>
+    <button data-cat="convert"><span class="dot" style="background:var(--green)"></span><span data-i18n="nav_convert">کنورٹرز</span></button>
+    <button data-cat="image"><span class="dot" style="background:var(--coral)"></span><span data-i18n="nav_image">امیج</span></button>
+    <button data-cat="prod"><span class="dot" style="background:var(--violet)"></span><span data-i18n="nav_prod">پروڈکٹیوٹی</span></button>
+  </nav>
+
+  <!-- ============ TEXT ============ -->
+  <section class="category active" data-cat="text">
+    <div class="cat-head">
+      <span class="badge" style="background:var(--amber-bg);color:var(--amber)">01</span>
+      <h2 data-i18n="cat1_title">ٹیکسٹ اینڈ رائٹنگ</h2>
+    </div>
+    <p class="cat-desc" data-i18n="cat1_desc">لکھائی سے متعلق ٹولز — گنتی، تبدیلی، تلاش اور تبدیلی۔</p>
+
+    <div class="tool" data-tool="wordcount">
+      <button class="tool-head"><span data-i18n="tool_wordcount_title">ورڈ اینڈ کریکٹر کاؤنٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="wc_label">یہاں ٹیکسٹ لکھیں یا پیسٹ کریں</label>
+        <textarea id="wc-input" data-i18n-ph="wc_ph" placeholder="اپنا ٹیکسٹ یہاں ڈالیں..."></textarea>
+        <div class="check-row">
+          <label><input type="checkbox" id="wc-spaces" checked> <span data-i18n="wc_include_spaces">خالی جگہ شامل کریں</span></label>
+        </div>
+        <div class="result">
+          <span id="wc-out"></span>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="wc_hint">نوٹ: اگر دو الفاظ کے درمیان ڈیش (-) یا ڈاٹ (.) بغیر خالی جگہ کے لگا ہو تو وہ دونوں مل کر ایک ہی لفظ شمار ہوں گے، جیسے "ایک-دو" یا "ایک.دو" ایک لفظ گنا جائے گا۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Tools.clearWordCount()" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="case">
+      <button class="tool-head"><span data-i18n="tool_case_title">کیس کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="case-input" placeholder="Type or paste text here..."></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.caseConv('upper')">UPPERCASE</button>
+          <button class="btn secondary" onclick="Tools.caseConv('lower')">lowercase</button>
+          <button class="btn secondary" onclick="Tools.caseConv('title')">Title Case</button>
+          <button class="btn secondary" onclick="Tools.caseConv('sentence')">Sentence case</button>
+        </div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="case-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.copy('case-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearCase()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="findreplace">
+      <button class="tool-head"><span data-i18n="tool_fr_title">فائنڈ اینڈ ریپلیس</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="fr_original_label">اصل ٹیکسٹ</label>
+        <textarea id="fr-input" placeholder="Original text..."></textarea>
+        <div class="row">
+          <div><label data-i18n="fr_find_label">تلاش کریں (کوما سے کئی الفاظ لکھ سکتے ہیں)</label><input type="text" id="fr-find" data-i18n-ph="fr_find_ph" placeholder="مثلاً: لفظ1, لفظ2"></div>
+          <div><label data-i18n="fr_replace_label">اس سے بدلیں (اسی ترتیب میں)</label><input type="text" id="fr-replace" data-i18n-ph="fr_replace_ph" placeholder="مثلاً: نیا1, نیا2"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.findReplace()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <label data-i18n="fr_result_label">نتیجہ</label>
+        <textarea id="fr-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('fr-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearFindReplace()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="cleanspace">
+      <button class="tool-head"><span data-i18n="tool_cleanspace_title">اضافی اسپیس/لائنز ہٹائیں</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cleanspace_label">ٹیکسٹ درج کریں</label>
+        <textarea id="cleanspace-input" placeholder="Paste text with extra spaces or blank lines..."></textarea>
+        <div class="btn-row"><button class="btn" onclick="Tools.cleanSpaces()" data-i18n="cleanspace_btn">صاف کریں</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="cleanspace-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('cleanspace-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['cleanspace-input','cleanspace-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="duplines">
+      <button class="tool-head"><span data-i18n="tool_duplines_title">ڈپلیکیٹ لائن ریموور</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="duplines_label">ہر لائن میں ایک آئٹم لکھیں</label>
+        <textarea id="duplines-input" placeholder="Line 1&#10;Line 2&#10;Line 1"></textarea>
+        <div class="btn-row"><button class="btn" onclick="Tools.removeDupLines()" data-i18n="duplines_btn">دہرائی لائنیں ہٹائیں</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="duplines-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('duplines-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['duplines-input','duplines-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="reverse">
+      <button class="tool-head"><span data-i18n="tool_reverse_title">ٹیکسٹ ریورسر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="reverse-input" placeholder="Type or paste text here..."></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.reverseChars()" data-i18n="reverse_chars_btn">حروف الٹے کریں</button>
+          <button class="btn secondary" onclick="Tools.reverseWords()" data-i18n="reverse_words_btn">الفاظ الٹے کریں</button>
+        </div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="reverse-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('reverse-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['reverse-input','reverse-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="slug">
+      <button class="tool-head"><span data-i18n="tool_slug_title">سلگ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="slug_label">ٹائٹل لکھیں</label>
+        <input type="text" id="slug-input" placeholder="My Blog Post Title">
+        <div class="btn-row"><button class="btn" onclick="Tools.genSlug()" data-i18n="slug_btn">سلگ بنائیں</button></div>
+        <label data-i18n="slug_result_label">URL سلگ</label>
+        <input type="text" id="slug-output" readonly>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('slug-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['slug-input','slug-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="lorem">
+      <button class="tool-head"><span data-i18n="tool_lorem_title">لورم اپسم / ڈمی ٹیکسٹ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="lorem_count_label">پیراگراف کی تعداد</label>
+        <input type="number" id="lorem-count" min="1" max="20" value="3">
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.genLorem('en')" data-i18n="lorem_btn_en">Lorem Ipsum بنائیں</button>
+          <button class="btn secondary" onclick="Tools.genLorem('ur')" data-i18n="lorem_btn_ur">اردو ڈمی ٹیکسٹ بنائیں</button>
+        </div>
+        <textarea id="lorem-output" readonly style="margin-top:10px;min-height:120px"></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('lorem-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['lorem-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="tts">
+      <button class="tool-head"><span data-i18n="tool_tts_title">ٹیکسٹ ٹو اسپیچ</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="tts_label">وہ ٹیکسٹ لکھیں جسے بولنا ہے</label>
+        <textarea id="tts-input" placeholder="Type something to hear it..."></textarea>
+        <label data-i18n="tts_lang_label">زبان</label>
+        <select id="tts-lang">
+          <option value="ur-PK">اردو</option>
+          <option value="en-US">English</option>
+        </select>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.speakText()" data-i18n="tts_speak_btn">بولیں</button>
+          <button class="btn secondary" onclick="Tools.stopSpeak()" data-i18n="tts_stop_btn">روکیں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['tts-input'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="tts_hint">نوٹ: آواز کا انحصار آپ کے آلے میں دستیاب سسٹم وائسز پر ہے</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CALCULATORS ============ -->
+  <section class="category" data-cat="calc">
+    <div class="cat-head">
+      <span class="badge" style="background:var(--blue-bg);color:var(--blue)">02</span>
+      <h2 data-i18n="cat2_title">کیلکولیٹرز</h2>
+    </div>
+    <p class="cat-desc" data-i18n="cat2_desc">روزمرہ حساب کتاب کے لیے فوری کیلکولیٹرز۔</p>
+
+    <div class="tool" data-tool="bmi">
+      <button class="tool-head"><span data-i18n="tool_bmi_title">BMI کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="bmi_weight_label">وزن (کلوگرام)</label><input type="number" id="bmi-w" placeholder="70"></div>
+          <div><label data-i18n="bmi_height_label">قد (سینٹی میٹر)</label><input type="number" id="bmi-h" placeholder="170"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.bmi()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="bmi-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="percent">
+      <button class="tool-head"><span data-i18n="tool_percent_title">پرسنٹیج کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pc_q1_label">X، Y کا کتنے فیصد ہے؟</label>
+        <div class="row">
+          <input type="number" id="pc-x" placeholder="X">
+          <input type="number" id="pc-y" placeholder="Y">
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.percentOf()" data-i18n="pc_btn1">فیصد نکالیں</button></div>
+        <div class="result" id="pc-out1" style="display:none"></div>
+        <label style="margin-top:16px" data-i18n="pc_q2_label">Y کا X فیصد کتنا ہوگا؟</label>
+        <div class="row">
+          <input type="number" id="pc-x2" data-i18n-ph="pc_pct_ph" placeholder="فیصد (%)">
+          <input type="number" id="pc-y2" placeholder="Y">
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.percentValue()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="pc-out2" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="tip">
+      <button class="tool-head"><span data-i18n="tool_tip_title">ٹپ اسپلٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="tip_bill_label">بل کی رقم</label>
+        <input type="number" id="tip-bill" placeholder="1000">
+        <div class="row">
+          <div><label data-i18n="tip_pct_label">ٹپ (%)</label><input type="number" id="tip-pct" placeholder="10"></div>
+          <div><label data-i18n="tip_people_label">افراد کی تعداد</label><input type="number" id="tip-people" placeholder="1"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.tip()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="tip-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="age">
+      <button class="tool-head"><span data-i18n="tool_age_title">عمر کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="age_start_label">شروع کی تاریخ (تاریخ پیدائش)</label>
+        <input type="date" id="age-dob">
+        <label data-i18n="age_end_label">اختتامی تاریخ</label>
+        <input type="date" id="age-end">
+        <div class="btn-row"><button class="btn" onclick="Tools.age()" data-i18n="age_btn">عمر معلوم کریں</button></div>
+        <div class="result" id="age-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="loan">
+      <button class="tool-head"><span data-i18n="tool_loan_title">لون / EMI کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="loan_principal_label">قرض کی رقم</label>
+        <input type="number" id="loan-principal" placeholder="100000">
+        <div class="row">
+          <div><label data-i18n="loan_rate_label">سالانہ شرح سود (%)</label><input type="number" id="loan-rate" placeholder="12"></div>
+          <div><label data-i18n="loan_months_label">مدت (مہینے)</label><input type="number" id="loan-months" placeholder="12"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.loanEmi()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="loan-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="discount">
+      <button class="tool-head"><span data-i18n="tool_discount_title">ڈسکاؤنٹ کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="discount_price_label">اصل قیمت</label><input type="number" id="discount-price" placeholder="1000"></div>
+          <div><label data-i18n="discount_pct_label">ڈسکاؤنٹ (%)</label><input type="number" id="discount-pct" placeholder="20"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.discount()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="discount-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="gst">
+      <button class="tool-head"><span data-i18n="tool_gst_title">GST / ٹیکس کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="gst_amount_label">رقم</label><input type="number" id="gst-amount" placeholder="1000"></div>
+          <div><label data-i18n="gst_rate_label">ٹیکس (%)</label><input type="number" id="gst-rate" placeholder="17"></div>
+        </div>
+        <label data-i18n="gst_mode_label">قسم</label>
+        <select id="gst-mode">
+          <option value="add" data-i18n="gst_mode_add">ٹیکس شامل کریں (رقم ٹیکس کے بغیر ہے)</option>
+          <option value="remove" data-i18n="gst_mode_remove">ٹیکس نکالیں (رقم ٹیکس سمیت ہے)</option>
+        </select>
+        <div class="btn-row"><button class="btn" onclick="Tools.gst()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="gst-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="interest">
+      <button class="tool-head"><span data-i18n="tool_interest_title">سادہ / مرکب سود کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="interest_principal_label">اصل رقم</label><input type="number" id="interest-principal" placeholder="10000"></div>
+          <div><label data-i18n="interest_rate_label">شرح سود (% سالانہ)</label><input type="number" id="interest-rate" placeholder="10"></div>
+        </div>
+        <label data-i18n="interest_time_label">مدت (سال)</label>
+        <input type="number" id="interest-time" placeholder="2">
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.interest('simple')" data-i18n="interest_simple_btn">سادہ سود</button>
+          <button class="btn secondary" onclick="Tools.interest('compound')" data-i18n="interest_compound_btn">مرکب سود</button>
+        </div>
+        <div class="result" id="interest-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="datediff">
+      <button class="tool-head"><span data-i18n="tool_datediff_title">ڈیٹ ڈفرنس کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="datediff_start_label">پہلی تاریخ</label>
+        <input type="date" id="datediff-start">
+        <label data-i18n="datediff_end_label">دوسری تاریخ</label>
+        <input type="date" id="datediff-end">
+        <div class="btn-row"><button class="btn" onclick="Tools.dateDiff()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="datediff-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="bmr">
+      <button class="tool-head"><span data-i18n="tool_bmr_title">BMR / کیلوری کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="bmr_gender_label">جنس</label>
+        <select id="bmr-gender">
+          <option value="male" data-i18n="bmr_male">مرد</option>
+          <option value="female" data-i18n="bmr_female">عورت</option>
+        </select>
+        <div class="row">
+          <div><label data-i18n="bmi_weight_label">وزن (کلوگرام)</label><input type="number" id="bmr-weight" placeholder="70"></div>
+          <div><label data-i18n="bmi_height_label">قد (سینٹی میٹر)</label><input type="number" id="bmr-height" placeholder="170"></div>
+        </div>
+        <label data-i18n="bmr_age_label">عمر (سال)</label>
+        <input type="number" id="bmr-age" placeholder="25">
+        <label data-i18n="bmr_activity_label">سرگرمی کی سطح</label>
+        <select id="bmr-activity">
+          <option value="1.2" data-i18n="bmr_act_1">بیٹھے رہنے والا (ورزش نہیں)</option>
+          <option value="1.375" data-i18n="bmr_act_2">ہلکی سرگرمی (ہفتے میں 1-3 دن)</option>
+          <option value="1.55" data-i18n="bmr_act_3">درمیانی سرگرمی (ہفتے میں 3-5 دن)</option>
+          <option value="1.725" data-i18n="bmr_act_4">زیادہ سرگرمی (ہفتے میں 6-7 دن)</option>
+          <option value="1.9" data-i18n="bmr_act_5">بہت زیادہ سرگرمی (سخت جسمانی کام)</option>
+        </select>
+        <div class="btn-row"><button class="btn" onclick="Tools.bmr()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="bmr-out" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONVERTERS / GENERATORS ============ -->
+  <section class="category" data-cat="convert">
+    <div class="cat-head">
+      <span class="badge" style="background:var(--green-bg);color:var(--green)">03</span>
+      <h2 data-i18n="cat3_title">کنورٹرز اینڈ جنریٹرز</h2>
+    </div>
+    <p class="cat-desc" data-i18n="cat3_desc">یونٹس بدلیں، پاسورڈ بنائیں، QR کوڈز اور رنگ پیلٹ تیار کریں۔</p>
+
+    <div class="tool" data-tool="unit">
+      <button class="tool-head"><span data-i18n="tool_unit_title">یونٹ کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="unit_type_label">قسم</label>
+        <select id="unit-type" onchange="Tools.unitTypeChange()">
+          <option value="length" data-i18n="unit_opt_length">لمبائی</option>
+          <option value="weight" data-i18n="unit_opt_weight">وزن</option>
+          <option value="temp" data-i18n="unit_opt_temp">درجہ حرارت</option>
+        </select>
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="unit-from"></select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="unit-to"></select>
+          </div>
+        </div>
+        <label data-i18n="unit_value_label">ویلیو</label>
+        <input type="number" id="unit-val" placeholder="1">
+        <div class="btn-row"><button class="btn" onclick="Tools.unitConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="unit-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="password">
+      <button class="tool-head"><span data-i18n="tool_password_title">پاسورڈ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label><span data-i18n="pw_length_label">لمبائی:</span> <span id="pw-len-val">14</span></label>
+        <div class="range-row">
+          <input type="range" id="pw-len" min="6" max="32" value="14" oninput="document.getElementById('pw-len-val').textContent=this.value">
+        </div>
+        <div class="check-row">
+          <label><input type="checkbox" id="pw-upper" checked> <span data-i18n="pw_upper">بڑے حروف</span></label>
+          <label><input type="checkbox" id="pw-lower" checked> <span data-i18n="pw_lower">چھوٹے حروف</span></label>
+          <label><input type="checkbox" id="pw-num" checked> <span data-i18n="pw_num">نمبرز</span></label>
+          <label><input type="checkbox" id="pw-sym"> <span data-i18n="pw_sym">علامات</span></label>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.genPassword()" data-i18n="pw_btn">پاسورڈ بنائیں</button></div>
+        <input type="text" id="pw-out" readonly style="margin-top:10px;font-size:15px;text-align:center">
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('pw-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="qr">
+      <button class="tool-head"><span data-i18n="tool_qr_title">QR کوڈ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="qr_label">ٹیکسٹ یا لنک</label>
+        <input type="text" id="qr-input" placeholder="https://example.com">
+        <div class="color-row">
+          <div><label data-i18n="qr_fg_label">QR کا رنگ</label><input type="color" id="qr-fg" value="#000000"></div>
+          <div><label data-i18n="qr_bg_label">بیک گراؤنڈ رنگ</label><input type="color" id="qr-bg" value="#ffffff"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.genQR()" data-i18n="qr_btn">QR بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearQR()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div id="qrbox"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="palette">
+      <button class="tool-head"><span data-i18n="tool_palette_title">کلر پیلٹ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pal_label">بنیادی رنگ</label>
+        <input type="color" id="pal-color" value="#2E6DA4" style="height:44px;padding:4px">
+        <div class="btn-row"><button class="btn" onclick="Tools.genPalette()" data-i18n="pal_btn">پیلٹ بنائیں</button></div>
+        <div class="swatches" id="pal-out"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="pal_hint">کسی بھی رنگ پر کلک کر کے کوڈ کاپی کریں</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="currency">
+      <button class="tool-head"><span data-i18n="tool_currency_title">کرنسی کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="currency_amount_label">رقم</label>
+        <input type="number" id="currency-amount" placeholder="100">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="currency-from">
+              <option value="USD">USD</option>
+              <option value="PKR">PKR</option>
+              <option value="INR">INR</option>
+              <option value="GBP">GBP</option>
+              <option value="EUR">EUR</option>
+              <option value="SAR">SAR</option>
+              <option value="AED">AED</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="currency-to">
+              <option value="PKR">PKR</option>
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+              <option value="GBP">GBP</option>
+              <option value="EUR">EUR</option>
+              <option value="SAR">SAR</option>
+              <option value="AED">AED</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.currencyConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="currency-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="currency_hint">نوٹ: یہ اندازاً/فکسڈ ریٹس ہیں، لائیو مارکیٹ ریٹ نہیں — درست ترین ریٹ کے لیے کسی بینک یا لائیو کرنسی سائٹ سے تصدیق کریں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="numwords">
+      <button class="tool-head"><span data-i18n="tool_numwords_title">نمبر ٹو ورڈز کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="numwords_label">عدد لکھیں</label>
+        <input type="number" id="numwords-input" placeholder="12345">
+        <div class="btn-row"><button class="btn" onclick="Tools.numToWords()" data-i18n="numwords_btn">الفاظ میں بدلیں</button></div>
+        <div class="result" id="numwords-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="timezone">
+      <button class="tool-head"><span data-i18n="tool_timezone_title">ٹائم زون کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="timezone_datetime_label">تاریخ اور وقت</label>
+        <input type="datetime-local" id="tz-datetime">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="tz-from">
+              <option value="Asia/Karachi">Pakistan (Karachi)</option>
+              <option value="Asia/Kolkata">India (Kolkata)</option>
+              <option value="Asia/Dubai">UAE (Dubai)</option>
+              <option value="Asia/Riyadh">Saudi Arabia (Riyadh)</option>
+              <option value="Europe/London">UK (London)</option>
+              <option value="America/New_York">USA (New York)</option>
+              <option value="America/Los_Angeles">USA (Los Angeles)</option>
+              <option value="Australia/Sydney">Australia (Sydney)</option>
+              <option value="Asia/Tokyo">Japan (Tokyo)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="tz-to">
+              <option value="Asia/Dubai">UAE (Dubai)</option>
+              <option value="Asia/Karachi">Pakistan (Karachi)</option>
+              <option value="Asia/Kolkata">India (Kolkata)</option>
+              <option value="Asia/Riyadh">Saudi Arabia (Riyadh)</option>
+              <option value="Europe/London">UK (London)</option>
+              <option value="America/New_York">USA (New York)</option>
+              <option value="America/Los_Angeles">USA (Los Angeles)</option>
+              <option value="Australia/Sydney">Australia (Sydney)</option>
+              <option value="Asia/Tokyo">Japan (Tokyo)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.timezoneConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="tz-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="baseconv">
+      <button class="tool-head"><span data-i18n="tool_baseconv_title">بیس کنورٹر (بائنری/ہیکسا/آکٹل)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="baseconv_value_label">ویلیو</label>
+        <input type="text" id="base-value" placeholder="1010">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="base-from">
+              <option value="2">Binary (2)</option>
+              <option value="8">Octal (8)</option>
+              <option value="10" selected>Decimal (10)</option>
+              <option value="16">Hexadecimal (16)</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="base-to">
+              <option value="2" selected>Binary (2)</option>
+              <option value="8">Octal (8)</option>
+              <option value="10">Decimal (10)</option>
+              <option value="16">Hexadecimal (16)</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.baseConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="base-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="randnum">
+      <button class="tool-head"><span data-i18n="tool_randnum_title">رینڈم نمبر جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="randnum_min_label">کم از کم</label><input type="number" id="rand-min" placeholder="1"></div>
+          <div><label data-i18n="randnum_max_label">زیادہ سے زیادہ</label><input type="number" id="rand-max" placeholder="100"></div>
+        </div>
+        <label data-i18n="randnum_count_label">کتنے نمبرز چاہییں</label>
+        <input type="number" id="rand-count" min="1" max="100" value="1">
+        <div class="check-row">
+          <label><input type="checkbox" id="rand-unique"> <span data-i18n="randnum_unique">دہرائی نہ ہو (unique)</span></label>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.genRandom()" data-i18n="randnum_btn">نمبر بنائیں</button></div>
+        <div class="result" id="rand-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="barcode">
+      <button class="tool-head"><span data-i18n="tool_barcode_title">بارکوڈ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="barcode_label">کوڈ / نمبر لکھیں</label>
+        <input type="text" id="barcode-input" placeholder="123456789012">
+        <div class="check-row">
+          <label><input type="checkbox" id="barcode-showtext" checked> <span data-i18n="barcode_showtext">نمبر/کوڈ نیچے دکھائیں</span></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.genBarcode()" data-i18n="barcode_btn">بارکوڈ بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearBarcode()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div id="barcode-box" style="margin-top:12px; display:flex; justify-content:center; background:#fff; border-radius:6px; padding:8px;"><svg id="barcode-svg"></svg></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IMAGE ============ -->
+  <section class="category" data-cat="image">
+    <div class="cat-head">
+      <span class="badge" style="background:var(--coral-bg);color:var(--coral)">04</span>
+      <h2 data-i18n="cat4_title">امیج ٹولز</h2>
+    </div>
+    <p class="cat-desc" data-i18n="cat4_desc">امیج کمپریس، ری سائز اور بیس64 میں تبدیل کریں — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔</p>
+
+    <div class="tool" data-tool="imgcompress">
+      <button class="tool-head"><span data-i18n="tool_imgcompress_title">امیج کمپریسر / ری سائزر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="img-file" accept="image/*" multiple onchange="Tools.loadImage(event)">
+        <div class="muted" style="margin-top:4px" data-i18n="img_multi_hint">ایک ساتھ 25 یا اس سے زیادہ تصاویر منتخب کی جا سکتی ہیں</div>
+        <label><span data-i18n="img_maxwidth_label">زیادہ سے زیادہ چوڑائی (px):</span> <span id="img-w-val">1024</span></label>
+        <input type="range" id="img-w" min="200" max="2000" value="1024" oninput="document.getElementById('img-w-val').textContent=this.value">
+        <label><span data-i18n="img_quality_label">کوالٹی:</span> <span id="img-q-val">0.8</span></label>
+        <input type="range" id="img-q" min="0.1" max="1" step="0.1" value="0.8" oninput="document.getElementById('img-q-val').textContent=this.value">
+        <div class="btn-row"><button class="btn" onclick="Tools.compressImage()" data-i18n="img_btn">کمپریس کریں</button></div>
+        <div class="result" id="img-summary" style="display:none"></div>
+        <div id="img-results" class="img-grid"></div>
+        <div class="btn-row">
+          <button class="btn secondary" id="img-downloadall" style="display:none" onclick="Tools.downloadAllZip()" data-i18n="img_download_all_btn">سب ڈاؤن لوڈ کریں (ZIP)</button>
+          <button class="btn ghost" onclick="Tools.clearImages()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="imgformat">
+      <button class="tool-head"><span data-i18n="tool_imgformat_title">امیج فارمیٹ کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="imgformat-file" accept="image/*" multiple onchange="Tools.loadImageFormat(event)">
+        <div class="muted" style="margin-top:4px" data-i18n="img_multi_hint">ایک ساتھ 25 یا اس سے زیادہ تصاویر منتخب کی جا سکتی ہیں</div>
+        <label data-i18n="imgformat_target_label">نیا فارمیٹ منتخب کریں</label>
+        <select id="imgformat-target">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WEBP</option>
+        </select>
+        <label><span data-i18n="img_quality_label">کوالٹی:</span> <span id="imgformat-q-val">0.9</span></label>
+        <input type="range" id="imgformat-quality" min="0.1" max="1" step="0.1" value="0.9" oninput="document.getElementById('imgformat-q-val').textContent=this.value">
+        <div class="btn-row"><button class="btn" onclick="Tools.convertImageFormat()" data-i18n="imgformat_btn">تبدیل کریں</button></div>
+        <div class="result" id="imgformat-summary" style="display:none"></div>
+        <div id="imgformat-results" class="img-grid"></div>
+        <div class="btn-row">
+          <button class="btn secondary" id="imgformat-downloadall" style="display:none" onclick="Tools.downloadFormatAllZip()" data-i18n="img_download_all_btn">سب ڈاؤن لوڈ کریں (ZIP)</button>
+          <button class="btn ghost" onclick="Tools.clearImageFormat()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="imgformat_hint">نوٹ: GIF ان پٹ کے طور پر قابلِ قبول ہے، لیکن براؤزر کی حد کے باعث نئی فائل GIF فارمیٹ میں نہیں بنائی جا سکتی — صرف JPG، PNG یا WEBP آؤٹ پٹ ممکن ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="imgb64">
+      <button class="tool-head"><span data-i18n="tool_imgb64_title">امیج ٹو بیس64</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="b64-file" accept="image/*" onchange="Tools.imageToBase64(event)">
+        <label data-i18n="b64_output_label">بیس64 آؤٹ پٹ</label>
+        <textarea id="b64-out" readonly style="min-height:100px"></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('b64-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRODUCTIVITY ============ -->
+  <section class="category" data-cat="prod">
+    <div class="cat-head">
+      <span class="badge" style="background:var(--violet-bg);color:var(--violet)">05</span>
+      <h2 data-i18n="cat5_title">پروڈکٹیوٹی</h2>
+    </div>
+    <p class="cat-desc" data-i18n="cat5_desc">روزانہ کام آسان بنانے والے ٹولز — یہ ڈیٹا صرف آپ کے اس براؤزر میں محفوظ رہتا ہے۔</p>
+
+    <div class="tool" data-tool="todo">
+      <button class="tool-head"><span data-i18n="tool_todo_title">ٹو-ڈو لسٹ</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <input type="text" id="todo-input" data-i18n-ph="todo_ph" placeholder="نیا کام لکھیں...">
+          <button class="btn" style="flex:none" onclick="Tools.addTodo()" data-i18n="todo_add_btn">شامل کریں</button>
+        </div>
+        <div id="todo-list" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pomodoro">
+      <button class="tool-head"><span data-i18n="tool_pomodoro_title">پوموڈورو ٹائمر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="mode-row">
+          <button class="active" id="pom-work" onclick="Tools.pomMode('work')" data-i18n="pom_work_btn">ورک 25</button>
+          <button id="pom-break" onclick="Tools.pomMode('break')" data-i18n="pom_break_btn">بریک 5</button>
+        </div>
+        <div class="timer-display" id="pom-display">25:00</div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="pom-startbtn" onclick="Tools.pomToggle()" data-i18n="pom_start_btn">شروع کریں</button>
+          <button class="btn secondary" onclick="Tools.pomReset()" data-i18n="pom_reset_btn">ری سیٹ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="notes">
+      <button class="tool-head"><span data-i18n="tool_notes_title">کوئیک نوٹس</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="notes_label">یہ نوٹس خودکار محفوظ ہو جاتے ہیں</label>
+        <textarea id="notes-area" style="min-height:120px" oninput="Tools.saveNotes()" data-i18n-ph="notes_ph" placeholder="کچھ بھی لکھیں..."></textarea>
+        <div class="muted" id="notes-status" style="margin-top:6px"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Tools.clearNotes()" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer data-i18n="footer_text">15 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
+</div>
+
+<script>
+// ---------- i18n ----------
+const I18N = {
+  brand_title: { ur: 'ٹول کِٹ', en: 'Toolkit' },
+  brand_tag: { ur: 'روزمرہ کے کام کے لیے آل اِن ون ٹولز', en: 'All your everyday tools, in one place' },
+  theme_btn: { ur: 'تھیم', en: 'Theme' },
+  nav_text: { ur: 'ٹیکسٹ', en: 'Text' },
+  nav_calc: { ur: 'کیلکولیٹرز', en: 'Calculators' },
+  nav_convert: { ur: 'کنورٹرز', en: 'Converters' },
+  nav_image: { ur: 'امیج', en: 'Image' },
+  nav_prod: { ur: 'پروڈکٹیوٹی', en: 'Productivity' },
+
+  cat1_title: { ur: 'ٹیکسٹ اینڈ رائٹنگ', en: 'Text & Writing' },
+  cat1_desc: { ur: 'لکھائی سے متعلق ٹولز — گنتی، تبدیلی، تلاش اور تبدیلی۔', en: 'Writing tools — counting, converting, finding and replacing.' },
+  cat2_title: { ur: 'کیلکولیٹرز', en: 'Calculators' },
+  cat2_desc: { ur: 'روزمرہ حساب کتاب کے لیے فوری کیلکولیٹرز۔', en: 'Quick calculators for everyday numbers.' },
+  cat3_title: { ur: 'کنورٹرز اینڈ جنریٹرز', en: 'Converters & Generators' },
+  cat3_desc: { ur: 'یونٹس بدلیں، پاسورڈ بنائیں، QR کوڈز اور رنگ پیلٹ تیار کریں۔', en: 'Convert units, generate passwords, QR codes, and color palettes.' },
+  cat4_title: { ur: 'امیج ٹولز', en: 'Image Tools' },
+  cat4_desc: { ur: 'امیج کمپریس، ری سائز اور بیس64 میں تبدیل کریں — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔', en: 'Compress, resize, and convert images to Base64 — all in your browser, nothing uploaded anywhere.' },
+  cat5_title: { ur: 'پروڈکٹیوٹی', en: 'Productivity' },
+  cat5_desc: { ur: 'روزانہ کام آسان بنانے والے ٹولز — یہ ڈیٹا صرف آپ کے اس براؤزر میں محفوظ رہتا ہے۔', en: 'Tools to make your day easier — this data stays only in this browser.' },
+
+  tool_wordcount_title: { ur: 'ورڈ اینڈ کریکٹر کاؤنٹر', en: 'Word & Character Counter' },
+  wc_label: { ur: 'یہاں ٹیکسٹ لکھیں یا پیسٹ کریں', en: 'Type or paste your text here' },
+  wc_ph: { ur: 'اپنا ٹیکسٹ یہاں ڈالیں...', en: 'Enter your text here...' },
+  wc_include_spaces: { ur: 'خالی جگہ شامل کریں (کریکٹر کاؤنٹ میں)', en: 'Include spaces (in character count)' },
+  wc_hint: { ur: 'نوٹ: یہ کاؤنٹر الفاظ کو صرف خالی جگہ (اسپیس) کی بنیاد پر گنتا ہے۔ اگر دو الفاظ کے درمیان کوئی بھی سپیشل کریکٹر (جیسے - . @ # & % _ /) بغیر خالی جگہ کے لگا ہو تو وہ دونوں مل کر ایک ہی لفظ شمار ہوں گے، جیسے "ایک-دو" یا "ایک@دو" ایک لفظ گنا جائے گا۔', en: 'Note: this counter splits words only by spaces. If any special character (such as - . @ # & % _ /) joins two words with no space between them, they count as a single word — e.g. "one-two" or "one@two" is counted as one word.' },
+
+  tool_case_title: { ur: 'کیس کنورٹر', en: 'Case Converter' },
+  case_label: { ur: 'ان پٹ ٹیکسٹ', en: 'Input text' },
+  case_result_label: { ur: 'نتیجہ', en: 'Result' },
+  copy_btn: { ur: 'کاپی کریں', en: 'Copy' },
+  clear_btn: { ur: 'صاف کریں', en: 'Clear' },
+
+  tool_fr_title: { ur: 'فائنڈ اینڈ ریپلیس', en: 'Find & Replace' },
+  fr_original_label: { ur: 'اصل ٹیکسٹ', en: 'Original text' },
+  fr_find_label: { ur: 'تلاش کریں (کوما سے کئی الفاظ لکھ سکتے ہیں)', en: 'Find (comma-separate multiple words)' },
+  fr_replace_label: { ur: 'اس سے بدلیں (اسی ترتیب میں)', en: 'Replace with (same order)' },
+  fr_find_ph: { ur: 'مثلاً: لفظ1, لفظ2', en: 'e.g. word1, word2' },
+  fr_replace_ph: { ur: 'مثلاً: نیا1, نیا2', en: 'e.g. new1, new2' },
+  fr_btn: { ur: 'تبدیل کریں', en: 'Convert' },
+  fr_result_label: { ur: 'نتیجہ', en: 'Result' },
+
+  tool_cleanspace_title: { ur: 'اضافی اسپیس/لائنز ہٹائیں', en: 'Remove Extra Spaces/Lines' },
+  cleanspace_label: { ur: 'ٹیکسٹ درج کریں', en: 'Enter text' },
+  cleanspace_btn: { ur: 'صاف کریں', en: 'Clean' },
+
+  tool_duplines_title: { ur: 'ڈپلیکیٹ لائن ریموور', en: 'Duplicate Line Remover' },
+  duplines_label: { ur: 'ہر لائن میں ایک آئٹم لکھیں', en: 'One item per line' },
+  duplines_btn: { ur: 'دہرائی لائنیں ہٹائیں', en: 'Remove duplicates' },
+
+  tool_reverse_title: { ur: 'ٹیکسٹ ریورسر', en: 'Text Reverser' },
+  reverse_chars_btn: { ur: 'حروف الٹے کریں', en: 'Reverse characters' },
+  reverse_words_btn: { ur: 'الفاظ الٹے کریں', en: 'Reverse words' },
+
+  tool_slug_title: { ur: 'سلگ جنریٹر', en: 'Slug Generator' },
+  slug_label: { ur: 'ٹائٹل لکھیں', en: 'Enter a title' },
+  slug_btn: { ur: 'سلگ بنائیں', en: 'Generate slug' },
+  slug_result_label: { ur: 'URL سلگ', en: 'URL slug' },
+
+  tool_lorem_title: { ur: 'لورم اپسم / ڈمی ٹیکسٹ جنریٹر', en: 'Lorem Ipsum / Dummy Text Generator' },
+  lorem_count_label: { ur: 'پیراگراف کی تعداد', en: 'Number of paragraphs' },
+  lorem_btn_en: { ur: 'Lorem Ipsum بنائیں', en: 'Generate Lorem Ipsum' },
+  lorem_btn_ur: { ur: 'اردو ڈمی ٹیکسٹ بنائیں', en: 'Generate Urdu dummy text' },
+
+  tool_tts_title: { ur: 'ٹیکسٹ ٹو اسپیچ', en: 'Text to Speech' },
+  tts_label: { ur: 'وہ ٹیکسٹ لکھیں جسے بولنا ہے', en: 'Type the text you want spoken' },
+  tts_lang_label: { ur: 'زبان', en: 'Language' },
+  tts_speak_btn: { ur: 'بولیں', en: 'Speak' },
+  tts_stop_btn: { ur: 'روکیں', en: 'Stop' },
+  tts_hint: { ur: 'نوٹ: آواز کا انحصار آپ کے آلے میں دستیاب سسٹم وائسز پر ہے', en: 'Note: the voice depends on the system voices available on your device' },
+
+  tool_bmi_title: { ur: 'BMI کیلکولیٹر', en: 'BMI Calculator' },
+  bmi_weight_label: { ur: 'وزن (کلوگرام)', en: 'Weight (kg)' },
+  bmi_height_label: { ur: 'قد (سینٹی میٹر)', en: 'Height (cm)' },
+  calc_btn: { ur: 'حساب کریں', en: 'Calculate' },
+
+  tool_percent_title: { ur: 'پرسنٹیج کیلکولیٹر', en: 'Percentage Calculator' },
+  pc_q1_label: { ur: 'X، Y کا کتنے فیصد ہے؟', en: 'X is what % of Y?' },
+  pc_btn1: { ur: 'فیصد نکالیں', en: 'Get %' },
+  pc_q2_label: { ur: 'Y کا X فیصد کتنا ہوگا؟', en: 'What is X% of Y?' },
+  pc_pct_ph: { ur: 'فیصد (%)', en: 'Percent (%)' },
+
+  tool_tip_title: { ur: 'ٹپ اسپلٹر', en: 'Tip Splitter' },
+  tip_bill_label: { ur: 'بل کی رقم', en: 'Bill amount' },
+  tip_pct_label: { ur: 'ٹپ (%)', en: 'Tip (%)' },
+  tip_people_label: { ur: 'افراد کی تعداد', en: 'Number of people' },
+
+  tool_age_title: { ur: 'عمر کیلکولیٹر', en: 'Age Calculator' },
+  age_start_label: { ur: 'شروع کی تاریخ (تاریخ پیدائش)', en: 'Start date (date of birth)' },
+  age_end_label: { ur: 'اختتامی تاریخ', en: 'End date' },
+  age_btn: { ur: 'عمر معلوم کریں', en: 'Calculate age' },
+  age_error: { ur: 'اختتامی تاریخ شروع کی تاریخ سے پہلے نہیں ہو سکتی', en: 'End date cannot be before the start date' },
+
+  tool_loan_title: { ur: 'لون / EMI کیلکولیٹر', en: 'Loan / EMI Calculator' },
+  loan_principal_label: { ur: 'قرض کی رقم', en: 'Loan amount' },
+  loan_rate_label: { ur: 'سالانہ شرح سود (%)', en: 'Annual interest rate (%)' },
+  loan_months_label: { ur: 'مدت (مہینے)', en: 'Tenure (months)' },
+  loan_emi_label: { ur: 'ماہانہ قسط (EMI)', en: 'Monthly EMI' },
+  loan_total_payment: { ur: 'کل ادائیگی', en: 'Total payment' },
+  loan_total_interest: { ur: 'کل سود', en: 'Total interest' },
+
+  tool_discount_title: { ur: 'ڈسکاؤنٹ کیلکولیٹر', en: 'Discount Calculator' },
+  discount_price_label: { ur: 'اصل قیمت', en: 'Original price' },
+  discount_pct_label: { ur: 'ڈسکاؤنٹ (%)', en: 'Discount (%)' },
+  discount_final_label: { ur: 'حتمی قیمت', en: 'Final price' },
+  discount_saved_label: { ur: 'بچت', en: 'You save' },
+
+  tool_gst_title: { ur: 'GST / ٹیکس کیلکولیٹر', en: 'GST / Tax Calculator' },
+  gst_amount_label: { ur: 'رقم', en: 'Amount' },
+  gst_rate_label: { ur: 'ٹیکس (%)', en: 'Tax (%)' },
+  gst_mode_label: { ur: 'قسم', en: 'Mode' },
+  gst_mode_add: { ur: 'ٹیکس شامل کریں (رقم ٹیکس کے بغیر ہے)', en: 'Add tax (amount excludes tax)' },
+  gst_mode_remove: { ur: 'ٹیکس نکالیں (رقم ٹیکس سمیت ہے)', en: 'Remove tax (amount includes tax)' },
+  gst_tax_amount_label: { ur: 'ٹیکس کی رقم', en: 'Tax amount' },
+  gst_final_label: { ur: 'حتمی رقم', en: 'Final amount' },
+  gst_original_label: { ur: 'اصل رقم (ٹیکس کے بغیر)', en: 'Original amount (excl. tax)' },
+
+  tool_interest_title: { ur: 'سادہ / مرکب سود کیلکولیٹر', en: 'Simple / Compound Interest Calculator' },
+  interest_principal_label: { ur: 'اصل رقم', en: 'Principal amount' },
+  interest_rate_label: { ur: 'شرح سود (% سالانہ)', en: 'Interest rate (% per year)' },
+  interest_time_label: { ur: 'مدت (سال)', en: 'Time (years)' },
+  interest_simple_btn: { ur: 'سادہ سود', en: 'Simple interest' },
+  interest_compound_btn: { ur: 'مرکب سود', en: 'Compound interest' },
+  interest_amount_label: { ur: 'سود کی رقم', en: 'Interest amount' },
+  interest_total_label: { ur: 'کل رقم', en: 'Total amount' },
+
+  tool_datediff_title: { ur: 'ڈیٹ ڈفرنس کیلکولیٹر', en: 'Date Difference Calculator' },
+  datediff_start_label: { ur: 'پہلی تاریخ', en: 'First date' },
+  datediff_end_label: { ur: 'دوسری تاریخ', en: 'Second date' },
+  datediff_error: { ur: 'دونوں تاریخیں درج کریں', en: 'Please enter both dates' },
+
+  tool_bmr_title: { ur: 'BMR / کیلوری کیلکولیٹر', en: 'BMR / Calorie Calculator' },
+  bmr_gender_label: { ur: 'جنس', en: 'Gender' },
+  bmr_male: { ur: 'مرد', en: 'Male' },
+  bmr_female: { ur: 'عورت', en: 'Female' },
+  bmr_age_label: { ur: 'عمر (سال)', en: 'Age (years)' },
+  bmr_activity_label: { ur: 'سرگرمی کی سطح', en: 'Activity level' },
+  bmr_act_1: { ur: 'بیٹھے رہنے والا (ورزش نہیں)', en: 'Sedentary (no exercise)' },
+  bmr_act_2: { ur: 'ہلکی سرگرمی (ہفتے میں 1-3 دن)', en: 'Light activity (1-3 days/week)' },
+  bmr_act_3: { ur: 'درمیانی سرگرمی (ہفتے میں 3-5 دن)', en: 'Moderate activity (3-5 days/week)' },
+  bmr_act_4: { ur: 'زیادہ سرگرمی (ہفتے میں 6-7 دن)', en: 'High activity (6-7 days/week)' },
+  bmr_act_5: { ur: 'بہت زیادہ سرگرمی (سخت جسمانی کام)', en: 'Very high activity (hard physical work)' },
+  bmr_result_label: { ur: 'بنیادی میٹابولک ریٹ (BMR)', en: 'Basal Metabolic Rate (BMR)' },
+  bmr_tdee_label: { ur: 'روزانہ کیلوری کی ضرورت', en: 'Daily calorie needs' },
+
+  tool_unit_title: { ur: 'یونٹ کنورٹر', en: 'Unit Converter' },
+  unit_type_label: { ur: 'قسم', en: 'Type' },
+  unit_opt_length: { ur: 'لمبائی', en: 'Length' },
+  unit_opt_weight: { ur: 'وزن', en: 'Weight' },
+  unit_opt_temp: { ur: 'درجہ حرارت', en: 'Temperature' },
+  unit_from_label: { ur: 'سے', en: 'From' },
+  unit_to_label: { ur: 'تک', en: 'To' },
+  unit_value_label: { ur: 'ویلیو', en: 'Value' },
+
+  tool_password_title: { ur: 'پاسورڈ جنریٹر', en: 'Password Generator' },
+  pw_length_label: { ur: 'لمبائی:', en: 'Length:' },
+  pw_upper: { ur: 'بڑے حروف', en: 'Uppercase' },
+  pw_lower: { ur: 'چھوٹے حروف', en: 'Lowercase' },
+  pw_num: { ur: 'نمبرز', en: 'Numbers' },
+  pw_sym: { ur: 'علامات', en: 'Symbols' },
+  pw_btn: { ur: 'پاسورڈ بنائیں', en: 'Generate password' },
+
+  tool_qr_title: { ur: 'QR کوڈ جنریٹر', en: 'QR Code Generator' },
+  qr_label: { ur: 'ٹیکسٹ یا لنک', en: 'Text or link' },
+  qr_btn: { ur: 'QR بنائیں', en: 'Generate QR' },
+  qr_fg_label: { ur: 'QR کا رنگ', en: 'QR color' },
+  qr_bg_label: { ur: 'بیک گراؤنڈ رنگ', en: 'Background color' },
+
+  tool_palette_title: { ur: 'کلر پیلٹ جنریٹر', en: 'Color Palette Generator' },
+  pal_label: { ur: 'بنیادی رنگ', en: 'Base color' },
+  pal_btn: { ur: 'پیلٹ بنائیں', en: 'Generate palette' },
+  pal_hint: { ur: 'کسی بھی رنگ پر کلک کر کے کوڈ کاپی کریں', en: 'Click any color to copy its code' },
+
+  tool_currency_title: { ur: 'کرنسی کنورٹر', en: 'Currency Converter' },
+  currency_amount_label: { ur: 'رقم', en: 'Amount' },
+  currency_hint: { ur: 'نوٹ: یہ اندازاً/فکسڈ ریٹس ہیں، لائیو مارکیٹ ریٹ نہیں — درست ترین ریٹ کے لیے کسی بینک یا لائیو کرنسی سائٹ سے تصدیق کریں۔', en: 'Note: these are approximate/fixed reference rates, not live market rates — verify with a bank or live currency site for accuracy.' },
+
+  tool_numwords_title: { ur: 'نمبر ٹو ورڈز کنورٹر', en: 'Number to Words Converter' },
+  numwords_label: { ur: 'عدد لکھیں', en: 'Enter a number' },
+  numwords_btn: { ur: 'الفاظ میں بدلیں', en: 'Convert to words' },
+
+  tool_timezone_title: { ur: 'ٹائم زون کنورٹر', en: 'Time Zone Converter' },
+  timezone_datetime_label: { ur: 'تاریخ اور وقت', en: 'Date and time' },
+
+  tool_baseconv_title: { ur: 'بیس کنورٹر (بائنری/ہیکسا/آکٹل)', en: 'Base Converter (Binary/Hex/Octal)' },
+  baseconv_value_label: { ur: 'ویلیو', en: 'Value' },
+  baseconv_error: { ur: 'غلط ویلیو — منتخب کردہ بیس کے مطابق درست ہندسے لکھیں', en: 'Invalid value — enter valid digits for the selected base' },
+
+  tool_randnum_title: { ur: 'رینڈم نمبر جنریٹر', en: 'Random Number Generator' },
+  randnum_min_label: { ur: 'کم از کم', en: 'Minimum' },
+  randnum_max_label: { ur: 'زیادہ سے زیادہ', en: 'Maximum' },
+  randnum_count_label: { ur: 'کتنے نمبرز چاہییں', en: 'How many numbers' },
+  randnum_unique: { ur: 'دہرائی نہ ہو (unique)', en: 'No repeats (unique)' },
+  randnum_btn: { ur: 'نمبر بنائیں', en: 'Generate' },
+  randnum_error: { ur: 'اتنی رینج میں یونیک نمبرز ممکن نہیں', en: 'Not enough unique numbers in this range' },
+
+  tool_barcode_title: { ur: 'بارکوڈ جنریٹر', en: 'Barcode Generator' },
+  barcode_label: { ur: 'کوڈ / نمبر لکھیں', en: 'Enter code / number' },
+  barcode_btn: { ur: 'بارکوڈ بنائیں', en: 'Generate barcode' },
+  barcode_showtext: { ur: 'نمبر/کوڈ نیچے دکھائیں', en: 'Show number/code below barcode' },
+  barcode_error: { ur: 'بارکوڈ نہیں بن سکا — یہ کریکٹرز درست نہیں یا لائبریری لوڈ نہیں ہوئی', en: 'Could not generate barcode — invalid characters or the library failed to load' },
+
+  tool_imgcompress_title: { ur: 'امیج کمپریسر / ری سائزر', en: 'Image Compressor / Resizer' },
+  img_select_label: { ur: 'امیج منتخب کریں', en: 'Select images' },
+  img_multi_hint: { ur: 'ایک ساتھ 25 یا اس سے زیادہ تصاویر منتخب کی جا سکتی ہیں', en: 'You can select 25 or more images at once' },
+  img_maxwidth_label: { ur: 'زیادہ سے زیادہ چوڑائی (px):', en: 'Max width (px):' },
+  img_quality_label: { ur: 'کوالٹی:', en: 'Quality:' },
+  img_btn: { ur: 'کمپریس کریں', en: 'Compress' },
+  img_download_btn: { ur: 'ڈاؤن لوڈ کریں', en: 'Download' },
+  img_download_all_btn: { ur: 'سب ڈاؤن لوڈ کریں (ZIP)', en: 'Download all (ZIP)' },
+  img_summary: { ur: 'تصاویر', en: 'images' },
+
+  tool_imgformat_title: { ur: 'امیج فارمیٹ کنورٹر', en: 'Image Format Converter' },
+  imgformat_target_label: { ur: 'نیا فارمیٹ منتخب کریں', en: 'Select new format' },
+  imgformat_btn: { ur: 'تبدیل کریں', en: 'Convert' },
+  imgformat_hint: { ur: 'نوٹ: GIF ان پٹ کے طور پر قابلِ قبول ہے، لیکن براؤزر کی حد کے باعث نئی فائل GIF فارمیٹ میں نہیں بنائی جا سکتی — صرف JPG، PNG یا WEBP آؤٹ پٹ ممکن ہے۔', en: 'Note: GIF is accepted as input, but due to browser limitations the output cannot be a new GIF file — only JPG, PNG, or WEBP output is possible.' },
+
+  tool_imgb64_title: { ur: 'امیج ٹو بیس64', en: 'Image to Base64' },
+  b64_output_label: { ur: 'بیس64 آؤٹ پٹ', en: 'Base64 output' },
+
+  tool_todo_title: { ur: 'ٹو-ڈو لسٹ', en: 'To-Do List' },
+  todo_ph: { ur: 'نیا کام لکھیں...', en: 'Write a new task...' },
+  todo_add_btn: { ur: 'شامل کریں', en: 'Add' },
+  todo_empty: { ur: 'ابھی کوئی کام شامل نہیں', en: 'No tasks yet' },
+
+  tool_pomodoro_title: { ur: 'پوموڈورو ٹائمر', en: 'Pomodoro Timer' },
+  pom_work_btn: { ur: 'ورک 25', en: 'Work 25' },
+  pom_break_btn: { ur: 'بریک 5', en: 'Break 5' },
+  pom_start_btn: { ur: 'شروع کریں', en: 'Start' },
+  pom_stop_btn: { ur: 'روکیں', en: 'Stop' },
+  pom_reset_btn: { ur: 'ری سیٹ', en: 'Reset' },
+
+  tool_notes_title: { ur: 'کوئیک نوٹس', en: 'Quick Notes' },
+  notes_label: { ur: 'یہ نوٹس خودکار محفوظ ہو جاتے ہیں', en: 'These notes save automatically' },
+  notes_ph: { ur: 'کچھ بھی لکھیں...', en: 'Write anything...' },
+  notes_saved: { ur: 'محفوظ ہو گیا ✓', en: 'Saved ✓' },
+
+  footer_text: { ur: '15 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '15 tools · 5 categories · everything runs in your browser' },
+
+  wc_words: { ur: 'الفاظ', en: 'Words' },
+  wc_chars: { ur: 'حروف', en: 'Characters' },
+  wc_sentences: { ur: 'جملے', en: 'Sentences' },
+  bmi_under: { ur: 'کم وزن', en: 'Underweight' },
+  bmi_normal: { ur: 'نارمل', en: 'Normal' },
+  bmi_over: { ur: 'زیادہ وزن', en: 'Overweight' },
+  bmi_obese: { ur: 'موٹاپا', en: 'Obese' },
+  tip_total_tip: { ur: 'کل ٹپ', en: 'Total tip' },
+  tip_total: { ur: 'کل رقم', en: 'Total' },
+  tip_per_person: { ur: 'فی فرد', en: 'per person' },
+  age_years: { ur: 'سال', en: 'years' },
+  age_months: { ur: 'ماہ', en: 'months' },
+  age_days: { ur: 'دن', en: 'days' },
+  age_hours: { ur: 'گھنٹے', en: 'hours' },
+  age_minutes: { ur: 'منٹ', en: 'minutes' },
+  age_seconds: { ur: 'سیکنڈ', en: 'seconds' }
+};
+
+let LANG = 'ur';
+
+function applyLang(){
+  document.documentElement.setAttribute('lang', LANG);
+  document.documentElement.setAttribute('dir', LANG === 'ur' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[key]) el.textContent = I18N[key][LANG];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(I18N[key]) el.setAttribute('placeholder', I18N[key][LANG]);
+  });
+  Tools.updateWordCount();
+  Tools.renderTodos();
+}
+
+document.getElementById('langToggle').onclick = function(){
+  LANG = LANG === 'ur' ? 'en' : 'ur';
+  applyLang();
+};
+
+// ---------- Theme ----------
+document.getElementById('themeToggle').onclick = function(){
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme');
+  if(current === 'dark'){ root.setAttribute('data-theme','light'); }
+  else if(current === 'light'){ root.removeAttribute('data-theme'); }
+  else { root.setAttribute('data-theme','dark'); }
+};
+
+// ---------- Category nav ----------
+document.getElementById('catNav').addEventListener('click', function(e){
+  const btn = e.target.closest('button[data-cat]');
+  if(!btn) return;
+  document.querySelectorAll('#catNav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const cat = btn.dataset.cat;
+  document.querySelectorAll('section.category').forEach(s=>{
+    s.classList.toggle('active', s.dataset.cat === cat);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+// ---------- Accordion ----------
+document.querySelectorAll('.tool-head').forEach(function(head){
+  head.addEventListener('click', function(){
+    const tool = head.closest('.tool');
+    const wasOpen = tool.classList.contains('open');
+    tool.parentElement.querySelectorAll('.tool.open').forEach(t=>{ if(t!==tool){ t.classList.remove('open'); t.querySelector('.plus').textContent='+'; }});
+    tool.classList.toggle('open', !wasOpen);
+    head.querySelector('.plus').textContent = !wasOpen ? '×' : '+';
+  });
+});
+
+// ---------- Tools ----------
+const Tools = {
+  copy(id){
+    const el = document.getElementById(id);
+    const text = el.value || el.textContent;
+    try{ navigator.clipboard.writeText(text); }catch(e){ el.select && el.select(); }
+  },
+
+  updateWordCount(){
+    const t = document.getElementById('wc-input').value;
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    const includeSpaces = document.getElementById('wc-spaces').checked;
+    const chars = includeSpaces ? t.length : t.replace(/\s/g,'').length;
+    const sentences = t.trim() ? (t.match(/[.!?۔]+/g) || []).length : 0;
+    document.getElementById('wc-out').textContent =
+      `${I18N.wc_words[LANG]}: ${words} · ${I18N.wc_chars[LANG]}: ${chars} · ${I18N.wc_sentences[LANG]}: ${sentences}`;
+  },
+  clearWordCount(){
+    document.getElementById('wc-input').value = '';
+    Tools.updateWordCount();
+  },
+
+  caseConv(type){
+    const t = document.getElementById('case-input').value;
+    let out = t;
+    if(type==='upper') out = t.toUpperCase();
+    else if(type==='lower') out = t.toLowerCase();
+    else if(type==='title') out = t.replace(/\w\S*/g, w => w.charAt(0).toUpperCase()+w.substr(1).toLowerCase());
+    else if(type==='sentence') out = t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+    document.getElementById('case-output').value = out;
+  },
+  clearCase(){
+    document.getElementById('case-input').value = '';
+    document.getElementById('case-output').value = '';
+  },
+
+  findReplace(){
+    const text = document.getElementById('fr-input').value;
+    const findRaw = document.getElementById('fr-find').value;
+    const replRaw = document.getElementById('fr-replace').value;
+    if(!findRaw){ document.getElementById('fr-output').value = text; return; }
+    const finds = findRaw.split(',').map(s=>s.trim()).filter(s=>s.length);
+    const repls = replRaw.split(',').map(s=>s.trim());
+    let out = text;
+    finds.forEach((f,i)=>{
+      const r = repls[i] !== undefined ? repls[i] : '';
+      if(f) out = out.split(f).join(r);
+    });
+    document.getElementById('fr-output').value = out;
+    document.getElementById('fr-input').value = out;
+  },
+  clearFindReplace(){
+    ['fr-input','fr-find','fr-replace','fr-output'].forEach(id=>{ document.getElementById(id).value = ''; });
+  },
+
+  bmi(){
+    const w = parseFloat(document.getElementById('bmi-w').value);
+    const h = parseFloat(document.getElementById('bmi-h').value) / 100;
+    const box = document.getElementById('bmi-out');
+    if(!w || !h){ box.style.display='none'; return; }
+    const val = w / (h*h);
+    let cat = I18N.bmi_normal[LANG];
+    if(val < 18.5) cat = I18N.bmi_under[LANG];
+    else if(val >= 25 && val < 30) cat = I18N.bmi_over[LANG];
+    else if(val >= 30) cat = I18N.bmi_obese[LANG];
+    box.innerHTML = `<span class="big">${val.toFixed(1)}</span><br><span class="muted">${cat}</span>`;
+    box.style.display='block';
+  },
+
+  percentOf(){
+    const x = parseFloat(document.getElementById('pc-x').value);
+    const y = parseFloat(document.getElementById('pc-y').value);
+    const box = document.getElementById('pc-out1');
+    if(isNaN(x) || !y){ box.style.display='none'; return; }
+    box.innerHTML = `<span class="big">${((x/y)*100).toFixed(2)}%</span>`;
+    box.style.display='block';
+  },
+  percentValue(){
+    const p = parseFloat(document.getElementById('pc-x2').value);
+    const y = parseFloat(document.getElementById('pc-y2').value);
+    const box = document.getElementById('pc-out2');
+    if(isNaN(p) || isNaN(y)){ box.style.display='none'; return; }
+    box.innerHTML = `<span class="big">${((p/100)*y).toFixed(2)}</span>`;
+    box.style.display='block';
+  },
+
+  tip(){
+    const bill = parseFloat(document.getElementById('tip-bill').value) || 0;
+    const pct = parseFloat(document.getElementById('tip-pct').value) || 0;
+    const people = parseFloat(document.getElementById('tip-people').value) || 1;
+    const box = document.getElementById('tip-out');
+    const tipAmt = bill * (pct/100);
+    const total = bill + tipAmt;
+    const perPerson = total / people;
+    box.innerHTML = `${I18N.tip_total_tip[LANG]}: ${tipAmt.toFixed(2)} · ${I18N.tip_total[LANG]}: ${total.toFixed(2)}<br><span class="big">${perPerson.toFixed(2)}</span> <span class="muted">${I18N.tip_per_person[LANG]}</span>`;
+    box.style.display='block';
+  },
+
+  age(){
+    const dobStr = document.getElementById('age-dob').value;
+    const endStr = document.getElementById('age-end').value;
+    const box = document.getElementById('age-out');
+    if(!dobStr){ box.style.display='none'; return; }
+    const birth = new Date(dobStr);
+    const end = endStr ? new Date(endStr) : new Date();
+    if(end < birth){
+      box.innerHTML = `<span class="muted">${I18N.age_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    let years = end.getFullYear() - birth.getFullYear();
+    let months = end.getMonth() - birth.getMonth();
+    let days = end.getDate() - birth.getDate();
+    if(days < 0){ months--; days += new Date(end.getFullYear(), end.getMonth(), 0).getDate(); }
+    if(months < 0){ years--; months += 12; }
+    const elapsedMs = end - birth;
+    const totalHours = Math.floor(elapsedMs/3600000);
+    const totalMinutes = Math.floor(elapsedMs/60000);
+    const totalSeconds = Math.floor(elapsedMs/1000);
+    box.innerHTML = `<span class="big">${years}</span> ${I18N.age_years[LANG]} ${months} ${I18N.age_months[LANG]} ${days} ${I18N.age_days[LANG]}`
+      + `<br><span class="muted">${totalHours.toLocaleString()} ${I18N.age_hours[LANG]} · ${totalMinutes.toLocaleString()} ${I18N.age_minutes[LANG]} · ${totalSeconds.toLocaleString()} ${I18N.age_seconds[LANG]}</span>`;
+    box.style.display='block';
+  },
+
+  unitData: {
+    length: { m:1, km:1000, cm:0.01, mile:1609.34, ft:0.3048, in:0.0254 },
+    weight: { kg:1, g:0.001, lb:0.453592, oz:0.0283495 }
+  },
+  unitTypeChange(){
+    const type = document.getElementById('unit-type').value;
+    const from = document.getElementById('unit-from');
+    const to = document.getElementById('unit-to');
+    from.innerHTML = ''; to.innerHTML = '';
+    let units;
+    if(type === 'temp') units = ['C','F','K'];
+    else units = Object.keys(Tools.unitData[type]);
+    units.forEach(u=>{
+      from.innerHTML += `<option value="${u}">${u}</option>`;
+      to.innerHTML += `<option value="${u}">${u}</option>`;
+    });
+    if(units.length>1) to.selectedIndex = 1;
+  },
+  unitConvert(){
+    const type = document.getElementById('unit-type').value;
+    const from = document.getElementById('unit-from').value;
+    const to = document.getElementById('unit-to').value;
+    const val = parseFloat(document.getElementById('unit-val').value);
+    const box = document.getElementById('unit-out');
+    if(isNaN(val)){ box.style.display='none'; return; }
+    let result;
+    if(type === 'temp'){
+      let celsius;
+      if(from==='C') celsius = val;
+      else if(from==='F') celsius = (val-32)*5/9;
+      else celsius = val - 273.15;
+      if(to==='C') result = celsius;
+      else if(to==='F') result = celsius*9/5+32;
+      else result = celsius + 273.15;
+    } else {
+      const base = val * Tools.unitData[type][from];
+      result = base / Tools.unitData[type][to];
+    }
+    box.innerHTML = `<span class="big">${result.toFixed(4).replace(/\.?0+$/,'')}</span> ${to}`;
+    box.style.display='block';
+  },
+
+  genPassword(){
+    const len = parseInt(document.getElementById('pw-len').value);
+    const upper = document.getElementById('pw-upper').checked;
+    const lower = document.getElementById('pw-lower').checked;
+    const num = document.getElementById('pw-num').checked;
+    const sym = document.getElementById('pw-sym').checked;
+    let chars = '';
+    if(upper) chars += 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    if(lower) chars += 'abcdefghijkmnpqrstuvwxyz';
+    if(num) chars += '23456789';
+    if(sym) chars += '!@#$%^&*-_+=?';
+    if(!chars){ chars = 'abcdefghijkmnpqrstuvwxyz'; }
+    let out = '';
+    const arr = new Uint32Array(len);
+    (window.crypto || window.msCrypto).getRandomValues(arr);
+    for(let i=0;i<len;i++){ out += chars[arr[i] % chars.length]; }
+    document.getElementById('pw-out').value = out;
+  },
+
+  genQR(){
+    const val = document.getElementById('qr-input').value.trim();
+    const fg = document.getElementById('qr-fg').value;
+    const bg = document.getElementById('qr-bg').value;
+    const box = document.getElementById('qrbox');
+    box.innerHTML = '';
+    if(!val) return;
+    try{ new QRCode(box, { text: val, width: 180, height: 180, colorDark: fg, colorLight: bg }); }
+    catch(e){ box.innerHTML = '<span class="muted">Error generating QR</span>'; }
+  },
+  clearQR(){
+    document.getElementById('qr-input').value = '';
+    document.getElementById('qrbox').innerHTML = '';
+  },
+
+  currencyRates: { USD:1, PKR:278, INR:83, GBP:0.79, EUR:0.92, SAR:3.75, AED:3.67, CAD:1.36, AUD:1.52 },
+  currencyConvert(){
+    const amt = parseFloat(document.getElementById('currency-amount').value);
+    const from = document.getElementById('currency-from').value;
+    const to = document.getElementById('currency-to').value;
+    const box = document.getElementById('currency-out');
+    if(isNaN(amt)){ box.style.display='none'; return; }
+    const usd = amt / Tools.currencyRates[from];
+    const result = usd * Tools.currencyRates[to];
+    box.innerHTML = `<span class="big">${result.toFixed(2)}</span> ${to}`;
+    box.style.display='block';
+  },
+
+  _onesEn: ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],
+  _tensEn: ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'],
+  _numToWordsHelper(n){
+    if(n < 20) return Tools._onesEn[n];
+    if(n < 100) return Tools._tensEn[Math.floor(n/10)] + (n%10 ? ' ' + Tools._onesEn[n%10] : '');
+    if(n < 1000) return Tools._onesEn[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + Tools._numToWordsHelper(n%100) : '');
+    return '';
+  },
+  numToWords(){
+    const box = document.getElementById('numwords-out');
+    const raw = document.getElementById('numwords-input').value;
+    const n = Math.trunc(Math.abs(parseFloat(raw)));
+    if(raw === '' || isNaN(n)){ box.style.display='none'; return; }
+    if(n === 0){ box.innerHTML = `<span class="big">Zero</span>`; box.style.display='block'; return; }
+    const units = [ {v:1000000000, n:'Billion'}, {v:1000000, n:'Million'}, {v:1000, n:'Thousand'} ];
+    let remaining = n;
+    let parts = [];
+    units.forEach(u=>{
+      if(remaining >= u.v){
+        const chunk = Math.floor(remaining / u.v);
+        parts.push(Tools._numToWordsHelper(chunk) + ' ' + u.n);
+        remaining = remaining % u.v;
+      }
+    });
+    if(remaining > 0) parts.push(Tools._numToWordsHelper(remaining));
+    const sign = parseFloat(raw) < 0 ? 'Minus ' : '';
+    box.innerHTML = `<span class="big" style="font-size:16px">${sign}${parts.join(' ')}</span>`;
+    box.style.display='block';
+  },
+
+  getTzOffsetMinutes(date, timeZone){
+    const dtf = new Intl.DateTimeFormat('en-US', { timeZone, hourCycle:'h23', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const parts = dtf.formatToParts(date).reduce((acc,p)=>{ if(p.type!=='literal') acc[p.type]=p.value; return acc; }, {});
+    const asUTC = Date.UTC(parts.year, parts.month-1, parts.day, parts.hour, parts.minute, parts.second);
+    return (asUTC - date.getTime()) / 60000;
+  },
+  timezoneConvert(){
+    const dtStr = document.getElementById('tz-datetime').value;
+    const fromZone = document.getElementById('tz-from').value;
+    const toZone = document.getElementById('tz-to').value;
+    const box = document.getElementById('tz-out');
+    if(!dtStr){ box.style.display='none'; return; }
+    const naive = new Date(dtStr + ':00Z');
+    const offset = Tools.getTzOffsetMinutes(naive, fromZone);
+    const realUtc = new Date(naive.getTime() - offset*60000);
+    const formatted = new Intl.DateTimeFormat('en-US', { timeZone: toZone, dateStyle:'medium', timeStyle:'short' }).format(realUtc);
+    box.innerHTML = `<span class="big" style="font-size:18px">${formatted}</span>`;
+    box.style.display='block';
+  },
+
+  baseConvert(){
+    const val = document.getElementById('base-value').value.trim();
+    const from = parseInt(document.getElementById('base-from').value);
+    const to = parseInt(document.getElementById('base-to').value);
+    const box = document.getElementById('base-out');
+    if(!val){ box.style.display='none'; return; }
+    const num = parseInt(val, from);
+    if(isNaN(num)){
+      box.innerHTML = `<span class="muted">${I18N.baseconv_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    box.innerHTML = `<span class="big">${num.toString(to).toUpperCase()}</span>`;
+    box.style.display='block';
+  },
+
+  genRandom(){
+    const min = Math.round(parseFloat(document.getElementById('rand-min').value));
+    const max = Math.round(parseFloat(document.getElementById('rand-max').value));
+    const count = Math.max(1, Math.min(100, parseInt(document.getElementById('rand-count').value) || 1));
+    const unique = document.getElementById('rand-unique').checked;
+    const box = document.getElementById('rand-out');
+    if(isNaN(min) || isNaN(max) || min > max){ box.style.display='none'; return; }
+    const rangeSize = max - min + 1;
+    if(unique && count > rangeSize){
+      box.innerHTML = `<span class="muted">${I18N.randnum_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    let results = [];
+    if(unique){
+      const pool = [];
+      for(let i=min;i<=max;i++) pool.push(i);
+      for(let i=pool.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [pool[i],pool[j]] = [pool[j],pool[i]];
+      }
+      results = pool.slice(0, count);
+    } else {
+      for(let i=0;i<count;i++){ results.push(Math.floor(Math.random()*rangeSize)+min); }
+    }
+    box.innerHTML = `<span class="big" style="font-size:18px">${results.join(', ')}</span>`;
+    box.style.display='block';
+  },
+
+  genBarcode(){
+    const val = document.getElementById('barcode-input').value.trim();
+    const box = document.getElementById('barcode-box');
+    if(!val) return;
+    try{
+      if(typeof JsBarcode === 'undefined'){
+        box.innerHTML = `<span class="muted" style="padding:10px">${I18N.barcode_error[LANG]}</span>`;
+        return;
+      }
+      box.innerHTML = '<svg id="barcode-svg"></svg>';
+      const showText = document.getElementById('barcode-showtext').checked;
+      JsBarcode('#barcode-svg', val, { format:'CODE128', lineColor:'#000', width:2, height:70, displayValue: showText });
+    }catch(e){
+      box.innerHTML = `<span class="muted" style="padding:10px">${I18N.barcode_error[LANG]}</span>`;
+    }
+  },
+  clearBarcode(){
+    document.getElementById('barcode-input').value = '';
+    document.getElementById('barcode-box').innerHTML = '<svg id="barcode-svg"></svg>';
+  },
+
+  hexToHsl(hex){
+    let r=parseInt(hex.substr(1,2),16)/255, g=parseInt(hex.substr(3,2),16)/255, b=parseInt(hex.substr(5,2),16)/255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if(max===min){ h=s=0; } else {
+      const d=max-min;
+      s = l>0.5 ? d/(2-max-min) : d/(max+min);
+      if(max===r) h=(g-b)/d+(g<b?6:0);
+      else if(max===g) h=(b-r)/d+2;
+      else h=(r-g)/d+4;
+      h/=6;
+    }
+    return [h*360, s*100, l*100];
+  },
+  hslToHex(h,s,l){
+    s/=100; l/=100;
+    const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+    let r,g,b;
+    if(h<60){r=c;g=x;b=0;} else if(h<120){r=x;g=c;b=0;} else if(h<180){r=0;g=c;b=x;}
+    else if(h<240){r=0;g=x;b=c;} else if(h<300){r=x;g=0;b=c;} else {r=c;g=0;b=x;}
+    const toHex = v => Math.round((v+m)*255).toString(16).padStart(2,'0');
+    return '#'+toHex(r)+toHex(g)+toHex(b);
+  },
+  genPalette(){
+    const base = document.getElementById('pal-color').value;
+    const [h,s,l] = Tools.hexToHsl(base);
+    const shades = [
+      {l: Math.min(l+30,92)},
+      {l: l},
+      {l: Math.max(l-25,8)},
+      {h:(h+180)%360, l:l},
+      {h:(h+30)%360, l:l},
+    ];
+    const box = document.getElementById('pal-out');
+    box.innerHTML = '';
+    shades.forEach(sh=>{
+      const hex = Tools.hslToHex(sh.h!==undefined?sh.h:h, s, sh.l);
+      const el = document.createElement('div');
+      el.className = 'swatch';
+      el.innerHTML = `<div class="chip" style="background:${hex}"></div>${hex}`;
+      el.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(hex); };
+      box.appendChild(el);
+    });
+  },
+
+  loanEmi(){
+    const p = parseFloat(document.getElementById('loan-principal').value);
+    const annualRate = parseFloat(document.getElementById('loan-rate').value);
+    const n = parseFloat(document.getElementById('loan-months').value);
+    const box = document.getElementById('loan-out');
+    if(!p || !annualRate || !n){ box.style.display='none'; return; }
+    const r = annualRate / 12 / 100;
+    const emi = (p * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+    const total = emi * n;
+    const totalInterest = total - p;
+    box.innerHTML = `<span class="big">${emi.toFixed(2)}</span> <span class="muted">${I18N.loan_emi_label[LANG]}</span>`
+      + `<br>${I18N.loan_total_payment[LANG]}: ${total.toFixed(2)} · ${I18N.loan_total_interest[LANG]}: ${totalInterest.toFixed(2)}`;
+    box.style.display='block';
+  },
+
+  discount(){
+    const price = parseFloat(document.getElementById('discount-price').value);
+    const pct = parseFloat(document.getElementById('discount-pct').value);
+    const box = document.getElementById('discount-out');
+    if(isNaN(price) || isNaN(pct)){ box.style.display='none'; return; }
+    const saved = price * (pct/100);
+    const final = price - saved;
+    box.innerHTML = `<span class="big">${final.toFixed(2)}</span> <span class="muted">${I18N.discount_final_label[LANG]}</span>`
+      + `<br>${I18N.discount_saved_label[LANG]}: ${saved.toFixed(2)}`;
+    box.style.display='block';
+  },
+
+  gst(){
+    const amount = parseFloat(document.getElementById('gst-amount').value);
+    const rate = parseFloat(document.getElementById('gst-rate').value);
+    const mode = document.getElementById('gst-mode').value;
+    const box = document.getElementById('gst-out');
+    if(isNaN(amount) || isNaN(rate)){ box.style.display='none'; return; }
+    if(mode === 'add'){
+      const tax = amount * (rate/100);
+      const final = amount + tax;
+      box.innerHTML = `<span class="big">${final.toFixed(2)}</span> <span class="muted">${I18N.gst_final_label[LANG]}</span>`
+        + `<br>${I18N.gst_tax_amount_label[LANG]}: ${tax.toFixed(2)}`;
+    } else {
+      const original = amount / (1 + rate/100);
+      const tax = amount - original;
+      box.innerHTML = `<span class="big">${original.toFixed(2)}</span> <span class="muted">${I18N.gst_original_label[LANG]}</span>`
+        + `<br>${I18N.gst_tax_amount_label[LANG]}: ${tax.toFixed(2)}`;
+    }
+    box.style.display='block';
+  },
+
+  interest(type){
+    const p = parseFloat(document.getElementById('interest-principal').value);
+    const rate = parseFloat(document.getElementById('interest-rate').value);
+    const t = parseFloat(document.getElementById('interest-time').value);
+    const box = document.getElementById('interest-out');
+    if(isNaN(p) || isNaN(rate) || isNaN(t)){ box.style.display='none'; return; }
+    let interestAmt, total;
+    if(type === 'simple'){
+      interestAmt = (p * rate * t) / 100;
+      total = p + interestAmt;
+    } else {
+      total = p * Math.pow(1 + rate/100, t);
+      interestAmt = total - p;
+    }
+    box.innerHTML = `<span class="big">${interestAmt.toFixed(2)}</span> <span class="muted">${I18N.interest_amount_label[LANG]}</span>`
+      + `<br>${I18N.interest_total_label[LANG]}: ${total.toFixed(2)}`;
+    box.style.display='block';
+  },
+
+  dateDiff(){
+    const startStr = document.getElementById('datediff-start').value;
+    const endStr = document.getElementById('datediff-end').value;
+    const box = document.getElementById('datediff-out');
+    if(!startStr || !endStr){
+      box.innerHTML = `<span class="muted">${I18N.datediff_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    let start = new Date(startStr);
+    let end = new Date(endStr);
+    if(end < start){ const tmp = start; start = end; end = tmp; }
+    const diffMs = end - start;
+    const totalDays = Math.round(diffMs / 86400000);
+    const totalWeeks = (totalDays / 7).toFixed(1);
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
+    if(days < 0){ months--; days += new Date(end.getFullYear(), end.getMonth(), 0).getDate(); }
+    if(months < 0){ years--; months += 12; }
+    box.innerHTML = `<span class="big">${totalDays}</span> <span class="muted">${I18N.age_days[LANG]}</span>`
+      + `<br>${years} ${I18N.age_years[LANG]} ${months} ${I18N.age_months[LANG]} ${days} ${I18N.age_days[LANG]} · ${totalWeeks} ${LANG==='ur'?'ہفتے':'weeks'}`;
+    box.style.display='block';
+  },
+
+  bmr(){
+    const gender = document.getElementById('bmr-gender').value;
+    const weight = parseFloat(document.getElementById('bmr-weight').value);
+    const height = parseFloat(document.getElementById('bmr-height').value);
+    const age = parseFloat(document.getElementById('bmr-age').value);
+    const activity = parseFloat(document.getElementById('bmr-activity').value);
+    const box = document.getElementById('bmr-out');
+    if(!weight || !height || !age){ box.style.display='none'; return; }
+    let bmrVal = 10*weight + 6.25*height - 5*age;
+    bmrVal += gender === 'male' ? 5 : -161;
+    const tdee = bmrVal * activity;
+    box.innerHTML = `<span class="big">${Math.round(bmrVal)}</span> <span class="muted">${I18N.bmr_result_label[LANG]}</span>`
+      + `<br>${I18N.bmr_tdee_label[LANG]}: <b>${Math.round(tdee)}</b> kcal/day`;
+    box.style.display='block';
+  },
+
+  clearIds(ids){
+    ids.forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ''; });
+  },
+
+  cleanSpaces(){
+    let t = document.getElementById('cleanspace-input').value;
+    t = t.replace(/[ \t]+/g, ' ');
+    t = t.split('\n').map(l => l.trim()).join('\n');
+    t = t.replace(/\n{3,}/g, '\n\n');
+    t = t.trim();
+    document.getElementById('cleanspace-output').value = t;
+  },
+
+  removeDupLines(){
+    const lines = document.getElementById('duplines-input').value.split('\n');
+    const seen = new Set();
+    const out = [];
+    lines.forEach(l=>{
+      const key = l.trim();
+      if(!seen.has(key)){ seen.add(key); out.push(l); }
+    });
+    document.getElementById('duplines-output').value = out.join('\n');
+  },
+
+  reverseChars(){
+    const t = document.getElementById('reverse-input').value;
+    document.getElementById('reverse-output').value = t.split('').reverse().join('');
+  },
+  reverseWords(){
+    const t = document.getElementById('reverse-input').value;
+    document.getElementById('reverse-output').value = t.split(/\s+/).filter(Boolean).reverse().join(' ');
+  },
+
+  genSlug(){
+    let t = document.getElementById('slug-input').value.toLowerCase().trim();
+    t = t.replace(/[^\p{L}\p{N}\s-]/gu, '');
+    t = t.replace(/[\s_]+/g, '-');
+    t = t.replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+    document.getElementById('slug-output').value = t;
+  },
+
+  _loremWordsEn: "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur".split(' '),
+  _loremSentenceUr: "یہ ایک نمونہ متن ہے جو ڈیزائن اور ترتیب کی جانچ کے لیے استعمال ہوتا ہے۔ اصل مواد کی جگہ عارضی طور پر یہ الفاظ درج کیے گئے ہیں تاکہ صفحے کی نظر ثانی میں آسانی ہو۔ یہ متن کسی خاص معنی کا حامل نہیں، محض جگہ پُر کرنے کے لیے ہے۔",
+  genLorem(type){
+    const count = Math.max(1, Math.min(20, parseInt(document.getElementById('lorem-count').value) || 3));
+    let out = '';
+    if(type === 'en'){
+      const words = Tools._loremWordsEn;
+      const paras = [];
+      for(let p=0; p<count; p++){
+        let sentence = words.slice(0, 18 + (p % 5)).join(' ');
+        sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
+        paras.push(sentence + ' ' + words.slice(5, 25).join(' ') + '.');
+      }
+      out = paras.join('\n\n');
+    } else {
+      const paras = [];
+      for(let p=0; p<count; p++){ paras.push(Tools._loremSentenceUr); }
+      out = paras.join('\n\n');
+    }
+    document.getElementById('lorem-output').value = out;
+  },
+
+  speakText(){
+    const text = document.getElementById('tts-input').value.trim();
+    if(!text || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = document.getElementById('tts-lang').value;
+    window.speechSynthesis.speak(utter);
+  },
+  stopSpeak(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  },
+
+  async saveFile(filename, blob){
+    try{
+      const downloads = await claude.use('downloads');
+      if(downloads){
+        await downloads.save({ filename, data: blob });
+        return true;
+      }
+    }catch(e){}
+    try{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 3000);
+      return true;
+    }catch(e){ return false; }
+  },
+
+  _imgFiles: [],
+  _compressedResults: [],
+  loadImage(e){ Tools._imgFiles = Array.from(e.target.files || []); },
+  compressImage(){
+    if(!Tools._imgFiles.length) return;
+    const maxW = parseInt(document.getElementById('img-w').value);
+    const quality = parseFloat(document.getElementById('img-q').value);
+    const resultsBox = document.getElementById('img-results');
+    const summary = document.getElementById('img-summary');
+    resultsBox.innerHTML = '';
+    Tools._compressedResults = [];
+    const total = Tools._imgFiles.length;
+    let processed = 0;
+    Tools._imgFiles.forEach((file)=>{
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const img = new Image();
+        img.onload = function(){
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function(blob){
+            processed++;
+            if(blob){
+              const origKB = Math.round(file.size/1024);
+              const newKB = Math.round(blob.size/1024);
+              const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+              const outName = baseName + '-compressed.jpg';
+              const idx = Tools._compressedResults.length;
+              Tools._compressedResults.push({ name: outName, blob });
+              const url = URL.createObjectURL(blob);
+              const div = document.createElement('div');
+              div.className = 'img-result-item';
+              div.innerHTML = `<img class="thumb" src="${url}"><div class="meta">${origKB}KB → ${newKB}KB</div><button class="btn secondary small" onclick="Tools.downloadOne(${idx})">${I18N.img_download_btn[LANG]}</button>`;
+              resultsBox.appendChild(div);
+            }
+            if(processed === total){
+              summary.textContent = `${Tools._compressedResults.length} ${I18N.img_summary[LANG]}`;
+              summary.style.display = 'block';
+              document.getElementById('img-downloadall').style.display = Tools._compressedResults.length > 1 ? 'inline-block' : 'none';
+            }
+          }, 'image/jpeg', quality);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+  async downloadOne(i){
+    const item = Tools._compressedResults[i];
+    if(!item) return;
+    await Tools.saveFile(item.name, item.blob);
+  },
+  async downloadAllZip(){
+    if(typeof JSZip === 'undefined' || !Tools._compressedResults.length) return;
+    const zip = new JSZip();
+    Tools._compressedResults.forEach(item => zip.file(item.name, item.blob));
+    const content = await zip.generateAsync({ type: 'blob' });
+    await Tools.saveFile('compressed-images.zip', content);
+  },
+  clearImages(){
+    Tools._imgFiles = [];
+    Tools._compressedResults = [];
+    document.getElementById('img-file').value = '';
+    document.getElementById('img-results').innerHTML = '';
+    document.getElementById('img-summary').style.display = 'none';
+    document.getElementById('img-downloadall').style.display = 'none';
+  },
+
+  _imgFormatFiles: [],
+  _imgFormatResults: [],
+  loadImageFormat(e){ Tools._imgFormatFiles = Array.from(e.target.files || []); },
+  convertImageFormat(){
+    if(!Tools._imgFormatFiles.length) return;
+    const targetFormat = document.getElementById('imgformat-target').value;
+    const quality = parseFloat(document.getElementById('imgformat-quality').value);
+    const ext = targetFormat === 'image/png' ? 'png' : (targetFormat === 'image/webp' ? 'webp' : 'jpg');
+    const resultsBox = document.getElementById('imgformat-results');
+    const summary = document.getElementById('imgformat-summary');
+    resultsBox.innerHTML = '';
+    Tools._imgFormatResults = [];
+    const total = Tools._imgFormatFiles.length;
+    let processed = 0;
+    Tools._imgFormatFiles.forEach((file)=>{
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if(targetFormat === 'image/jpeg'){
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(function(blob){
+            processed++;
+            if(blob){
+              const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+              const outName = baseName + '.' + ext;
+              const idx = Tools._imgFormatResults.length;
+              Tools._imgFormatResults.push({ name: outName, blob });
+              const url = URL.createObjectURL(blob);
+              const div = document.createElement('div');
+              div.className = 'img-result-item';
+              div.innerHTML = `<img class="thumb" src="${url}"><div class="meta">${outName}</div><button class="btn secondary small" onclick="Tools.downloadFormatOne(${idx})">${I18N.img_download_btn[LANG]}</button>`;
+              resultsBox.appendChild(div);
+            }
+            if(processed === total){
+              summary.textContent = `${Tools._imgFormatResults.length} ${I18N.img_summary[LANG]}`;
+              summary.style.display = 'block';
+              document.getElementById('imgformat-downloadall').style.display = Tools._imgFormatResults.length > 1 ? 'inline-block' : 'none';
+            }
+          }, targetFormat, quality);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+  async downloadFormatOne(i){
+    const item = Tools._imgFormatResults[i];
+    if(!item) return;
+    await Tools.saveFile(item.name, item.blob);
+  },
+  async downloadFormatAllZip(){
+    if(typeof JSZip === 'undefined' || !Tools._imgFormatResults.length) return;
+    const zip = new JSZip();
+    Tools._imgFormatResults.forEach(item => zip.file(item.name, item.blob));
+    const content = await zip.generateAsync({ type: 'blob' });
+    await Tools.saveFile('converted-images.zip', content);
+  },
+  clearImageFormat(){
+    Tools._imgFormatFiles = [];
+    Tools._imgFormatResults = [];
+    document.getElementById('imgformat-file').value = '';
+    document.getElementById('imgformat-results').innerHTML = '';
+    document.getElementById('imgformat-summary').style.display = 'none';
+    document.getElementById('imgformat-downloadall').style.display = 'none';
+  },
+
+  imageToBase64(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){ document.getElementById('b64-out').value = ev.target.result; };
+    reader.readAsDataURL(file);
+  },
+
+  _todos: [],
+  loadTodos(){
+    try{
+      const raw = localStorage.getItem('toolkit_todos');
+      Tools._todos = raw ? JSON.parse(raw) : [];
+    }catch(e){ Tools._todos = []; }
+    Tools.renderTodos();
+  },
+  saveTodos(){ try{ localStorage.setItem('toolkit_todos', JSON.stringify(Tools._todos)); }catch(e){} },
+  addTodo(){
+    const input = document.getElementById('todo-input');
+    const val = input.value.trim();
+    if(!val) return;
+    Tools._todos.push({ text: val, done: false });
+    input.value = '';
+    Tools.saveTodos();
+    Tools.renderTodos();
+  },
+  toggleTodo(i){ Tools._todos[i].done = !Tools._todos[i].done; Tools.saveTodos(); Tools.renderTodos(); },
+  deleteTodo(i){ Tools._todos.splice(i,1); Tools.saveTodos(); Tools.renderTodos(); },
+  renderTodos(){
+    const list = document.getElementById('todo-list');
+    if(!list) return;
+    list.innerHTML = '';
+    if(Tools._todos.length === 0){
+      list.innerHTML = `<div class="muted">${I18N.todo_empty[LANG]}</div>`;
+      return;
+    }
+    Tools._todos.forEach((t,i)=>{
+      const div = document.createElement('div');
+      div.className = 'todo-item' + (t.done ? ' done' : '');
+      div.innerHTML = `<input type="checkbox" ${t.done?'checked':''} onchange="Tools.toggleTodo(${i})"><span class="txt">${t.text}</span><button onclick="Tools.deleteTodo(${i})">✕</button>`;
+      list.appendChild(div);
+    });
+  },
+
+  pomSeconds: 25*60,
+  pomMode_: 'work',
+  pomInterval: null,
+  pomRunning: false,
+  pomMode(mode){
+    Tools.pomMode_ = mode;
+    Tools.pomSeconds = mode === 'work' ? 25*60 : 5*60;
+    document.getElementById('pom-work').classList.toggle('active', mode==='work');
+    document.getElementById('pom-break').classList.toggle('active', mode==='break');
+    Tools.pomUpdateDisplay();
+    Tools.pomStop();
+  },
+  pomUpdateDisplay(){
+    const m = Math.floor(Tools.pomSeconds/60).toString().padStart(2,'0');
+    const s = (Tools.pomSeconds%60).toString().padStart(2,'0');
+    const el = document.getElementById('pom-display');
+    if(el) el.textContent = `${m}:${s}`;
+  },
+  pomToggle(){ if(Tools.pomRunning){ Tools.pomStop(); } else { Tools.pomStart(); } },
+  pomStart(){
+    Tools.pomRunning = true;
+    document.getElementById('pom-startbtn').textContent = I18N.pom_stop_btn[LANG];
+    Tools.pomInterval = setInterval(()=>{
+      Tools.pomSeconds--;
+      if(Tools.pomSeconds <= 0){ Tools.pomStop(); Tools.pomSeconds = 0; }
+      Tools.pomUpdateDisplay();
+    }, 1000);
+  },
+  pomStop(){
+    Tools.pomRunning = false;
+    clearInterval(Tools.pomInterval);
+    const btn = document.getElementById('pom-startbtn');
+    if(btn) btn.textContent = I18N.pom_start_btn[LANG];
+  },
+  pomReset(){
+    Tools.pomStop();
+    Tools.pomSeconds = Tools.pomMode_ === 'work' ? 25*60 : 5*60;
+    Tools.pomUpdateDisplay();
+  },
+
+  loadNotes(){
+    try{
+      const val = localStorage.getItem('toolkit_notes') || '';
+      const area = document.getElementById('notes-area');
+      if(area) area.value = val;
+    }catch(e){}
+  },
+  saveNotes(){
+    const area = document.getElementById('notes-area');
+    try{
+      localStorage.setItem('toolkit_notes', area.value);
+      const status = document.getElementById('notes-status');
+      if(status){ status.textContent = I18N.notes_saved[LANG]; setTimeout(()=>{ status.textContent=''; }, 1200); }
+    }catch(e){}
+  },
+  clearNotes(){
+    document.getElementById('notes-area').value = '';
+    try{ localStorage.removeItem('toolkit_notes'); }catch(e){}
+  }
+};
+
+document.getElementById('wc-input').addEventListener('input', Tools.updateWordCount);
+document.getElementById('wc-spaces').addEventListener('change', Tools.updateWordCount);
+document.getElementById('age-end').valueAsDate = new Date();
+Tools.unitTypeChange();
+Tools.loadTodos();
+Tools.loadNotes();
+applyLang();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

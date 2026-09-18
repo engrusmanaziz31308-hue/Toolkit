@@ -1,0 +1,40 @@
+{
+  "name": "ٹول کِٹ — All-in-One Toolbox",
+  "short_name": "ٹول کِٹ",
+  "description": "روزمرہ کے کام کے لیے آل اِن ون ٹولز — ٹیکسٹ، کیلکولیٹرز، کنورٹرز، امیج اور پروڈکٹیوٹی ٹولز",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E7E9EC",
+  "theme_color": "#191D22",
+  "lang": "ur",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
