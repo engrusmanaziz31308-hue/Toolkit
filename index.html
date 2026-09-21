@@ -257,6 +257,15 @@
   .img-result-item img.thumb{ width:100%; height:60px; object-fit:cover; border-radius:5px; margin-bottom:4px; display:block; }
   .img-result-item .meta{ color:var(--text-muted); margin-bottom:6px; line-height:1.4; word-break:break-word; }
   .btn.small{ padding:5px 8px; font-size:10px; width:100%; }
+
+  /* Reorderable image list (Image to PDF) */
+  .pdf-order-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .pdf-order-item{ display:flex; align-items:center; gap:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px; }
+  .pdf-order-item img.thumb{ width:44px; height:44px; object-fit:cover; border-radius:6px; flex:none; }
+  .pdf-order-item .meta{ flex:1; font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:start; }
+  .pdf-order-item .order-actions{ display:flex; gap:4px; flex:none; }
+  .pdf-order-item .order-actions button{ width:28px; height:28px; padding:0; font-size:13px; border-radius:6px; }
+  .pdf-order-item .order-actions button:disabled{ opacity:0.3; cursor:default; }
   footer{ text-align:center; color:var(--text-muted); font-size:11px; margin-top:30px; }
   html[lang="ur"] footer{ font-size:12.5px; }
 
@@ -1054,7 +1063,8 @@
       <div class="tool-body">
         <label data-i18n="img_select_label">امیج منتخب کریں</label>
         <input type="file" id="img2pdf-file" accept="image/*" multiple onchange="Tools.loadImagesForPdf(event)">
-        <div class="muted" style="margin-top:4px" data-i18n="img2pdf_hint">منتخب کردہ ترتیب میں ہر تصویر ایک نیا PDF صفحہ بنے گی</div>
+        <div class="muted" style="margin-top:4px" data-i18n="img2pdf_hint">تصاویر منتخب کرنے کے بعد نیچے ترتیب اوپر/نیچے تیر سے بدل سکتے ہیں</div>
+        <div id="img2pdf-preview" class="pdf-order-list"></div>
         <label><span data-i18n="img_quality_label">کوالٹی:</span> <span id="img2pdf-q-val">0.8</span></label>
         <input type="range" id="img2pdf-quality" min="0.2" max="1" step="0.1" value="0.8" oninput="document.getElementById('img2pdf-q-val').textContent=this.value">
         <div class="muted" style="margin-top:4px" data-i18n="img2pdf_quality_hint">کم کوالٹی = چھوٹی فائل سائز</div>
@@ -1421,7 +1431,7 @@ const I18N = {
   pdf2img_error: { ur: 'PDF پروسیس نہیں ہو سکی — فائل درست PDF ہے یا نہیں چیک کریں', en: 'Could not process the PDF — check that the file is a valid PDF' },
 
   tool_img2pdf_title: { ur: 'امیج ٹو PDF', en: 'Image to PDF' },
-  img2pdf_hint: { ur: 'منتخب کردہ ترتیب میں ہر تصویر ایک نیا PDF صفحہ بنے گی', en: 'Each selected image becomes a new PDF page, in the order chosen' },
+  img2pdf_hint: { ur: 'تصاویر منتخب کرنے کے بعد نیچے ترتیب اوپر/نیچے تیر سے بدل سکتے ہیں', en: 'After selecting images, use the up/down arrows below to reorder them' },
   img2pdf_quality_hint: { ur: 'کم کوالٹی = چھوٹی فائل سائز', en: 'Lower quality = smaller file size' },
   tool_pdfcompress_title: { ur: 'PDF سائز کمپریسر', en: 'PDF Size Compressor' },
   pdfcompress_btn: { ur: 'کمپریس کریں', en: 'Compress' },
@@ -2391,7 +2401,40 @@ const Tools = {
 
   // ===== Image to PDF =====
   _imagesForPdf: [],
-  loadImagesForPdf(e){ Tools._imagesForPdf = Array.from(e.target.files || []); },
+  loadImagesForPdf(e){
+    Tools._imagesForPdf = Array.from(e.target.files || []);
+    Tools.renderImg2pdfPreview();
+  },
+  renderImg2pdfPreview(){
+    const box = document.getElementById('img2pdf-preview');
+    if(!box) return;
+    box.innerHTML = '';
+    Tools._imagesForPdf.forEach((file, idx)=>{
+      const url = URL.createObjectURL(file);
+      const row = document.createElement('div');
+      row.className = 'pdf-order-item';
+      row.innerHTML = `
+        <img class="thumb" src="${url}">
+        <div class="meta">${idx+1}. ${file.name}</div>
+        <div class="order-actions">
+          <button type="button" class="btn secondary" onclick="Tools.moveImgForPdf(${idx},-1)" ${idx===0?'disabled':''}>\u2191</button>
+          <button type="button" class="btn secondary" onclick="Tools.moveImgForPdf(${idx},1)" ${idx===Tools._imagesForPdf.length-1?'disabled':''}>\u2193</button>
+          <button type="button" class="btn ghost" onclick="Tools.removeImgForPdf(${idx})">\u2715</button>
+        </div>`;
+      box.appendChild(row);
+    });
+  },
+  moveImgForPdf(idx, dir){
+    const newIdx = idx + dir;
+    if(newIdx < 0 || newIdx >= Tools._imagesForPdf.length) return;
+    const arr = Tools._imagesForPdf;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    Tools.renderImg2pdfPreview();
+  },
+  removeImgForPdf(idx){
+    Tools._imagesForPdf.splice(idx, 1);
+    Tools.renderImg2pdfPreview();
+  },
   async imagesToPdf(){
     if(!Tools._imagesForPdf.length) return;
     const out = document.getElementById('img2pdf-out');
@@ -2467,6 +2510,7 @@ const Tools = {
     Tools._imagesForPdf = [];
     document.getElementById('img2pdf-file').value = '';
     document.getElementById('img2pdf-out').style.display = 'none';
+    document.getElementById('img2pdf-preview').innerHTML = '';
   },
 
   // ===== PDF Size Compressor =====
