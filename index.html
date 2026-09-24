@@ -12,6 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.12.3/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.min.js" onerror="window.__pdfjsLoadFailed=true"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" onerror="window.__jspdfLoadFailed=true"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" onerror="window.__pdflibLoadFailed=true"></script>
 <style>
   :root{
     --bg:#E7E9EC;
@@ -238,6 +239,19 @@
   .todo-item button, .icon-x{
     background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px;
   }
+  .dyn-row{ display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .dyn-row:last-child{ border-bottom:none; }
+  .dyn-row .dyn-credit{ max-width:70px; flex:none; }
+  .dyn-row select{ flex:1; min-width:0; }
+  .dyn-row .icon-x{ flex:none; font-size:15px; }
+  .crop-stage{ position:relative; max-width:100%; margin-top:12px; display:inline-block; touch-action:none; user-select:none; }
+  .crop-stage img{ display:block; max-width:100%; max-height:360px; border-radius:8px; }
+  .crop-box{ position:absolute; border:2px solid var(--blue); box-shadow:0 0 0 9999px rgba(0,0,0,0.4); cursor:move; touch-action:none; }
+  .crop-handle{ position:absolute; width:16px; height:16px; background:var(--blue); border-radius:50%; touch-action:none; border:2px solid #fff; }
+  .crop-handle[data-h="nw"]{ top:-9px; left:-9px; cursor:nwse-resize; }
+  .crop-handle[data-h="ne"]{ top:-9px; right:-9px; cursor:nesw-resize; }
+  .crop-handle[data-h="sw"]{ bottom:-9px; left:-9px; cursor:nesw-resize; }
+  .crop-handle[data-h="se"]{ bottom:-9px; right:-9px; cursor:nwse-resize; }
   .timer-display{
     font-family:var(--font-head); font-size:44px; font-weight:700; text-align:center;
     padding:14px 0 4px;
@@ -311,6 +325,28 @@
   .tool-hint{ font-size:11px; color:var(--text-muted); padding:0 14px 12px; display:none; line-height:1.7; }
   .tool-hint.show{ display:block; }
   .tool-head-actions{ display:flex; align-items:center; gap:6px; flex:none; }
+
+  /* ===== Fancy font, quote card ===== */
+  .fancy-list{ margin-top:10px; }
+  .fancy-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .fancy-row:last-child{ border-bottom:none; }
+  .fancy-main{ flex:1; min-width:0; }
+  .fancy-name{ display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px; direction:ltr; text-align:left; }
+  .fancy-text{
+    display:block; direction:ltr; text-align:left; font-size:17px; line-height:1.5; word-break:break-word;
+    font-family:'Segoe UI Symbol','Noto Sans Math','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols',var(--font-head),sans-serif;
+  }
+  .fancy-row .btn{ flex:none; padding:6px 11px; font-size:11px; }
+  .quote-card{ text-align:center; padding:6px 4px 2px; }
+  .quote-type{ display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px; background:var(--violet-bg); color:var(--violet); margin-bottom:10px; }
+  html[lang="ur"] .quote-type{ font-size:12.5px; }
+  .quote-orig{ direction:rtl; font-size:21px; line-height:2.1; margin-bottom:8px; }
+  .quote-orig.ar{ font-family:'Amiri Quran','Amiri','Scheherazade New','Traditional Arabic','Geeza Pro','Noto Naskh Arabic',serif; font-size:24px; line-height:2; }
+  .quote-orig.ur{ font-family:var(--font-ur), serif; }
+  .quote-text{ font-size:14px; line-height:1.8; margin-bottom:8px; }
+  html[lang="ur"] .quote-text{ font-size:16px; line-height:2.2; }
+  .quote-src{ font-size:11px; color:var(--text-muted); }
+  html[lang="ur"] .quote-src{ font-size:12.5px; }
 
   /* ===== fade-in animation for results ===== */
   @keyframes fadeInResult{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:translateY(0); } }
@@ -431,6 +467,9 @@
 
     .pdf-order-item{ padding:10px; }
     .pdf-order-item img.thumb{ width:56px; height:56px; }
+
+    .dyn-row{ padding:10px 0; font-size:14px; }
+    .worldclock-table td{ padding:9px 6px; }
 
     footer{ margin-top:44px; font-size:12px; max-width:900px; }
   }
@@ -662,6 +701,64 @@
         <div class="btn-row"><button class="btn ghost" onclick="Tools.clearIds(['md-input']); Tools.renderMarkdown()" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
+
+    <div class="tool" data-tool="romanurdu">
+      <button class="tool-head"><span data-i18n="tool_romanurdu_title">رومن اردو سے اردو کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="romanurdu_input_label">رومن اردو ٹائپ کریں</label>
+        <textarea id="romanurdu-input" placeholder="ap kaisay hain?" oninput="Tools.romanToUrdu()"></textarea>
+        <label data-i18n="romanurdu_output_label">اردو نتیجہ</label>
+        <textarea id="romanurdu-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('romanurdu-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['romanurdu-input','romanurdu-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="romanurdu_hint">نوٹ: یہ ایک تخمینی (beta) صوتی کنورٹر ہے، مکمل طور پر درست نہیں ہو سکتا — بھیجنے سے پہلے نتیجہ دیکھ لیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="extract">
+      <button class="tool-head"><span data-i18n="tool_extract_title">ای میل/فون نمبر ایکسٹریکٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="extract_input_label">متن پیسٹ کریں</label>
+        <textarea id="extract-input" placeholder="Paste any text containing emails or phone numbers..."></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.extractContacts()" data-i18n="extract_btn">نکالیں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['extract-input','extract-emails-out','extract-phones-out'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <label data-i18n="extract_emails_label">ای میلز</label>
+        <textarea id="extract-emails-out" readonly placeholder="—"></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('extract-emails-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <label data-i18n="extract_phones_label">فون نمبرز</label>
+        <textarea id="extract-phones-out" readonly placeholder="—"></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('extract-phones-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="muted" style="margin-top:6px" data-i18n="extract_hint">نوٹ: فون نمبر کی شناخت تخمینی ہے — غیر متعلقہ نمبر بھی شامل ہو سکتے ہیں، نتیجہ چیک کر لیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="sigpad">
+      <button class="tool-head"><span data-i18n="tool_sigpad_title">سگنیچر پیڈ</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+          <canvas id="sigpad-canvas" width="320" height="160" style="width:100%;height:160px;display:block;touch-action:none;cursor:crosshair;"></canvas>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn ghost" onclick="Tools.clearSignature()" data-i18n="clear_btn">صاف کریں</button>
+          <button class="btn secondary" onclick="Tools.downloadSignature()" data-i18n="download_btn">ڈاؤن لوڈ کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="sigpad_hint">نوٹ: ماؤس یا انگلی سے خانے میں دستخط بنائیں، پھر PNG کے طور پر محفوظ کریں (پس منظر شفاف ہوگا)۔</div>
+      </div>
+    </div>
+    <div class="tool" data-tool="fancyfont">
+      <button class="tool-head"><span data-i18n="tool_fancyfont_title">فینسی / اسٹائلش فونٹ جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="fancy_label">اپنا انگریزی ٹیکسٹ لکھیں</label>
+        <input type="text" id="fancy-input" dir="ltr" data-i18n-ph="fancy_ph" placeholder="Type something..." oninput="Tools.fancyRender()">
+        <div class="btn-row"><button class="btn ghost" onclick="Tools.clearFancy()" data-i18n="clear_btn">صاف کریں</button></div>
+        <div class="fancy-list" id="fancy-out"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="fancy_hint">نوٹ: یہ اسٹائلز انگریزی حروف اور ہندسوں پر لگتے ہیں (اردو پر نہیں)۔</div>
+      </div>
+    </div>
   </section>
 
   <!-- ============ CALCULATORS ============ -->
@@ -681,6 +778,52 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.bmi()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="bmi-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="idealweight">
+      <button class="tool-head"><span data-i18n="tool_idealweight_title">مثالی وزن / پانی کی ضرورت</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="bmr_gender_label">جنس</label>
+        <select id="iw-gender">
+          <option value="male" data-i18n="bmr_male">مرد</option>
+          <option value="female" data-i18n="bmr_female">عورت</option>
+        </select>
+        <div class="row">
+          <div><label data-i18n="bmi_height_label">قد (سینٹی میٹر)</label><input type="number" id="iw-height" placeholder="170"></div>
+          <div><label data-i18n="iw_weight_label">وزن (کلوگرام، اختیاری)</label><input type="number" id="iw-weight" placeholder="70"></div>
+        </div>
+        <label data-i18n="iw_exercise_label">روزانہ ورزش (منٹ)</label>
+        <input type="number" id="iw-exercise" placeholder="30">
+        <div class="btn-row"><button class="btn" onclick="Tools.idealWeight()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="iw-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="iw_hint">نوٹ: یہ عمومی اندازہ ہے، طبی مشورہ نہیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="bodyfat">
+      <button class="tool-head"><span data-i18n="tool_bodyfat_title">باڈی فیٹ % کیلکولیٹر (US Navy)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="bmr_gender_label">جنس</label>
+        <select id="bf-gender" onchange="Tools.bodyFatGender()">
+          <option value="male" data-i18n="bmr_male">مرد</option>
+          <option value="female" data-i18n="bmr_female">عورت</option>
+        </select>
+        <div class="row">
+          <div><label data-i18n="bmi_height_label">قد (سینٹی میٹر)</label><input type="number" id="bf-height" placeholder="170"></div>
+          <div><label data-i18n="iw_weight_label">وزن (کلوگرام، اختیاری)</label><input type="number" id="bf-weight" placeholder="70"></div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="bf_neck_label">گردن (سینٹی میٹر)</label><input type="number" id="bf-neck" placeholder="37"></div>
+          <div><label data-i18n="bf_waist_label">کمر (سینٹی میٹر)</label><input type="number" id="bf-waist" placeholder="85"></div>
+        </div>
+        <div id="bf-hip-wrap" style="display:none">
+          <label data-i18n="bf_hip_label">کولہے (سینٹی میٹر)</label>
+          <input type="number" id="bf-hip" placeholder="98">
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.bodyFat()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="bf-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="bf_hint">نوٹ: یہ اندازہ ہے، طبی پیمائش نہیں۔</div>
       </div>
     </div>
 
@@ -828,6 +971,149 @@
         <div class="result" id="bmr-out" style="display:none"></div>
       </div>
     </div>
+
+    <div class="tool" data-tool="zakat">
+      <button class="tool-head"><span data-i18n="tool_zakat_title">زکوٰۃ کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="zakat_nisab_label">نصاب کی بنیاد</label>
+        <select id="zakat-nisab">
+          <option value="silver" data-i18n="zakat_nisab_silver">چاندی (612.36 گرام) — کم نصاب</option>
+          <option value="gold" data-i18n="zakat_nisab_gold">سونا (87.48 گرام)</option>
+        </select>
+        <label data-i18n="zakat_gold_g_label">سونا (وزن)</label>
+        <div class="row">
+          <input type="number" id="zakat-gold-g" placeholder="0">
+          <select id="zakat-gold-u">
+              <option value="g" selected>گرام (Gram)</option>
+              <option value="tola">تولہ (Tola)</option>
+              <option value="masha">ماشہ (Masha)</option>
+              <option value="ratti">رتی (Ratti)</option>
+              <option value="mg">ملی گرام (Milligram)</option>
+              <option value="kg">کلوگرام (Kilogram)</option>
+              <option value="ozt">ٹرائے اونس (Troy Ounce)</option>
+          </select>
+        </div>
+        <label data-i18n="zakat_gold_p_label">سونے کی قیمت</label>
+        <div class="row">
+          <input type="number" id="zakat-gold-p" placeholder="0">
+          <select id="zakat-gold-pu">
+              <option value="g" selected>فی گرام (per Gram)</option>
+              <option value="tola">فی تولہ (per Tola)</option>
+              <option value="masha">فی ماشہ (per Masha)</option>
+              <option value="ratti">فی رتی (per Ratti)</option>
+              <option value="ozt">فی ٹرائے اونس (per Troy Ounce)</option>
+          </select>
+        </div>
+        <label data-i18n="zakat_silver_g_label">چاندی (وزن)</label>
+        <div class="row">
+          <input type="number" id="zakat-silver-g" placeholder="0">
+          <select id="zakat-silver-u">
+              <option value="g" selected>گرام (Gram)</option>
+              <option value="tola">تولہ (Tola)</option>
+              <option value="masha">ماشہ (Masha)</option>
+              <option value="ratti">رتی (Ratti)</option>
+              <option value="mg">ملی گرام (Milligram)</option>
+              <option value="kg">کلوگرام (Kilogram)</option>
+              <option value="ozt">ٹرائے اونس (Troy Ounce)</option>
+          </select>
+        </div>
+        <label data-i18n="zakat_silver_p_label">چاندی کی قیمت</label>
+        <div class="row">
+          <input type="number" id="zakat-silver-p" placeholder="0">
+          <select id="zakat-silver-pu">
+              <option value="g" selected>فی گرام (per Gram)</option>
+              <option value="tola">فی تولہ (per Tola)</option>
+              <option value="masha">فی ماشہ (per Masha)</option>
+              <option value="ratti">فی رتی (per Ratti)</option>
+              <option value="ozt">فی ٹرائے اونس (per Troy Ounce)</option>
+          </select>
+        </div>
+        <label data-i18n="zakat_cash_label">نقدی، بینک بیلنس اور دیگر مالیت</label>
+        <input type="number" id="zakat-cash" placeholder="0">
+        <label data-i18n="zakat_debt_label">واجب الادا قرض / اخراجات</label>
+        <input type="number" id="zakat-debt" placeholder="0">
+        <div class="btn-row"><button class="btn" onclick="Tools.zakat()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="zakat-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="zakat_hint">نوٹ: یہ اندازاً حساب ہے — قیمتیں مقامی مارکیٹ کے مطابق خود درج کریں اور حتمی مسئلے میں اپنے مقامی عالم دین سے رہنمائی لیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="gpa">
+      <button class="tool-head"><span data-i18n="tool_gpa_title">GPA / گریڈ کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="gpa_rows_label">ہر کورس کے لیے کریڈٹ آورز اور گریڈ منتخب کریں</label>
+        <div id="gpa-rows"></div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.gpaAddRow()" data-i18n="gpa_add_btn">کورس شامل کریں</button>
+          <button class="btn ghost" onclick="Tools.gpaClear()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="gpa-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="fuel">
+      <button class="tool-head"><span data-i18n="tool_fuel_title">فیول ایوریج کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="fuel_distance_label">سفر کی مسافت (کلومیٹر)</label><input type="number" id="fuel-distance" placeholder="100"></div>
+          <div><label data-i18n="fuel_used_label">استعمال شدہ فیول (لیٹر)</label><input type="number" id="fuel-used" placeholder="8"></div>
+        </div>
+        <label data-i18n="fuel_price_label">فیول کی قیمت فی لیٹر (اختیاری)</label>
+        <input type="number" id="fuel-price" placeholder="0">
+        <div class="btn-row"><button class="btn" onclick="Tools.fuelAvg()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="fuel-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="retirement">
+      <button class="tool-head"><span data-i18n="tool_retirement_title">ریٹائرمنٹ / بچت پلانر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="ret_current_label">موجودہ بچت</label>
+        <input type="number" id="ret-current" placeholder="0">
+        <div class="row">
+          <div><label data-i18n="ret_monthly_label">ماہانہ بچت</label><input type="number" id="ret-monthly" placeholder="10000"></div>
+          <div><label data-i18n="ret_rate_label">متوقع سالانہ منافع (%)</label><input type="number" id="ret-rate" placeholder="10"></div>
+        </div>
+        <label data-i18n="ret_years_label">ریٹائرمنٹ تک باقی سال</label>
+        <input type="number" id="ret-years" placeholder="20">
+        <div class="btn-row"><button class="btn" onclick="Tools.retirementPlan()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="ret-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="ret_hint">نوٹ: یہ اندازہ ہے، اصل منافع مارکیٹ کے حالات پر منحصر ہوگا۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="incometax">
+      <button class="tool-head"><span data-i18n="tool_incometax_title">انکم ٹیکس کیلکولیٹر (تنخواہ دار)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="incometax_period_label">آمدنی کی مدت</label>
+        <select id="incometax-period">
+          <option value="monthly" selected data-i18n="incometax_monthly">ماہانہ تنخواہ</option>
+          <option value="annual" data-i18n="incometax_annual">سالانہ آمدنی</option>
+        </select>
+        <label data-i18n="incometax_amount_label">رقم (PKR)</label>
+        <input type="number" id="incometax-amount" placeholder="150000">
+        <div class="btn-row"><button class="btn" onclick="Tools.incomeTax()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="incometax-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="incometax_hint">نوٹ: یہ حساب صرف تنخواہ دار افراد کے لیے ہے (Tax Year 2027 / FY 2026-27، Finance Act 2026 کے مطابق)۔ غیر تنخواہ دار/کاروباری آمدنی پر مختلف اور عموماً زیادہ (زیادہ سے زیادہ 45%) شرحیں لاگو ہوتی ہیں — قطعی رقم کے لیے FBR یا ٹیکس کنسلٹنٹ سے رجوع کریں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="elecbill">
+      <button class="tool-head"><span data-i18n="tool_elecbill_title">بجلی کے بل کا تخمینہ</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="elecbill_units_label">استعمال شدہ یونٹس</label>
+        <input type="number" id="elecbill-units" min="0" placeholder="300">
+        <label data-i18n="elecbill_rate_label">فی یونٹ ریٹ (PKR)</label>
+        <input type="number" id="elecbill-rate" min="0" step="0.01" placeholder="45">
+        <div class="row">
+          <div><label data-i18n="elecbill_gst_label">جی ایس ٹی (%)</label><input type="number" id="elecbill-gst" min="0" value="17"></div>
+          <div><label data-i18n="elecbill_fixed_label">فکسڈ/میٹر چارجز (PKR)</label><input type="number" id="elecbill-fixed" min="0" value="0"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.electricityBill()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="elecbill-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="elecbill_hint">نوٹ: یہ صرف تخمینہ ہے — اصل بل میں سلیب ریٹس، فیول ایڈجسٹمنٹ اور دیگر سرچارجز شامل ہو سکتے ہیں۔ فی یونٹ ریٹ اپنے DISCO کے موجودہ نرخ نامے سے لیں۔</div>
+      </div>
+    </div>
   </section>
 
   <!-- ============ CONVERTERS / GENERATORS ============ -->
@@ -895,8 +1181,127 @@
         <div class="btn-row">
           <button class="btn" onclick="Tools.genQR()" data-i18n="qr_btn">QR بنائیں</button>
           <button class="btn ghost" onclick="Tools.clearQR()" data-i18n="clear_btn">صاف کریں</button>
+          <button class="btn secondary" onclick="Tools.downloadQR('qrbox','qr-code')" data-i18n="download_btn">ڈاؤن لوڈ کریں</button>
         </div>
         <div id="qrbox"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="hijri">
+      <button class="tool-head"><span data-i18n="tool_hijri_title">ہجری/عیسوی تاریخ کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="mode-row" id="hijri-mode-row">
+          <button class="active" data-mode="g2h" onclick="Tools.hijriMode('g2h')" data-i18n="hijri_mode_g2h">عیسوی سے ہجری</button>
+          <button data-mode="h2g" onclick="Tools.hijriMode('h2g')" data-i18n="hijri_mode_h2g">ہجری سے عیسوی</button>
+        </div>
+        <div id="hijri-g2h-box">
+          <label data-i18n="hijri_greg_date_label">عیسوی تاریخ</label>
+          <input type="date" id="hijri-g-date">
+        </div>
+        <div id="hijri-h2g-box" style="display:none">
+          <div class="row">
+            <div><label data-i18n="hijri_h_day_label">دن</label><input type="number" id="hijri-h-day" min="1" max="30" placeholder="1"></div>
+            <div>
+              <label data-i18n="hijri_h_month_label">مہینہ</label>
+              <select id="hijri-h-month">
+                <option value="1">محرم</option><option value="2">صفر</option><option value="3">ربیع الاول</option>
+                <option value="4">ربیع الثانی</option><option value="5">جمادی الاول</option><option value="6">جمادی الثانی</option>
+                <option value="7">رجب</option><option value="8">شعبان</option><option value="9">رمضان</option>
+                <option value="10">شوال</option><option value="11">ذوالقعدہ</option><option value="12">ذوالحجہ</option>
+              </select>
+            </div>
+          </div>
+          <label data-i18n="hijri_h_year_label">سال</label>
+          <input type="number" id="hijri-h-year" placeholder="1447">
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.hijriConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="hijri-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="hijri_hint">نوٹ: یہ حسابی اسلامی کیلنڈر ہے — چاند دیکھنے پر مبنی سرکاری اعلان سے ایک دن آگے پیچھے ہو سکتا ہے۔ دیسی مہینہ تخمینی تاریخوں پر مبنی ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="prayertimes">
+      <button class="tool-head"><span data-i18n="tool_prayer_title">نماز کے اوقات کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="prayer_city_label">شہر</label>
+        <select id="prayer-city">
+          <option value="Karachi" data-lat="24.8607" data-lng="67.0011" data-tz="5">کراچی</option>
+          <option value="Lahore" data-lat="31.5497" data-lng="74.3436" data-tz="5">لاہور</option>
+          <option value="Islamabad" data-lat="33.6844" data-lng="73.0479" data-tz="5">اسلام آباد</option>
+          <option value="Faisalabad" data-lat="31.4504" data-lng="73.1350" data-tz="5">فیصل آباد</option>
+          <option value="Rawalpindi" data-lat="33.5651" data-lng="73.0169" data-tz="5">راولپنڈی</option>
+          <option value="Multan" data-lat="30.1575" data-lng="71.5249" data-tz="5">ملتان</option>
+          <option value="Peshawar" data-lat="34.0151" data-lng="71.5249" data-tz="5">پشاور</option>
+          <option value="Quetta" data-lat="30.1798" data-lng="66.9750" data-tz="5">کوئٹہ</option>
+          <option value="Gujranwala" data-lat="32.1877" data-lng="74.1945" data-tz="5">گوجرانوالہ</option>
+          <option value="Sialkot" data-lat="32.4945" data-lng="74.5229" data-tz="5">سیالکوٹ</option>
+          <option value="Hyderabad" data-lat="25.3960" data-lng="68.3578" data-tz="5">حیدرآباد</option>
+          <option value="Bahawalpur" data-lat="29.3956" data-lng="71.6836" data-tz="5">بہاولپور</option>
+        </select>
+        <label data-i18n="prayer_date_label">تاریخ</label>
+        <input type="date" id="prayer-date">
+        <label data-i18n="prayer_asr_label">عصر کا طریقہ</label>
+        <select id="prayer-asr">
+          <option value="1" data-i18n="prayer_asr_hanafi">حنفی</option>
+          <option value="0" data-i18n="prayer_asr_standard">شافعی/عام</option>
+        </select>
+        <div class="btn-row"><button class="btn" onclick="Tools.prayerTimes()" data-i18n="calc_btn">حساب کریں</button></div>
+        <table class="worldclock-table" id="prayer-table" style="display:none"></table>
+        <div class="muted" style="margin-top:6px" data-i18n="prayer_hint">نوٹ: یہ فلکیاتی حساب سے اندازاً اوقات ہیں (فجر/عشاء زاویہ: 18°) — مقامی مسجد کے اعلان کردہ اوقات کو ترجیح دیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="speedconv">
+      <button class="tool-head"><span data-i18n="tool_speed_title">رفتار کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="unit_from_label">سے</label><select id="speed-from"></select></div>
+          <div><label data-i18n="unit_to_label">تک</label><select id="speed-to"></select></div>
+        </div>
+        <label data-i18n="unit_value_label">ویلیو</label>
+        <input type="number" id="speed-val" placeholder="1">
+        <div class="btn-row"><button class="btn" onclick="Tools.speedConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="speed-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="datastorage">
+      <button class="tool-head"><span data-i18n="tool_datastorage_title">ڈیٹا اسٹوریج کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="ds-from">
+              <option value="B">Byte</option><option value="KB">KB</option><option value="MB" selected>MB</option>
+              <option value="GB">GB</option><option value="TB">TB</option><option value="PB">PB</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="ds-to">
+              <option value="B">Byte</option><option value="KB">KB</option><option value="MB">MB</option>
+              <option value="GB" selected>GB</option><option value="TB">TB</option><option value="PB">PB</option>
+            </select>
+          </div>
+        </div>
+        <label data-i18n="unit_value_label">ویلیو</label>
+        <input type="number" id="ds-val" placeholder="1">
+        <div class="btn-row"><button class="btn" onclick="Tools.dataStorageConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="ds-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="romannum">
+      <button class="tool-head"><span data-i18n="tool_roman_title">رومن نمرلز کنورٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="roman_num_label">عدد (1–3999)</label>
+        <input type="number" id="roman-num" min="1" max="3999" placeholder="1994">
+        <div class="btn-row"><button class="btn" onclick="Tools.numToRoman()" data-i18n="roman_to_roman_btn">رومن میں بدلیں</button></div>
+        <div class="result" id="roman-out1" style="display:none"></div>
+        <label style="margin-top:16px" data-i18n="roman_input_label">رومن نمبر لکھیں</label>
+        <input type="text" id="roman-input" placeholder="MCMXCIV" style="text-transform:uppercase">
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.romanToNum()" data-i18n="roman_to_num_btn">عدد میں بدلیں</button></div>
+        <div class="result" id="roman-out2" style="display:none"></div>
       </div>
     </div>
 
@@ -1079,8 +1484,203 @@
         <div class="btn-row">
           <button class="btn" onclick="Tools.genBarcode()" data-i18n="barcode_btn">بارکوڈ بنائیں</button>
           <button class="btn ghost" onclick="Tools.clearBarcode()" data-i18n="clear_btn">صاف کریں</button>
+          <button class="btn secondary" onclick="Tools.downloadBarcode()" data-i18n="download_btn">ڈاؤن لوڈ کریں</button>
         </div>
         <div id="barcode-box" style="margin-top:12px; display:flex; justify-content:center; background:#fff; border-radius:6px; padding:8px;"><svg id="barcode-svg"></svg></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="areaconv">
+      <button class="tool-head"><span data-i18n="tool_areaconv_title">مرلہ/کنال کنورٹر (رقبہ)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="area-from">
+              <option value="marla">مرلہ (Marla)</option>
+              <option value="kanal">کنال (Kanal)</option>
+              <option value="sqft" selected>مربع فٹ (Sq. Ft)</option>
+              <option value="sqyd">مربع گز (Sq. Yard)</option>
+              <option value="acre">ایکڑ (Acre)</option>
+              <option value="sqm">مربع میٹر (Sq. Meter)</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="area-to">
+              <option value="marla" selected>مرلہ (Marla)</option>
+              <option value="kanal">کنال (Kanal)</option>
+              <option value="sqft">مربع فٹ (Sq. Ft)</option>
+              <option value="sqyd">مربع گز (Sq. Yard)</option>
+              <option value="acre">ایکڑ (Acre)</option>
+              <option value="sqm">مربع میٹر (Sq. Meter)</option>
+            </select>
+          </div>
+        </div>
+        <label data-i18n="unit_value_label">ویلیو</label>
+        <input type="number" id="area-val" placeholder="5">
+        <div class="btn-row"><button class="btn" onclick="Tools.areaConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="area-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="areaconv_hint">نوٹ: 1 مرلہ = 225 مربع فٹ، 1 کنال = 20 مرلہ (پاکستان کا عام معیاری حساب) — کچھ علاقوں میں مقامی فرق ہو سکتا ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="goldconv">
+      <button class="tool-head"><span data-i18n="tool_goldconv_title">سونا / چاندی وزن کنورٹر (تولہ، ماشہ)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div>
+            <label data-i18n="unit_from_label">سے</label>
+            <select id="gold-from">
+              <option value="tola" selected>تولہ (Tola)</option>
+              <option value="masha">ماشہ (Masha)</option>
+              <option value="ratti">رتی (Ratti)</option>
+              <option value="g">گرام (Gram)</option>
+              <option value="mg">ملی گرام (Milligram)</option>
+              <option value="kg">کلوگرام (Kilogram)</option>
+              <option value="ozt">ٹرائے اونس (Troy Ounce)</option>
+              <option value="oz">اونس (Ounce)</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="unit_to_label">تک</label>
+            <select id="gold-to">
+              <option value="tola">تولہ (Tola)</option>
+              <option value="masha">ماشہ (Masha)</option>
+              <option value="ratti">رتی (Ratti)</option>
+              <option value="g" selected>گرام (Gram)</option>
+              <option value="mg">ملی گرام (Milligram)</option>
+              <option value="kg">کلوگرام (Kilogram)</option>
+              <option value="ozt">ٹرائے اونس (Troy Ounce)</option>
+              <option value="oz">اونس (Ounce)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="unit_value_label">ویلیو</label><input type="number" id="gold-val" placeholder="1"></div>
+          <div><label data-i18n="gold_price_label">فی تولہ قیمت (اختیاری)</label><input type="number" id="gold-price" placeholder="PKR"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.goldConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <div class="result" id="gold-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="gold_hint">نوٹ: 1 تولہ = 11.664 گرام = 12 ماشہ، 1 ماشہ = 8 رتی۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="qibla">
+      <button class="tool-head"><span data-i18n="tool_qibla_title">قبلہ ڈائریکشن</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="prayer_city_label">شہر</label>
+        <select id="qibla-city" onchange="Tools.qiblaCityChange()">
+          <option value="Karachi" data-lat="24.8607" data-lng="67.0011">کراچی</option>
+          <option value="Lahore" data-lat="31.5497" data-lng="74.3436">لاہور</option>
+          <option value="Islamabad" data-lat="33.6844" data-lng="73.0479">اسلام آباد</option>
+          <option value="Faisalabad" data-lat="31.4504" data-lng="73.1350">فیصل آباد</option>
+          <option value="Rawalpindi" data-lat="33.5651" data-lng="73.0169">راولپنڈی</option>
+          <option value="Multan" data-lat="30.1575" data-lng="71.5249">ملتان</option>
+          <option value="Peshawar" data-lat="34.0151" data-lng="71.5249">پشاور</option>
+          <option value="Quetta" data-lat="30.1798" data-lng="66.9750">کوئٹہ</option>
+          <option value="Gujranwala" data-lat="32.1877" data-lng="74.1945">گوجرانوالہ</option>
+          <option value="Sialkot" data-lat="32.4945" data-lng="74.5229">سیالکوٹ</option>
+          <option value="Hyderabad" data-lat="25.3960" data-lng="68.3578">حیدرآباد</option>
+          <option value="Bahawalpur" data-lat="29.3956" data-lng="71.6836">بہاولپور</option>
+          <option value="manual" data-i18n="qibla_manual_opt">دیگر (لیٹیٹیوڈ/لانگیٹیوڈ خود درج کریں)</option>
+        </select>
+        <div id="qibla-manual-box" style="display:none">
+          <div class="row">
+            <div><label data-i18n="qibla_lat_label">لیٹیٹیوڈ</label><input type="number" id="qibla-lat" step="0.0001" placeholder="24.8607"></div>
+            <div><label data-i18n="qibla_lng_label">لانگیٹیوڈ</label><input type="number" id="qibla-lng" step="0.0001" placeholder="67.0011"></div>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.qiblaCalc()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="qibla-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="qibla_hint">نوٹ: زاویہ شمال (North) سے گھڑی کی سمت میں ناپا گیا ہے — قطب نما (compass) کے ساتھ ملائیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="cnic">
+      <button class="tool-head"><span data-i18n="tool_cnic_title">CNIC نمبر فارمیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cnic_label">CNIC نمبر (صرف ہندسے، 13 عدد)</label>
+        <input type="text" id="cnic-input" inputmode="numeric" maxlength="13" placeholder="3520112345671" oninput="Tools.formatCNIC()">
+        <input type="text" id="cnic-out" readonly style="margin-top:10px;font-size:15px;text-align:center">
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('cnic-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="mobnet">
+      <button class="tool-head"><span data-i18n="tool_mobnet_title">موبائل نیٹ ورک شناخت کار</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="mobnet_label">موبائل نمبر</label>
+        <input type="text" id="mobnet-input" inputmode="numeric" maxlength="11" placeholder="03001234567">
+        <div class="btn-row"><button class="btn" onclick="Tools.detectNetwork()" data-i18n="mobnet_btn">نیٹ ورک معلوم کریں</button></div>
+        <div class="result" id="mobnet-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="mobnet_hint">نوٹ: پورٹ (منتقل) شدہ نمبروں کا اصل نیٹ ورک مختلف ہو سکتا ہے — یہ صرف اصل جاری کنندہ نیٹ ورک کا اندازہ ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="vcard">
+      <button class="tool-head"><span data-i18n="tool_vcard_title">vCard QR (کانٹیکٹ کارڈ)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="vcard_name_label">نام</label>
+        <input type="text" id="vcard-name" placeholder="Ali Khan">
+        <label data-i18n="vcard_phone_label">فون نمبر</label>
+        <input type="text" id="vcard-phone" placeholder="03001234567">
+        <label data-i18n="vcard_email_label">ای میل (اختیاری)</label>
+        <input type="email" id="vcard-email" placeholder="ali@example.com">
+        <label data-i18n="vcard_org_label">ادارہ (اختیاری)</label>
+        <input type="text" id="vcard-org" placeholder="Company Name">
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.genVCardQR()" data-i18n="qr_btn">QR بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearVCardQR()" data-i18n="clear_btn">صاف کریں</button>
+          <button class="btn secondary" onclick="Tools.downloadQR('vcardqrbox','vcard-qr')" data-i18n="download_btn">ڈاؤن لوڈ کریں</button>
+        </div>
+        <div id="vcardqrbox"></div>
+      </div>
+    </div>
+    <div class="tool" data-tool="wapp">
+      <button class="tool-head"><span data-i18n="tool_wapp_title">واٹس ایپ چیٹ لنک جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div>
+            <label data-i18n="wapp_country_label">ملک کا کوڈ</label>
+            <select id="wapp-cc">
+              <option value="92" data-len="10" selected>پاکستان (Pakistan) +92</option>
+              <option value="91" data-len="10">بھارت (India) +91</option>
+              <option value="966" data-len="9">سعودی عرب (Saudi Arabia) +966</option>
+              <option value="971" data-len="9">متحدہ عرب امارات (UAE) +971</option>
+              <option value="44" data-len="10">برطانیہ (UK) +44</option>
+              <option value="1" data-len="10">امریکہ/کینیڈا (US/Canada) +1</option>
+              <option value="880" data-len="10">بنگلہ دیش (Bangladesh) +880</option>
+              <option value="93" data-len="9">افغانستان (Afghanistan) +93</option>
+              <option value="98" data-len="10">ایران (Iran) +98</option>
+              <option value="90" data-len="10">ترکی (Turkey) +90</option>
+              <option value="974" data-len="8">قطر (Qatar) +974</option>
+              <option value="968" data-len="8">عمان (Oman) +968</option>
+              <option value="965" data-len="8">کویت (Kuwait) +965</option>
+              <option value="973" data-len="8">بحرین (Bahrain) +973</option>
+              <option value="" data-len="0" data-i18n="wapp_nocode">کوڈ پہلے سے شامل ہے</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="wapp_phone_label">فون نمبر</label>
+            <input type="text" id="wapp-phone" inputmode="tel" dir="ltr" placeholder="0300 1234567">
+          </div>
+        </div>
+        <label data-i18n="wapp_msg_label">پہلے سے لکھا پیغام (اختیاری)</label>
+        <textarea id="wapp-msg" data-i18n-ph="wapp_msg_ph" placeholder="Hello! I saw your ad..."></textarea>
+        <div class="result" id="wapp-box" style="display:none">
+          <label data-i18n="wapp_link_label">آپ کا لنک</label>
+          <input type="text" id="wapp-out" dir="ltr" readonly>
+          <div class="btn-row">
+            <button class="btn secondary" onclick="Tools.copyText(document.getElementById('wapp-out').value, this)" data-i18n="copy_btn">کاپی کریں</button>
+            <button class="btn" onclick="Tools.wappOpen()" data-i18n="wapp_open_btn">چیٹ کھولیں</button>
+            <button class="btn secondary" onclick="Tools.wappQR()" data-i18n="qr_btn">QR بنائیں</button>
+            <button class="btn secondary" onclick="Tools.downloadQR('wappqrbox','whatsapp-chat-qr')" data-i18n="download_btn">ڈاؤن لوڈ کریں</button>
+          </div>
+          <div id="wappqrbox" style="margin-top:12px;display:flex;justify-content:center"></div>
+        </div>
+        <div class="result" id="wapp-err" style="display:none"><span class="muted" data-i18n="wapp_invalid">درست فون نمبر درج کریں۔</span></div>
+        <div class="muted" style="margin-top:6px" data-i18n="wapp_hint">نوٹ: نمبر 0300 1234567 کی طرح لکھ سکتے ہیں۔</div>
       </div>
     </div>
   </section>
@@ -1091,7 +1691,7 @@
       <span class="badge" style="background:var(--coral-bg);color:var(--coral)">04</span>
       <h2 data-i18n="cat4_title">امیج ٹولز</h2>
     </div>
-    <p class="cat-desc" data-i18n="cat4_desc">امیج کمپریس، ری سائز اور بیس64 میں تبدیل کریں — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔</p>
+    <p class="cat-desc" data-i18n="cat4_desc">امیج کمپریس، کراپ، روٹیٹ، واٹرمارک، میم اور مزید — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔</p>
 
     <div class="tool" data-tool="imgcompress">
       <button class="tool-head"><span data-i18n="tool_imgcompress_title">امیج کمپریسر / ری سائزر</span><span class="plus">+</span></button>
@@ -1135,6 +1735,118 @@
           <button class="btn ghost" onclick="Tools.clearImageFormat()" data-i18n="clear_btn">صاف کریں</button>
         </div>
         <div class="muted" style="margin-top:6px" data-i18n="imgformat_hint">نوٹ: GIF ان پٹ کے طور پر قابلِ قبول ہے، لیکن براؤزر کی حد کے باعث نئی فائل GIF فارمیٹ میں نہیں بنائی جا سکتی — صرف JPG، PNG یا WEBP آؤٹ پٹ ممکن ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="imgcrop">
+      <button class="tool-head"><span data-i18n="tool_imgcrop_title">امیج کراپر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="imgcrop-file" accept="image/*" onchange="Tools.loadImageForCrop(event)">
+        <div class="muted" style="margin-top:4px" data-i18n="imgcrop_hint">کراپ باکس کو گھسیٹیں یا کونوں سے سائز بدلیں</div>
+        <div id="imgcrop-stage" class="crop-stage" style="display:none">
+          <img id="imgcrop-img" draggable="false" alt="">
+          <div id="imgcrop-box" class="crop-box">
+            <span class="crop-handle" data-h="nw"></span>
+            <span class="crop-handle" data-h="ne"></span>
+            <span class="crop-handle" data-h="sw"></span>
+            <span class="crop-handle" data-h="se"></span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.cropImage()" data-i18n="imgcrop_btn">کراپ کر کے محفوظ کریں</button>
+          <button class="btn ghost" onclick="Tools.clearImageCrop()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="imgcrop-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="imgrotate">
+      <button class="tool-head"><span data-i18n="tool_imgrotate_title">امیج روٹیٹر/فلپر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="imgrotate-file" accept="image/*" onchange="Tools.loadImageForRotate(event)">
+        <div id="imgrotate-preview-wrap" style="display:none; text-align:center; margin-top:12px;">
+          <canvas id="imgrotate-canvas" style="max-width:100%; max-height:320px; border-radius:8px;"></canvas>
+        </div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.rotateImage(-90)" data-i18n="imgrotate_ccw_btn">\u21B6 90° بائیں</button>
+          <button class="btn secondary" onclick="Tools.rotateImage(90)" data-i18n="imgrotate_cw_btn">\u21B7 90° دائیں</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.flipImage('h')" data-i18n="imgrotate_fliph_btn">\u2194 افقی فلپ</button>
+          <button class="btn secondary" onclick="Tools.flipImage('v')" data-i18n="imgrotate_flipv_btn">\u2195 عمودی فلپ</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.downloadRotatedImage()" data-i18n="imgrotate_download_btn">محفوظ کریں</button>
+          <button class="btn ghost" onclick="Tools.clearImageRotate()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="imgrotate-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="watermark">
+      <button class="tool-head"><span data-i18n="tool_watermark_title">واٹرمارک شامل کریں</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="watermark-file" accept="image/*" onchange="Tools.loadImageForWatermark(event)">
+        <label data-i18n="watermark_text_label">واٹرمارک ٹیکسٹ</label>
+        <input type="text" id="watermark-text" placeholder="© آپ کا نام" oninput="Tools.renderWatermark()">
+        <div class="row">
+          <div>
+            <label><span data-i18n="watermark_size_label">فونٹ سائز:</span> <span id="watermark-size-val">36</span></label>
+            <input type="range" id="watermark-size" min="10" max="120" value="36" oninput="document.getElementById('watermark-size-val').textContent=this.value; Tools.renderWatermark()">
+          </div>
+          <div>
+            <label><span data-i18n="watermark_opacity_label">شفافیت:</span> <span id="watermark-opacity-val">0.5</span></label>
+            <input type="range" id="watermark-opacity" min="0.1" max="1" step="0.05" value="0.5" oninput="document.getElementById('watermark-opacity-val').textContent=this.value; Tools.renderWatermark()">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label data-i18n="watermark_color_label">رنگ</label>
+            <input type="color" id="watermark-color" value="#ffffff" oninput="Tools.renderWatermark()">
+          </div>
+          <div>
+            <label data-i18n="watermark_pos_label">پوزیشن</label>
+            <select id="watermark-pos" onchange="Tools.renderWatermark()">
+              <option value="center" data-i18n="watermark_pos_center">درمیان</option>
+              <option value="tl" data-i18n="watermark_pos_tl">اوپر بائیں</option>
+              <option value="tr" data-i18n="watermark_pos_tr">اوپر دائیں</option>
+              <option value="bl" data-i18n="watermark_pos_bl">نیچے بائیں</option>
+              <option value="br" selected data-i18n="watermark_pos_br">نیچے دائیں</option>
+              <option value="tile" data-i18n="watermark_pos_tile">پوری تصویر پر (Tile)</option>
+            </select>
+          </div>
+        </div>
+        <div id="watermark-preview-wrap" style="display:none; text-align:center; margin-top:12px;">
+          <canvas id="watermark-canvas" style="max-width:100%; max-height:320px; border-radius:8px;"></canvas>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.downloadWatermark()" data-i18n="watermark_download_btn">محفوظ کریں</button>
+          <button class="btn ghost" onclick="Tools.clearWatermark()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="watermark-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="memegen">
+      <button class="tool-head"><span data-i18n="tool_memegen_title">میم جنریٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="memegen-file" accept="image/*" onchange="Tools.loadImageForMeme(event)">
+        <label data-i18n="memegen_top_label">اوپر کا ٹیکسٹ</label>
+        <input type="text" id="memegen-top" oninput="Tools.renderMeme()">
+        <label data-i18n="memegen_bottom_label">نیچے کا ٹیکسٹ</label>
+        <input type="text" id="memegen-bottom" oninput="Tools.renderMeme()">
+        <div id="memegen-preview-wrap" style="display:none; text-align:center; margin-top:12px;">
+          <canvas id="memegen-canvas" style="max-width:100%; max-height:360px; border-radius:8px;"></canvas>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.downloadMeme()" data-i18n="memegen_download_btn">محفوظ کریں</button>
+          <button class="btn ghost" onclick="Tools.clearMeme()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="memegen-out" style="display:none"></div>
       </div>
     </div>
 
@@ -1184,6 +1896,55 @@
         </div>
         <div class="result" id="pdfcompress-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="pdfcompress_hint">نوٹ: ہر صفحہ تصویر میں بدل کر دوبارہ کمپریس ہوتا ہے — متن سلیکٹ ایبل نہیں رہے گا، لیکن سائز میں نمایاں کمی آتی ہے، خاص طور پر اسکینڈ/تصویری PDFs میں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pdfmerge">
+      <button class="tool-head"><span data-i18n="tool_pdfmerge_title">PDF ملانا (Merge)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pdfmerge_select_label">PDF فائلیں منتخب کریں (ایک سے زیادہ)</label>
+        <input type="file" id="pdfmerge-file" accept="application/pdf" multiple onchange="Tools.loadPdfsForMerge(event)">
+        <div class="muted" style="margin-top:4px" data-i18n="img2pdf_hint">ترتیب بدلنے کے لیے ⠿ آئیکن کو پکڑ کر گھسیٹیں، یا اوپر/نیچے تیر استعمال کریں</div>
+        <div id="pdfmerge-preview" class="pdf-order-list"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.mergePdfs()" data-i18n="pdfmerge_btn">ملا کر PDF بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearPdfMerge()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="pdfmerge-out" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pdfsplit">
+      <button class="tool-head"><span data-i18n="tool_pdfsplit_title">PDF تقسیم کرنا (Split)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pdf2img_select_label">PDF فائل منتخب کریں</label>
+        <input type="file" id="pdfsplit-file" accept="application/pdf" onchange="Tools.loadPdfForSplit(event)">
+        <div class="muted" id="pdfsplit-info" style="margin-top:4px"></div>
+        <label data-i18n="pdfsplit_range_label">صفحات کی رینج (مثلاً 1-3,5,8-10)</label>
+        <input type="text" id="pdfsplit-range" placeholder="1-3,5,8-10">
+        <div class="btn-row"><button class="btn" onclick="Tools.splitPdfRange()" data-i18n="pdfsplit_extract_btn">منتخب صفحات نکالیں</button></div>
+        <div class="result" id="pdfsplit-out" style="display:none"></div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn secondary" onclick="Tools.splitPdfAllPages()" data-i18n="pdfsplit_all_btn">ہر صفحہ الگ PDF میں (ZIP)</button>
+          <button class="btn ghost" onclick="Tools.clearPdfSplit()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="pdfsplit-out2" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pdfreorder">
+      <button class="tool-head"><span data-i18n="tool_pdfreorder_title">PDF صفحات ترتیب/حذف</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pdf2img_select_label">PDF فائل منتخب کریں</label>
+        <input type="file" id="pdfreorder-file" accept="application/pdf" onchange="Tools.loadPdfForReorder(event)">
+        <div class="muted" style="margin-top:4px" data-i18n="img2pdf_hint">ترتیب بدلنے کے لیے ⠿ آئیکن کو پکڑ کر گھسیٹیں، یا اوپر/نیچے تیر استعمال کریں</div>
+        <div class="muted" id="pdfreorder-loading" style="display:none" data-i18n="pdfreorder_loading">صفحات لوڈ ہو رہے ہیں…</div>
+        <div id="pdfreorder-preview" class="pdf-order-list"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.savePdfReorder()" data-i18n="pdfreorder_save_btn">نئی PDF بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearPdfReorder()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="pdfreorder-out" style="display:none"></div>
       </div>
     </div>
 
@@ -1253,6 +2014,49 @@
         <div class="btn-row"><button class="btn ghost" onclick="Tools.clearNotes()" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
+
+    <div class="tool" data-tool="tasbih">
+      <button class="tool-head"><span data-i18n="tool_tasbih_title">تسبیح کاؤنٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="tasbih_target_label">ٹارگٹ</label>
+        <select id="tasbih-target" onchange="Tools.tasbihSetTarget()">
+          <option value="33">33</option>
+          <option value="99" selected>99</option>
+          <option value="100">100</option>
+          <option value="1000">1000</option>
+        </select>
+        <div style="text-align:center; margin-top:16px;">
+          <div id="tasbih-count" style="font-family:var(--font-mono); font-size:56px; font-weight:700; color:var(--blue);">0</div>
+          <div class="muted" id="tasbih-progress">0 / 99</div>
+          <button class="btn" style="width:100%; padding:22px; margin-top:14px; font-size:18px;" onclick="Tools.tasbihTap()" data-i18n="tasbih_tap_btn">تسبیح کے لیے یہاں ٹیپ کریں</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.tasbihUndo()" data-i18n="tasbih_undo_btn">ایک کم کریں</button>
+          <button class="btn ghost" onclick="Tools.tasbihReset()" data-i18n="tasbih_reset_btn">ری سیٹ کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" id="tasbih-rounds"></div>
+      </div>
+    </div>
+    <div class="tool" data-tool="quote">
+      <button class="tool-head"><span data-i18n="tool_quote_title">روزانہ اقتباس / حدیث</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="quote_type_label">قسم</label>
+        <select id="quote-type" onchange="Tools.quoteToday()">
+          <option value="all" data-i18n="quote_type_all">سب</option>
+          <option value="hadith" data-i18n="quote_type_hadith">حدیث</option>
+          <option value="quran" data-i18n="quote_type_quran">قرآنی آیت</option>
+          <option value="quote" data-i18n="quote_type_quote">اقتباس</option>
+        </select>
+        <div class="result" id="quote-out" style="display:block"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.quoteRandom()" data-i18n="quote_random_btn">نیا اقتباس</button>
+          <button class="btn secondary" onclick="Tools.quoteToday()" data-i18n="quote_today_btn">آج کا اقتباس</button>
+          <button class="btn secondary" onclick="Tools.quoteCopy(this)" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn secondary" onclick="Tools.quoteShare()" data-i18n="quote_share_btn">واٹس ایپ پر شیئر کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="quote_hint">نوٹ: احادیث کے حوالے کتاب کے نام کے ساتھ دیے گئے ہیں۔</div>
+      </div>
+    </div>
   </section>
   </div>
   </div>
@@ -1262,7 +2066,7 @@
     <button onclick="Tools.undoLast()" data-i18n="undo_btn">Undo</button>
   </div>
 
-  <footer data-i18n="footer_text">15 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
+  <footer data-i18n="footer_text">75 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
 </div>
 
 <script>
@@ -1284,7 +2088,7 @@ const I18N = {
   cat3_title: { ur: 'کنورٹرز اینڈ جنریٹرز', en: 'Converters & Generators' },
   cat3_desc: { ur: 'یونٹس بدلیں، پاسورڈ بنائیں، QR کوڈز اور رنگ پیلٹ تیار کریں۔', en: 'Convert units, generate passwords, QR codes, and color palettes.' },
   cat4_title: { ur: 'امیج ٹولز', en: 'Image Tools' },
-  cat4_desc: { ur: 'امیج کمپریس، ری سائز اور بیس64 میں تبدیل کریں — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔', en: 'Compress, resize, and convert images to Base64 — all in your browser, nothing uploaded anywhere.' },
+  cat4_desc: { ur: 'امیج کمپریس، کراپ، روٹیٹ، واٹرمارک، میم اور مزید — سب کچھ آپ کے براؤزر میں، کہیں اپلوڈ نہیں ہوتا۔', en: 'Compress, crop, rotate, watermark, make memes and more — all in your browser, nothing uploaded anywhere.' },
   cat5_title: { ur: 'پروڈکٹیوٹی', en: 'Productivity' },
   cat5_desc: { ur: 'روزانہ کام آسان بنانے والے ٹولز — یہ ڈیٹا صرف آپ کے اس براؤزر میں محفوظ رہتا ہے۔', en: 'Tools to make your day easier — this data stays only in this browser.' },
 
@@ -1299,6 +2103,8 @@ const I18N = {
   case_result_label: { ur: 'نتیجہ', en: 'Result' },
   copy_btn: { ur: 'کاپی کریں', en: 'Copy' },
   clear_btn: { ur: 'صاف کریں', en: 'Clear' },
+  download_btn: { ur: 'ڈاؤن لوڈ کریں', en: 'Download' },
+  download_empty: { ur: 'پہلے QR کوڈ بنائیں', en: 'Generate a QR code first' },
 
   tool_fr_title: { ur: 'فائنڈ اینڈ ریپلیس', en: 'Find & Replace' },
   fr_original_label: { ur: 'اصل ٹیکسٹ', en: 'Original text' },
@@ -1484,6 +2290,44 @@ const I18N = {
   imgformat_btn: { ur: 'تبدیل کریں', en: 'Convert' },
   imgformat_hint: { ur: 'نوٹ: GIF ان پٹ کے طور پر قابلِ قبول ہے، لیکن براؤزر کی حد کے باعث نئی فائل GIF فارمیٹ میں نہیں بنائی جا سکتی — صرف JPG، PNG یا WEBP آؤٹ پٹ ممکن ہے۔', en: 'Note: GIF is accepted as input, but due to browser limitations the output cannot be a new GIF file — only JPG, PNG, or WEBP output is possible.' },
 
+  tool_imgcrop_title: { ur: 'امیج کراپر', en: 'Image Cropper' },
+  imgcrop_hint: { ur: 'کراپ باکس کو گھسیٹیں یا کونوں سے سائز بدلیں', en: 'Drag the crop box, or resize it from the corners' },
+  imgcrop_btn: { ur: 'کراپ کر کے محفوظ کریں', en: 'Crop and save' },
+  imgcrop_done: { ur: 'کراپ شدہ تصویر تیار ہے', en: 'Cropped image is ready' },
+  imgcrop_error: { ur: 'تصویر کراپ نہیں ہو سکی', en: 'Could not crop the image' },
+
+  tool_imgrotate_title: { ur: 'امیج روٹیٹر/فلپر', en: 'Image Rotator/Flipper' },
+  imgrotate_ccw_btn: { ur: '\u21B6 90° بائیں', en: '\u21B6 Rotate 90° left' },
+  imgrotate_cw_btn: { ur: '\u21B7 90° دائیں', en: '\u21B7 Rotate 90° right' },
+  imgrotate_fliph_btn: { ur: '\u2194 افقی فلپ', en: '\u2194 Flip horizontal' },
+  imgrotate_flipv_btn: { ur: '\u2195 عمودی فلپ', en: '\u2195 Flip vertical' },
+  imgrotate_download_btn: { ur: 'محفوظ کریں', en: 'Save' },
+  imgrotate_done: { ur: 'تصویر تیار ہے', en: 'Image is ready' },
+  imgrotate_error: { ur: 'تصویر محفوظ نہیں ہو سکی', en: 'Could not save the image' },
+
+  tool_watermark_title: { ur: 'واٹرمارک شامل کریں', en: 'Add Watermark' },
+  watermark_text_label: { ur: 'واٹرمارک ٹیکسٹ', en: 'Watermark text' },
+  watermark_size_label: { ur: 'فونٹ سائز:', en: 'Font size:' },
+  watermark_opacity_label: { ur: 'شفافیت:', en: 'Opacity:' },
+  watermark_color_label: { ur: 'رنگ', en: 'Color' },
+  watermark_pos_label: { ur: 'پوزیشن', en: 'Position' },
+  watermark_pos_center: { ur: 'درمیان', en: 'Center' },
+  watermark_pos_tl: { ur: 'اوپر بائیں', en: 'Top left' },
+  watermark_pos_tr: { ur: 'اوپر دائیں', en: 'Top right' },
+  watermark_pos_bl: { ur: 'نیچے بائیں', en: 'Bottom left' },
+  watermark_pos_br: { ur: 'نیچے دائیں', en: 'Bottom right' },
+  watermark_pos_tile: { ur: 'پوری تصویر پر (Tile)', en: 'Tiled across image' },
+  watermark_download_btn: { ur: 'محفوظ کریں', en: 'Save' },
+  watermark_done: { ur: 'تصویر تیار ہے', en: 'Image is ready' },
+  watermark_error: { ur: 'تصویر محفوظ نہیں ہو سکی', en: 'Could not save the image' },
+
+  tool_memegen_title: { ur: 'میم جنریٹر', en: 'Meme Generator' },
+  memegen_top_label: { ur: 'اوپر کا ٹیکسٹ', en: 'Top text' },
+  memegen_bottom_label: { ur: 'نیچے کا ٹیکسٹ', en: 'Bottom text' },
+  memegen_download_btn: { ur: 'محفوظ کریں', en: 'Save' },
+  memegen_done: { ur: 'میم تیار ہے', en: 'Meme is ready' },
+  memegen_error: { ur: 'میم محفوظ نہیں ہو سکی', en: 'Could not save the meme' },
+
   tool_imgb64_title: { ur: 'امیج ٹو بیس64', en: 'Image to Base64' },
   b64_output_label: { ur: 'بیس64 آؤٹ پٹ', en: 'Base64 output' },
 
@@ -1504,7 +2348,7 @@ const I18N = {
   notes_ph: { ur: 'کچھ بھی لکھیں...', en: 'Write anything...' },
   notes_saved: { ur: 'محفوظ ہو گیا ✓', en: 'Saved ✓' },
 
-  footer_text: { ur: '15 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '15 tools · 5 categories · everything runs in your browser' },
+  footer_text: { ur: '75 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '75 tools · 5 categories · everything runs in your browser' },
 
   search_ph: { ur: 'ٹولز تلاش کریں...', en: 'Search tools...' },
   nav_favorites: { ur: 'پسندیدہ', en: 'Favorites' },
@@ -1537,6 +2381,91 @@ const I18N = {
   img2pdf_done: { ur: 'PDF تیار ہو گئی', en: 'PDF is ready' },
   img2pdf_error: { ur: 'PDF نہیں بن سکی — تصاویر دوبارہ منتخب کر کے کوشش کریں', en: 'Could not create the PDF — try selecting the images again' },
 
+  pdflib_error: { ur: 'PDF لائبریری لوڈ نہیں ہو سکی', en: 'Could not load the PDF library' },
+  pdfsplit_pages_word: { ur: 'صفحات', en: 'pages' },
+
+  tool_pdfmerge_title: { ur: 'PDF ملانا (Merge)', en: 'PDF Merge' },
+  pdfmerge_select_label: { ur: 'PDF فائلیں منتخب کریں (ایک سے زیادہ)', en: 'Select PDF files (multiple)' },
+  pdfmerge_btn: { ur: 'ملا کر PDF بنائیں', en: 'Merge into one PDF' },
+  pdfmerge_need_two: { ur: 'کم از کم 2 فائلیں منتخب کریں', en: 'Select at least 2 files' },
+  pdfmerge_done: { ur: 'PDF تیار ہو گئی', en: 'PDF is ready' },
+  pdfmerge_error: { ur: 'فائلیں ملائی نہیں جا سکیں', en: 'Could not merge the files' },
+
+  tool_pdfsplit_title: { ur: 'PDF تقسیم کرنا (Split)', en: 'PDF Split' },
+  pdfsplit_range_label: { ur: 'صفحات کی رینج (مثلاً 1-3,5,8-10)', en: 'Page range (e.g. 1-3,5,8-10)' },
+  pdfsplit_extract_btn: { ur: 'منتخب صفحات نکالیں', en: 'Extract selected pages' },
+  pdfsplit_all_btn: { ur: 'ہر صفحہ الگ PDF میں (ZIP)', en: 'Each page as separate PDF (ZIP)' },
+  pdfsplit_need_file: { ur: 'براہ کرم پہلے PDF فائل منتخب کریں', en: 'Please select a PDF file first' },
+  pdfsplit_invalid_range: { ur: 'رینج درست نہیں یا خالی ہے', en: 'Range is invalid or empty' },
+  pdfsplit_done: { ur: 'PDF تیار ہو گئی', en: 'PDF is ready' },
+  pdfsplit_error: { ur: 'صفحات نکالے نہیں جا سکے', en: 'Could not extract the pages' },
+
+  tool_pdfreorder_title: { ur: 'PDF صفحات ترتیب/حذف', en: 'PDF Reorder / Delete Pages' },
+  pdfreorder_loading: { ur: 'صفحات لوڈ ہو رہے ہیں…', en: 'Loading pages…' },
+  pdfreorder_save_btn: { ur: 'نئی PDF بنائیں', en: 'Create new PDF' },
+  pdfreorder_page_word: { ur: 'صفحہ', en: 'Page' },
+  pdfreorder_need_pages: { ur: 'براہ کرم پہلے PDF فائل منتخب کریں', en: 'Please select a PDF file first' },
+  pdfreorder_done: { ur: 'PDF تیار ہو گئی', en: 'PDF is ready' },
+  pdfreorder_error: { ur: 'نئی PDF نہیں بن سکی', en: 'Could not create the new PDF' },
+
+  tool_romanurdu_title: { ur: 'رومن اردو سے اردو کنورٹر', en: 'Roman Urdu to Urdu Converter' },
+  romanurdu_input_label: { ur: 'رومن اردو ٹائپ کریں', en: 'Type Roman Urdu' },
+  romanurdu_output_label: { ur: 'اردو نتیجہ', en: 'Urdu result' },
+  romanurdu_hint: { ur: 'نوٹ: یہ ایک تخمینی (beta) صوتی کنورٹر ہے، مکمل طور پر درست نہیں ہو سکتا — بھیجنے سے پہلے نتیجہ دیکھ لیں۔', en: 'Note: this is an approximate (beta) phonetic converter and may not always be fully accurate — please review the result before sending.' },
+
+  tool_extract_title: { ur: 'ای میل/فون نمبر ایکسٹریکٹر', en: 'Email/Phone Number Extractor' },
+  extract_input_label: { ur: 'متن پیسٹ کریں', en: 'Paste text' },
+  extract_btn: { ur: 'نکالیں', en: 'Extract' },
+  extract_emails_label: { ur: 'ای میلز', en: 'Emails' },
+  extract_phones_label: { ur: 'فون نمبرز', en: 'Phone numbers' },
+  extract_hint: { ur: 'نوٹ: فون نمبر کی شناخت تخمینی ہے — غیر متعلقہ نمبر بھی شامل ہو سکتے ہیں، نتیجہ چیک کر لیں۔', en: 'Note: phone number detection is approximate — unrelated numbers may be picked up, so review the result.' },
+
+  tool_sigpad_title: { ur: 'سگنیچر پیڈ', en: 'Signature Pad' },
+  sigpad_hint: { ur: 'نوٹ: ماؤس یا انگلی سے خانے میں دستخط بنائیں، پھر PNG کے طور پر محفوظ کریں (پس منظر شفاف ہوگا)۔', en: 'Note: draw your signature in the box with your mouse or finger, then save it as a PNG (with a transparent background).' },
+
+  tool_incometax_title: { ur: 'انکم ٹیکس کیلکولیٹر (تنخواہ دار)', en: 'Income Tax Calculator (Salaried)' },
+  incometax_period_label: { ur: 'آمدنی کی مدت', en: 'Income period' },
+  incometax_monthly: { ur: 'ماہانہ تنخواہ', en: 'Monthly salary' },
+  incometax_annual: { ur: 'سالانہ آمدنی', en: 'Annual income' },
+  incometax_amount_label: { ur: 'رقم (PKR)', en: 'Amount (PKR)' },
+  incometax_hint: { ur: 'نوٹ: یہ حساب صرف تنخواہ دار افراد کے لیے ہے (Tax Year 2027 / FY 2026-27، Finance Act 2026 کے مطابق)۔ غیر تنخواہ دار/کاروباری آمدنی پر مختلف اور عموماً زیادہ (زیادہ سے زیادہ 45%) شرحیں لاگو ہوتی ہیں — قطعی رقم کے لیے FBR یا ٹیکس کنسلٹنٹ سے رجوع کریں۔', en: 'Note: this covers salaried individuals only (Tax Year 2027 / FY 2026-27, per Finance Act 2026). Non-salaried/business income is taxed under different, generally higher slabs (up to 45%) — consult FBR or a tax advisor for an exact figure.' },
+  incometax_per_month: { ur: 'ماہانہ ٹیکس', en: 'tax per month' },
+  incometax_annual_tax: { ur: 'سالانہ ٹیکس', en: 'Annual tax' },
+  incometax_net_monthly: { ur: 'ماہانہ خالص آمدنی', en: 'Net monthly income' },
+
+  tool_elecbill_title: { ur: 'بجلی کے بل کا تخمینہ', en: 'Electricity Bill Estimator' },
+  elecbill_units_label: { ur: 'استعمال شدہ یونٹس', en: 'Units consumed' },
+  elecbill_rate_label: { ur: 'فی یونٹ ریٹ (PKR)', en: 'Rate per unit (PKR)' },
+  elecbill_gst_label: { ur: 'جی ایس ٹی (%)', en: 'GST (%)' },
+  elecbill_fixed_label: { ur: 'فکسڈ/میٹر چارجز (PKR)', en: 'Fixed/meter charges (PKR)' },
+  elecbill_hint: { ur: 'نوٹ: یہ صرف تخمینہ ہے — اصل بل میں سلیب ریٹس، فیول ایڈجسٹمنٹ اور دیگر سرچارجز شامل ہو سکتے ہیں۔ فی یونٹ ریٹ اپنے DISCO کے موجودہ نرخ نامے سے لیں۔', en: 'Note: this is only an estimate — the actual bill may include slab rates, fuel adjustment, and other surcharges. Get the current per-unit rate from your DISCO\'s tariff notice.' },
+  elecbill_energy: { ur: 'یونٹ چارجز', en: 'Energy charges' },
+  elecbill_gst_amt: { ur: 'جی ایس ٹی رقم', en: 'GST amount' },
+
+  tool_areaconv_title: { ur: 'مرلہ/کنال کنورٹر (رقبہ)', en: 'Marla/Kanal Area Converter' },
+  areaconv_hint: { ur: 'نوٹ: 1 مرلہ = 225 مربع فٹ، 1 کنال = 20 مرلہ (پاکستان کا عام معیاری حساب) — کچھ علاقوں میں مقامی فرق ہو سکتا ہے۔', en: 'Note: 1 Marla = 225 sq. ft, 1 Kanal = 20 Marla (common Pakistan standard) — some regions may use slightly different local conventions.' },
+
+  tool_qibla_title: { ur: 'قبلہ ڈائریکشن', en: 'Qibla Direction' },
+  qibla_manual_opt: { ur: 'دیگر (لیٹیٹیوڈ/لانگیٹیوڈ خود درج کریں)', en: 'Other (enter latitude/longitude manually)' },
+  qibla_lat_label: { ur: 'لیٹیٹیوڈ', en: 'Latitude' },
+  qibla_lng_label: { ur: 'لانگیٹیوڈ', en: 'Longitude' },
+  qibla_hint: { ur: 'نوٹ: زاویہ شمال (North) سے گھڑی کی سمت میں ناپا گیا ہے — قطب نما (compass) کے ساتھ ملائیں۔', en: 'Note: the angle is measured clockwise from North — align it with a compass.' },
+  qibla_dir_n: { ur: 'شمال', en: 'N' },
+  qibla_dir_ne: { ur: 'شمال مشرق', en: 'NE' },
+  qibla_dir_e: { ur: 'مشرق', en: 'E' },
+  qibla_dir_se: { ur: 'جنوب مشرق', en: 'SE' },
+  qibla_dir_s: { ur: 'جنوب', en: 'S' },
+  qibla_dir_sw: { ur: 'جنوب مغرب', en: 'SW' },
+  qibla_dir_w: { ur: 'مغرب', en: 'W' },
+  qibla_dir_nw: { ur: 'شمال مغرب', en: 'NW' },
+
+  tool_tasbih_title: { ur: 'تسبیح کاؤنٹر', en: 'Tasbih Counter' },
+  tasbih_target_label: { ur: 'ٹارگٹ', en: 'Target' },
+  tasbih_tap_btn: { ur: 'تسبیح کے لیے یہاں ٹیپ کریں', en: 'Tap here to count' },
+  tasbih_undo_btn: { ur: 'ایک کم کریں', en: 'Undo one' },
+  tasbih_reset_btn: { ur: 'ری سیٹ کریں', en: 'Reset' },
+  tasbih_rounds_word: { ur: 'مکمل رَاؤنڈز', en: 'Completed rounds' },
+
   tool_stopwatch_title: { ur: 'اسٹاپ واچ', en: 'Stopwatch' },
   undo_cleared_label: { ur: 'صاف کر دیا گیا', en: 'Cleared' },
   undo_btn: { ur: 'واپس لائیں', en: 'Undo' },
@@ -1557,7 +2486,172 @@ const I18N = {
   age_days: { ur: 'دن', en: 'days' },
   age_hours: { ur: 'گھنٹے', en: 'hours' },
   age_minutes: { ur: 'منٹ', en: 'minutes' },
-  age_seconds: { ur: 'سیکنڈ', en: 'seconds' }
+  age_seconds: { ur: 'سیکنڈ', en: 'seconds' },
+
+  tool_zakat_title: { ur: 'زکوٰۃ کیلکولیٹر', en: 'Zakat Calculator' },
+  zakat_nisab_label: { ur: 'نصاب کی بنیاد', en: 'Nisab basis' },
+  zakat_nisab_silver: { ur: 'چاندی (612.36 گرام) — کم نصاب', en: 'Silver (612.36g) — lower nisab' },
+  zakat_nisab_gold: { ur: 'سونا (87.48 گرام)', en: 'Gold (87.48g)' },
+  zakat_gold_g_label: { ur: 'سونا (وزن)', en: 'Gold (weight)' },
+  zakat_gold_p_label: { ur: 'سونے کی قیمت', en: 'Gold price' },
+  zakat_silver_g_label: { ur: 'چاندی (وزن)', en: 'Silver (weight)' },
+  zakat_silver_p_label: { ur: 'چاندی کی قیمت', en: 'Silver price' },
+  zakat_weight_in_g: { ur: 'گرام میں وزن', en: 'Weight in grams' },
+  zakat_gold_word: { ur: 'سونا', en: 'Gold' },
+  zakat_silver_word: { ur: 'چاندی', en: 'Silver' },
+  zakat_cash_label: { ur: 'نقدی، بینک بیلنس اور دیگر مالیت', en: 'Cash, bank balance & other assets' },
+  zakat_debt_label: { ur: 'واجب الادا قرض / اخراجات', en: 'Debts / liabilities owed' },
+  zakat_hint: { ur: 'نوٹ: یہ اندازاً حساب ہے — قیمتیں مقامی مارکیٹ کے مطابق خود درج کریں اور حتمی مسئلے میں اپنے مقامی عالم دین سے رہنمائی لیں۔', en: 'Note: this is an estimate — enter current market prices yourself, and consult a local scholar for a final ruling.' },
+  zakat_need_price: { ur: 'براہ کرم نصاب کی بنیاد کے مطابق قیمت درج کریں', en: 'Please enter a price for the selected nisab basis' },
+  zakat_below_nisab: { ur: 'کل مالیت نصاب سے کم ہے — زکوٰۃ واجب نہیں', en: 'Total wealth is below nisab — zakat is not due' },
+  zakat_total_wealth: { ur: 'کل مالیت', en: 'Total wealth' },
+  zakat_nisab_value: { ur: 'نصاب کی مالیت', en: 'Nisab value' },
+
+  tool_gpa_title: { ur: 'GPA / گریڈ کیلکولیٹر', en: 'GPA / Grade Calculator' },
+  gpa_rows_label: { ur: 'ہر کورس کے لیے کریڈٹ آورز اور گریڈ منتخب کریں', en: 'Enter credit hours and pick a grade for each course' },
+  gpa_add_btn: { ur: 'کورس شامل کریں', en: 'Add course' },
+  gpa_total_credits: { ur: 'کل کریڈٹ آورز', en: 'Total credit hours' },
+  gpa_credit_ph: { ur: 'کریڈٹ', en: 'Credits' },
+
+  tool_fuel_title: { ur: 'فیول ایوریج کیلکولیٹر', en: 'Fuel Average Calculator' },
+  fuel_distance_label: { ur: 'سفر کی مسافت (کلومیٹر)', en: 'Distance travelled (km)' },
+  fuel_used_label: { ur: 'استعمال شدہ فیول (لیٹر)', en: 'Fuel used (litres)' },
+  fuel_price_label: { ur: 'فیول کی قیمت فی لیٹر (اختیاری)', en: 'Fuel price per litre (optional)' },
+  fuel_kmpl: { ur: 'کلومیٹر فی لیٹر', en: 'km per litre' },
+  fuel_lp100: { ur: 'لیٹر فی 100 کلومیٹر', en: 'litres per 100km' },
+  fuel_cost_per_km: { ur: 'لاگت فی کلومیٹر', en: 'Cost per km' },
+
+  tool_retirement_title: { ur: 'ریٹائرمنٹ / بچت پلانر', en: 'Retirement / Savings Planner' },
+  ret_current_label: { ur: 'موجودہ بچت', en: 'Current savings' },
+  ret_monthly_label: { ur: 'ماہانہ بچت', en: 'Monthly savings' },
+  ret_rate_label: { ur: 'متوقع سالانہ منافع (%)', en: 'Expected annual return (%)' },
+  ret_years_label: { ur: 'ریٹائرمنٹ تک باقی سال', en: 'Years until retirement' },
+  ret_hint: { ur: 'نوٹ: یہ اندازہ ہے، اصل منافع مارکیٹ کے حالات پر منحصر ہوگا۔', en: 'Note: this is an estimate — actual returns depend on market conditions.' },
+  ret_contributed: { ur: 'کل جمع شدہ رقم', en: 'Total contributed' },
+  ret_growth: { ur: 'منافع', en: 'Growth' },
+
+  tool_hijri_title: { ur: 'ہجری/عیسوی تاریخ کنورٹر', en: 'Hijri/Gregorian Date Converter' },
+  hijri_mode_g2h: { ur: 'عیسوی سے ہجری', en: 'Gregorian → Hijri' },
+  hijri_mode_h2g: { ur: 'ہجری سے عیسوی', en: 'Hijri → Gregorian' },
+  hijri_greg_date_label: { ur: 'عیسوی تاریخ', en: 'Gregorian date' },
+  hijri_h_day_label: { ur: 'دن', en: 'Day' },
+  hijri_h_month_label: { ur: 'مہینہ', en: 'Month' },
+  hijri_h_year_label: { ur: 'سال', en: 'Year' },
+  hijri_hint: { ur: 'نوٹ: یہ حسابی اسلامی کیلنڈر ہے — چاند دیکھنے پر مبنی سرکاری اعلان سے ایک دن آگے پیچھے ہو سکتا ہے۔ دیسی مہینہ تخمینی تاریخوں پر مبنی ہے۔', en: 'Note: this uses a calculated Islamic calendar — the official moonsighting announcement may differ by a day. The desi month is based on approximate dates.' },
+  hijri_desi_label: { ur: 'دیسی تاریخ (تخمینی)', en: 'Desi date (approx.)' },
+  hijri_bikrami_label: { ur: 'بکرمی سن', en: 'Bikrami Samvat' },
+
+  tool_prayer_title: { ur: 'نماز کے اوقات کیلکولیٹر', en: 'Prayer Times Calculator' },
+  prayer_city_label: { ur: 'شہر', en: 'City' },
+  prayer_date_label: { ur: 'تاریخ', en: 'Date' },
+  prayer_asr_label: { ur: 'عصر کا طریقہ', en: 'Asr method' },
+  prayer_asr_hanafi: { ur: 'حنفی', en: 'Hanafi' },
+  prayer_asr_standard: { ur: 'شافعی/عام', en: "Shafi'i / standard" },
+  prayer_hint: { ur: 'نوٹ: یہ فلکیاتی حساب سے اندازاً اوقات ہیں (فجر/عشاء زاویہ: 18°) — مقامی مسجد کے اعلان کردہ اوقات کو ترجیح دیں۔', en: 'Note: these are astronomically estimated times (Fajr/Isha angle: 18°) — prefer times announced by your local mosque.' },
+  prayer_fajr: { ur: 'فجر', en: 'Fajr' },
+  prayer_sunrise: { ur: 'طلوعِ آفتاب', en: 'Sunrise' },
+  prayer_dhuhr: { ur: 'ظہر', en: 'Dhuhr' },
+  prayer_asr: { ur: 'عصر', en: 'Asr' },
+  prayer_maghrib: { ur: 'مغرب', en: 'Maghrib' },
+  prayer_isha: { ur: 'عشاء', en: 'Isha' },
+
+  tool_speed_title: { ur: 'رفتار کنورٹر', en: 'Speed Converter' },
+  tool_datastorage_title: { ur: 'ڈیٹا اسٹوریج کنورٹر', en: 'Data Storage Converter' },
+
+  tool_roman_title: { ur: 'رومن نمرلز کنورٹر', en: 'Roman Numeral Converter' },
+  roman_num_label: { ur: 'عدد (1–3999)', en: 'Number (1–3999)' },
+  roman_to_roman_btn: { ur: 'رومن میں بدلیں', en: 'Convert to Roman' },
+  roman_input_label: { ur: 'رومن نمبر لکھیں', en: 'Enter a Roman numeral' },
+  roman_to_num_btn: { ur: 'عدد میں بدلیں', en: 'Convert to number' },
+  roman_range_error: { ur: '1 سے 3999 کے درمیان نمبر درج کریں', en: 'Enter a number between 1 and 3999' },
+  roman_invalid_error: { ur: 'غلط رومن نمبر', en: 'Invalid Roman numeral' },
+
+  tool_cnic_title: { ur: 'CNIC نمبر فارمیٹر', en: 'CNIC Number Formatter' },
+  cnic_label: { ur: 'CNIC نمبر (صرف ہندسے، 13 عدد)', en: 'CNIC number (digits only, 13 digits)' },
+
+  tool_mobnet_title: { ur: 'موبائل نیٹ ورک شناخت کار', en: 'Mobile Network Identifier' },
+  mobnet_label: { ur: 'موبائل نمبر', en: 'Mobile number' },
+  mobnet_btn: { ur: 'نیٹ ورک معلوم کریں', en: 'Detect network' },
+  mobnet_hint: { ur: 'نوٹ: پورٹ (منتقل) شدہ نمبروں کا اصل نیٹ ورک مختلف ہو سکتا ہے — یہ صرف اصل جاری کنندہ نیٹ ورک کا اندازہ ہے۔', en: 'Note: a ported number may now be on a different network — this only identifies the original issuing operator.' },
+  mobnet_invalid: { ur: 'براہ کرم درست 11 ہندسوں کا پاکستانی موبائل نمبر درج کریں (03XXXXXXXXX)', en: 'Please enter a valid 11-digit Pakistani mobile number (03XXXXXXXXX)' },
+  mobnet_unknown: { ur: 'نیٹ ورک شناخت نہیں ہو سکا', en: 'Network could not be identified' },
+
+  tool_vcard_title: { ur: 'vCard QR (کانٹیکٹ کارڈ)', en: 'vCard QR (Contact Card)' },
+  vcard_name_label: { ur: 'نام', en: 'Name' },
+  vcard_phone_label: { ur: 'فون نمبر', en: 'Phone number' },
+  vcard_email_label: { ur: 'ای میل (اختیاری)', en: 'Email (optional)' },
+  vcard_org_label: { ur: 'ادارہ (اختیاری)', en: 'Organization (optional)' },
+
+  // ----- New tools: shared -----
+  copied_label: { ur: 'کاپی ہو گیا', en: 'Copied' },
+
+  // ----- Fancy font -----
+  tool_fancyfont_title: { ur: 'فینسی / اسٹائلش فونٹ جنریٹر', en: 'Fancy / Stylish Font Generator' },
+  fancy_label: { ur: 'اپنا انگریزی ٹیکسٹ لکھیں', en: 'Type your text' },
+  fancy_ph: { ur: 'یہاں کچھ لکھیں...', en: 'Type something...' },
+  fancy_hint: { ur: 'نوٹ: یہ اسٹائلز انگریزی حروف اور ہندسوں پر لگتے ہیں (اردو پر نہیں)۔ کسی بھی اسٹائل کے ساتھ کاپی دبائیں اور Instagram، WhatsApp یا کہیں بھی پیسٹ کریں۔ کچھ ایپس میں چند اسٹائلز ٹھیک نہیں دکھتے۔', en: 'Note: these styles apply to English letters and digits (not Urdu). Press Copy next to any style and paste it into Instagram, WhatsApp, or anywhere else. A few styles may not display in some apps.' },
+
+  // ----- Ideal weight & water -----
+  tool_idealweight_title: { ur: 'مثالی وزن / پانی کی ضرورت', en: 'Ideal Weight & Water Intake' },
+  iw_weight_label: { ur: 'وزن (کلوگرام، اختیاری)', en: 'Weight (kg, optional)' },
+  iw_exercise_label: { ur: 'روزانہ ورزش (منٹ)', en: 'Daily exercise (minutes)' },
+  iw_healthy_range: { ur: 'صحت مند وزن کی حد (BMI 18.5–24.9)', en: 'Healthy weight range (BMI 18.5–24.9)' },
+  iw_formulas: { ur: 'مثالی وزن (مختلف فارمولے)', en: 'Ideal weight (by formula)' },
+  iw_short_note: { ur: 'قد 152 سینٹی میٹر سے کم ہو تو فارمولے قابلِ اعتبار نہیں، اس لیے صرف BMI کی حد دکھائی گئی ہے۔', en: 'Formulas are not reliable below 152 cm, so only the BMI range is shown.' },
+  iw_water: { ur: 'روزانہ پانی کی ضرورت', en: 'Daily water need' },
+  iw_glasses: { ur: 'گلاس (250 ml)', en: 'glasses (250 ml)' },
+  iw_basis_ideal: { ur: 'مثالی وزن کی بنیاد پر', en: 'based on ideal weight' },
+  iw_basis_current: { ur: 'آپ کے موجودہ وزن کی بنیاد پر', en: 'based on your current weight' },
+  iw_hint: { ur: 'نوٹ: یہ عمومی اندازہ ہے، طبی مشورہ نہیں۔ پانی کی ضرورت گرمی، بیماری، حمل یا دودھ پلانے کی صورت میں مختلف ہو سکتی ہے۔ اگر کوئی بیماری ہے تو ڈاکٹر کی ہدایت پر عمل کریں۔', en: 'Note: a general estimate, not medical advice. Water needs vary with heat, illness, pregnancy, or breastfeeding. If you have a medical condition, follow the advice of your doctor.' },
+
+  // ----- Body fat -----
+  tool_bodyfat_title: { ur: 'باڈی فیٹ % کیلکولیٹر (US Navy)', en: 'Body Fat % Calculator (US Navy)' },
+  bf_neck_label: { ur: 'گردن (سینٹی میٹر)', en: 'Neck (cm)' },
+  bf_waist_label: { ur: 'کمر (سینٹی میٹر)', en: 'Waist (cm)' },
+  bf_hip_label: { ur: 'کولہے (سینٹی میٹر)', en: 'Hip (cm)' },
+  bf_cat_essential: { ur: 'ضروری چربی کی سطح', en: 'Essential fat range' },
+  bf_cat_athlete: { ur: 'کھلاڑیوں والی سطح', en: 'Athletic' },
+  bf_cat_fit: { ur: 'فٹ', en: 'Fit' },
+  bf_cat_average: { ur: 'اوسط', en: 'Average' },
+  bf_cat_high: { ur: 'زیادہ چربی (موٹاپے کی حد)', en: 'High (obese range)' },
+  bf_fat_mass: { ur: 'چربی کا وزن', en: 'Fat mass' },
+  bf_lean_mass: { ur: 'بغیر چربی وزن', en: 'Lean mass' },
+  bf_invalid: { ur: 'ناپ چیک کریں — کمر، گردن سے بڑی ہونی چاہیے اور نتیجہ حقیقی حد میں آنا چاہیے۔', en: 'Check your measurements — waist must be larger than neck and the result must fall in a realistic range.' },
+  bf_hint: { ur: 'نوٹ: گردن کو گلے کے نیچے، کمر کو ناف کے لیول پر (خواتین: کمر کی سب سے پتلی جگہ) اور کولہوں کو سب سے چوڑی جگہ سے ناپیں۔ یہ اندازہ ہے، طبی پیمائش نہیں۔', en: 'Note: measure the neck just below the larynx, the waist at navel level (women: narrowest point of the waist), and hips at their widest point. This is an estimate, not a clinical measurement.' },
+
+  // ----- Gold / silver converter -----
+  tool_goldconv_title: { ur: 'سونا / چاندی وزن کنورٹر (تولہ، ماشہ)', en: 'Gold / Silver Weight Converter (Tola, Masha)' },
+  gold_price_label: { ur: 'فی تولہ قیمت (اختیاری)', en: 'Price per tola (optional)' },
+  gold_breakdown: { ur: 'تولہ / ماشہ / رتی میں', en: 'In tola / masha / ratti' },
+  gold_tola: { ur: 'تولہ', en: 'tola' },
+  gold_masha: { ur: 'ماشہ', en: 'masha' },
+  gold_ratti: { ur: 'رتی', en: 'ratti' },
+  gold_value: { ur: 'اندازاً قیمت', en: 'Estimated value' },
+  gold_hint: { ur: 'نوٹ: 1 تولہ = 11.664 گرام = 12 ماشہ، 1 ماشہ = 8 رتی۔ (زکوٰۃ کا نصاب: 7.5 تولہ سونا یا 52.5 تولہ چاندی۔) ٹرائے اونس سونے چاندی کی عالمی مارکیٹ کا معیار ہے (31.1035 گرام)۔', en: 'Note: 1 tola = 11.664 g = 12 masha, 1 masha = 8 ratti. (Zakat nisab: 7.5 tola gold or 52.5 tola silver.) The troy ounce is the international gold and silver market standard (31.1035 g).' },
+
+  // ----- WhatsApp link -----
+  tool_wapp_title: { ur: 'واٹس ایپ چیٹ لنک جنریٹر', en: 'WhatsApp Click-to-Chat Link' },
+  wapp_country_label: { ur: 'ملک کا کوڈ', en: 'Country code' },
+  wapp_nocode: { ur: 'کوڈ پہلے سے شامل ہے', en: 'Code already included' },
+  wapp_phone_label: { ur: 'فون نمبر', en: 'Phone number' },
+  wapp_msg_label: { ur: 'پہلے سے لکھا پیغام (اختیاری)', en: 'Pre-filled message (optional)' },
+  wapp_msg_ph: { ur: 'السلام علیکم! مجھے آپ کا اشتہار نظر آیا...', en: 'Hello! I saw your ad...' },
+  wapp_link_label: { ur: 'آپ کا لنک', en: 'Your link' },
+  wapp_open_btn: { ur: 'چیٹ کھولیں', en: 'Open chat' },
+  wapp_invalid: { ur: 'درست فون نمبر درج کریں (ملک کے کوڈ سمیت 8 سے 15 ہندسے)۔', en: 'Enter a valid phone number (8 to 15 digits including the country code).' },
+  wapp_hint: { ur: 'نوٹ: نمبر 0300 1234567 کی طرح لکھ سکتے ہیں — شروع کا 0 خود ہٹ جائے گا۔ لنک wa.me فارمیٹ میں بنتا ہے اور واٹس ایپ چیٹ سیدھی کھول دیتا ہے۔', en: 'Note: you can type the number as 0300 1234567 — the leading 0 is dropped automatically. The link uses the wa.me format and opens the chat directly in WhatsApp.' },
+
+  // ----- Quote / hadith -----
+  tool_quote_title: { ur: 'روزانہ اقتباس / حدیث', en: 'Daily Quote / Hadith' },
+  quote_type_label: { ur: 'قسم', en: 'Type' },
+  quote_type_all: { ur: 'سب', en: 'All' },
+  quote_type_hadith: { ur: 'حدیث', en: 'Hadith' },
+  quote_type_quran: { ur: 'قرآنی آیت', en: 'Quran verse' },
+  quote_type_quote: { ur: 'اقتباس', en: 'Quote' },
+  quote_random_btn: { ur: 'نیا اقتباس', en: 'New random' },
+  quote_today_btn: { ur: 'آج کا اقتباس', en: 'Pick of the day' },
+  quote_share_btn: { ur: 'واٹس ایپ پر شیئر کریں', en: 'Share on WhatsApp' },
+  quote_hint: { ur: 'نوٹ: احادیث کے حوالے کتاب کے نام (اور جہاں ممکن ہو نمبر) کے ساتھ دیے گئے ہیں — آگے شیئر کرنے سے پہلے مستند کتاب سے تصدیق کر لیں۔', en: 'Note: hadith are cited by collection (with number where available) — please verify against the original source before sharing further.' }
 };
 
 let LANG = 'en';
@@ -1575,6 +2669,8 @@ function applyLang(){
   });
   Tools.updateWordCount();
   Tools.renderTodos();
+  if(Tools._quoteCur) Tools.renderQuote();
+  Tools.idealWeight(); Tools.bodyFat(); Tools.goldConvert();
 }
 
 document.getElementById('langToggle').onclick = function(){
@@ -1842,6 +2938,86 @@ const Tools = {
     document.getElementById('qrbox').innerHTML = '';
   },
 
+  downloadQR(boxId, filename){
+    const box = document.getElementById(boxId);
+    const canvas = box.querySelector('canvas');
+    const img = box.querySelector('img');
+    let source = null, w = 0, h = 0;
+    if(canvas && canvas.width){ source = canvas; w = canvas.width; h = canvas.height; }
+    else if(img && img.src && (img.naturalWidth || img.width)){ source = img; w = img.naturalWidth || img.width; h = img.naturalHeight || img.height; }
+    if(!source){ alert(I18N.download_empty[LANG]); return; }
+    // Add a white quiet-zone border — QR codes exported edge-to-edge (no margin)
+    // often fail with camera/gallery scanners even though they look fine on screen.
+    const quiet = Math.round(Math.max(w, h) * 0.18);
+    const out = document.createElement('canvas');
+    out.width = w + quiet * 2;
+    out.height = h + quiet * 2;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(source, quiet, quiet, w, h);
+    const a = document.createElement('a');
+    a.href = out.toDataURL('image/png');
+    a.download = `${filename}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  },
+
+  formatCNIC(){
+    const digits = document.getElementById('cnic-input').value.replace(/\D/g,'').slice(0,13);
+    let out = digits;
+    if(digits.length > 5) out = digits.slice(0,5) + '-' + digits.slice(5,12) + (digits.length > 12 ? '-' + digits.slice(12) : '');
+    document.getElementById('cnic-out').value = out;
+  },
+
+  mobileNetworkRanges: [
+    { min:300, max:309, name:'Jazz' },
+    { min:320, max:329, name:'Jazz (Warid)' },
+    { min:310, max:319, name:'Zong' },
+    { min:330, max:339, name:'Ufone' },
+    { min:340, max:349, name:'Telenor' }
+  ],
+  detectNetwork(){
+    const box = document.getElementById('mobnet-out');
+    let raw = document.getElementById('mobnet-input').value.replace(/\D/g,'');
+    if(raw.startsWith('92')) raw = '0' + raw.slice(2);
+    if(raw.length === 10 && raw.startsWith('3')) raw = '0' + raw;
+    if(raw.length !== 11 || !raw.startsWith('03')){
+      box.innerHTML = `<span class="muted">${I18N.mobnet_invalid[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    const prefix = parseInt(raw.slice(1,4), 10);
+    const match = Tools.mobileNetworkRanges.find(r => prefix >= r.min && prefix <= r.max);
+    box.innerHTML = match
+      ? `<span class="big">${match.name}</span>`
+      : `<span class="muted">${I18N.mobnet_unknown[LANG]}</span>`;
+    box.style.display = 'block';
+  },
+
+  genVCardQR(){
+    const name = document.getElementById('vcard-name').value.trim();
+    const phone = document.getElementById('vcard-phone').value.trim();
+    const email = document.getElementById('vcard-email').value.trim();
+    const org = document.getElementById('vcard-org').value.trim();
+    const box = document.getElementById('vcardqrbox');
+    box.innerHTML = '';
+    if(!name && !phone) return;
+    let vcf = 'BEGIN:VCARD\nVERSION:3.0\n';
+    if(name) vcf += `N:${name}\nFN:${name}\n`;
+    if(org) vcf += `ORG:${org}\n`;
+    if(phone) vcf += `TEL;TYPE=CELL:${phone}\n`;
+    if(email) vcf += `EMAIL:${email}\n`;
+    vcf += 'END:VCARD';
+    try{ new QRCode(box, { text: vcf, width: 180, height: 180 }); }
+    catch(e){ box.innerHTML = '<span class="muted">Error generating QR</span>'; }
+  },
+  clearVCardQR(){
+    ['vcard-name','vcard-phone','vcard-email','vcard-org'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('vcardqrbox').innerHTML = '';
+  },
+
   currencyRates: { USD:1, PKR:278, INR:83, GBP:0.79, EUR:0.92, SAR:3.75, AED:3.67, CAD:1.36, AUD:1.52, JPY:149, CNY:7.2, BDT:110, TRY:34, MYR:4.7 },
   currencyConvert(){
     const amt = parseFloat(document.getElementById('currency-amount').value);
@@ -1969,6 +3145,41 @@ const Tools = {
   clearBarcode(){
     document.getElementById('barcode-input').value = '';
     document.getElementById('barcode-box').innerHTML = '<svg id="barcode-svg"></svg>';
+  },
+  downloadBarcode(){
+    const svg = document.getElementById('barcode-svg');
+    if(!svg || !svg.getAttribute('width')){ alert(I18N.download_empty[LANG]); return; }
+    Tools.downloadSVGAsPNG(svg, 'barcode');
+  },
+  downloadSVGAsPNG(svg, filename){
+    const width = parseFloat(svg.getAttribute('width')) || svg.getBoundingClientRect().width || 300;
+    const height = parseFloat(svg.getAttribute('height')) || svg.getBoundingClientRect().height || 150;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type:'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = function(){
+      // Extra white quiet-zone margin — helps camera/gallery scanners that need
+      // more clear space around the bars than the library's built-in margin.
+      const quietX = Math.max(24, Math.round(width * 0.08));
+      const quietY = Math.max(16, Math.round(height * 0.08));
+      const canvas = document.createElement('canvas');
+      canvas.width = width + quietX * 2;
+      canvas.height = height + quietY * 2;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, quietX, quietY, width, height);
+      URL.revokeObjectURL(url);
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `${filename}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); alert(I18N.download_empty[LANG]); };
+    img.src = url;
   },
 
   hexToHsl(hex){
@@ -2127,6 +3338,288 @@ const Tools = {
     const snapshot = ids.map(id=>{ const el = document.getElementById(id); return { id, val: el ? el.value : '' }; });
     ids.forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ''; });
     Tools.pushUndo(()=>{ snapshot.forEach(s=>{ const el = document.getElementById(s.id); if(el) el.value = s.val; }); });
+  },
+
+  // ===== Roman Urdu to Urdu (approximate phonetic converter) =====
+  _romanUrduMulti: [
+    ['chh','چھ'],
+    ['kh','خ'], ['gh','غ'], ['sh','ش'], ['ch','چ'], ['th','تھ'], ['dh','دھ'],
+    ['bh','بھ'], ['ph','پھ'], ['jh','جھ'], ['rh','ڑھ'], ['zh','ژ'],
+    ['aa','ا'], ['ee','ی'], ['oo','و'], ['ai','ے'], ['au','او'], ['ei','ے'], ['ou','او']
+  ],
+  _romanUrduSingle: {
+    q:'ق', k:'ک', g:'گ', j:'ج', z:'ز', x:'خ', c:'ک', v:'و', w:'و', f:'ف',
+    b:'ب', p:'پ', t:'ت', d:'د', s:'س', h:'ہ', l:'ل', m:'م', n:'ن', r:'ر', y:'ی'
+  },
+  _romanUrduVowelCarrier: { a:'ا', i:'ی', u:'و', e:'ے', o:'او' },
+  _romanUrduWord(word){
+    const lower = word.toLowerCase();
+    let out = '';
+    let i = 0;
+    while(i < lower.length){
+      let matched = false;
+      for(const [pat, rep] of Tools._romanUrduMulti){
+        if(lower.startsWith(pat, i)){
+          out += rep;
+          i += pat.length;
+          matched = true;
+          break;
+        }
+      }
+      if(matched) continue;
+      const ch = lower[i];
+      if(Tools._romanUrduSingle[ch]){
+        out += Tools._romanUrduSingle[ch];
+        i++;
+        continue;
+      }
+      if('aeiou'.includes(ch)){
+        const isEdge = (i === 0) || (i === lower.length - 1);
+        if(isEdge) out += Tools._romanUrduVowelCarrier[ch];
+        // else: short medial vowel, omitted (standard Urdu script convention)
+        i++;
+        continue;
+      }
+      // unknown character (digits, punctuation, non-Latin) — pass through
+      out += word[i];
+      i++;
+    }
+    return out;
+  },
+  romanToUrdu(){
+    const input = document.getElementById('romanurdu-input').value;
+    const words = input.split(/(\s+)/); // keep whitespace segments for reconstruction
+    const converted = words.map(w => /\s+/.test(w) ? w : Tools._romanUrduWord(w)).join('');
+    document.getElementById('romanurdu-output').value = converted;
+  },
+
+  extractContacts(){
+    const text = document.getElementById('extract-input').value;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const phoneRegex = /(?:\+|00)?\d{1,3}?[\s.-]?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}(?:[\s.-]?\d{2,4})?/g;
+    const emails = [...new Set(text.match(emailRegex) || [])];
+    const phones = [...new Set(
+      (text.match(phoneRegex) || [])
+        .map(p => p.trim())
+        .filter(p => p.replace(/\D/g,'').length >= 7 && p.replace(/\D/g,'').length <= 15)
+    )];
+    document.getElementById('extract-emails-out').value = emails.join('\n');
+    document.getElementById('extract-phones-out').value = phones.join('\n');
+  },
+
+  // ===== Signature Pad =====
+  _sigCtx: null,
+  _sigDrawing: false,
+  _sigHasContent: false,
+  initSignaturePad(){
+    const canvas = document.getElementById('sigpad-canvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    Tools._sigCtx = ctx;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#111';
+    const getPos = (ev)=>{
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return { x: (ev.clientX - rect.left) * scaleX, y: (ev.clientY - rect.top) * scaleY };
+    };
+    canvas.addEventListener('pointerdown', (ev)=>{
+      ev.preventDefault();
+      canvas.setPointerCapture(ev.pointerId);
+      Tools._sigDrawing = true;
+      const p = getPos(ev);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    });
+    canvas.addEventListener('pointermove', (ev)=>{
+      if(!Tools._sigDrawing) return;
+      ev.preventDefault();
+      const p = getPos(ev);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      Tools._sigHasContent = true;
+    });
+    const stop = ()=>{ Tools._sigDrawing = false; };
+    canvas.addEventListener('pointerup', stop);
+    canvas.addEventListener('pointerleave', stop);
+    canvas.addEventListener('pointercancel', stop);
+  },
+  clearSignature(){
+    const canvas = document.getElementById('sigpad-canvas');
+    if(!canvas || !Tools._sigCtx) return;
+    Tools._sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+    Tools._sigHasContent = false;
+  },
+  downloadSignature(){
+    const canvas = document.getElementById('sigpad-canvas');
+    if(!canvas || !Tools._sigHasContent){ alert(I18N.download_empty[LANG]); return; }
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'signature.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  },
+
+  // ===== Income Tax Calculator (Salaried, Tax Year 2027 / FY 2026-27) =====
+  _incomeTaxSlabs: [
+    { upto: 600000,       base: 0,       rate: 0.00, over: 0 },
+    { upto: 1200000,      base: 0,       rate: 0.01, over: 600000 },
+    { upto: 2200000,      base: 6000,    rate: 0.11, over: 1200000 },
+    { upto: 3200000,      base: 116000,  rate: 0.20, over: 2200000 },
+    { upto: 4100000,      base: 316000,  rate: 0.25, over: 3200000 },
+    { upto: 5600000,      base: 541000,  rate: 0.29, over: 4100000 },
+    { upto: 7000000,      base: 976000,  rate: 0.32, over: 5600000 },
+    { upto: Infinity,     base: 1424000, rate: 0.35, over: 7000000 }
+  ],
+  _calcIncomeTax(annual){
+    if(annual <= 600000) return 0;
+    for(const slab of Tools._incomeTaxSlabs){
+      if(annual <= slab.upto){
+        return slab.base + (annual - slab.over) * slab.rate;
+      }
+    }
+    return 0;
+  },
+  incomeTax(){
+    const period = document.getElementById('incometax-period').value;
+    const amount = parseFloat(document.getElementById('incometax-amount').value);
+    const box = document.getElementById('incometax-out');
+    if(!amount || amount <= 0){ box.style.display='none'; return; }
+    const annual = period === 'monthly' ? amount * 12 : amount;
+    const tax = Tools._calcIncomeTax(annual);
+    const monthlyTax = tax / 12;
+    const netAnnual = annual - tax;
+    const netMonthly = netAnnual / 12;
+    box.innerHTML = `<span class="big">${Math.round(monthlyTax).toLocaleString()}</span> <span class="muted">${I18N.incometax_per_month[LANG]}</span>`
+      + `<br><span class="muted">${I18N.incometax_annual_tax[LANG]}: ${Math.round(tax).toLocaleString()} \u00b7 ${I18N.incometax_net_monthly[LANG]}: ${Math.round(netMonthly).toLocaleString()}</span>`;
+    box.style.display='block';
+  },
+
+  electricityBill(){
+    const units = parseFloat(document.getElementById('elecbill-units').value);
+    const rate = parseFloat(document.getElementById('elecbill-rate').value);
+    const gstPct = parseFloat(document.getElementById('elecbill-gst').value) || 0;
+    const fixed = parseFloat(document.getElementById('elecbill-fixed').value) || 0;
+    const box = document.getElementById('elecbill-out');
+    if(isNaN(units) || isNaN(rate) || units < 0 || rate < 0){ box.style.display='none'; return; }
+    const energy = units * rate;
+    const gst = energy * gstPct / 100;
+    const total = energy + gst + fixed;
+    box.innerHTML = `<span class="big">${Math.round(total).toLocaleString()}</span> <span class="muted">PKR</span>`
+      + `<br><span class="muted">${I18N.elecbill_energy[LANG]}: ${Math.round(energy).toLocaleString()} \u00b7 ${I18N.elecbill_gst_amt[LANG]}: ${Math.round(gst).toLocaleString()}</span>`;
+    box.style.display='block';
+  },
+
+  // ===== Area Converter (Marla/Kanal/Sq.Ft/Sq.Yard/Acre/Sq.Meter) =====
+  areaUnits: { marla:225, kanal:4500, sqft:1, sqyd:9, acre:43560, sqm:10.7639 },
+  areaConvert(){
+    const from = document.getElementById('area-from').value;
+    const to = document.getElementById('area-to').value;
+    const val = parseFloat(document.getElementById('area-val').value);
+    const box = document.getElementById('area-out');
+    if(isNaN(val)){ box.style.display='none'; return; }
+    const sqft = val * Tools.areaUnits[from];
+    const result = sqft / Tools.areaUnits[to];
+    box.innerHTML = `<span class="big">${result.toLocaleString(undefined,{maximumFractionDigits:4})}</span>`;
+    box.style.display='block';
+  },
+
+  // ===== Qibla Direction =====
+  qiblaCityChange(){
+    const sel = document.getElementById('qibla-city');
+    document.getElementById('qibla-manual-box').style.display = sel.value === 'manual' ? 'block' : 'none';
+  },
+  qiblaCalc(){
+    const out = document.getElementById('qibla-out');
+    const sel = document.getElementById('qibla-city');
+    let lat, lng;
+    if(sel.value === 'manual'){
+      lat = parseFloat(document.getElementById('qibla-lat').value);
+      lng = parseFloat(document.getElementById('qibla-lng').value);
+    } else {
+      const opt = sel.options[sel.selectedIndex];
+      lat = parseFloat(opt.dataset.lat);
+      lng = parseFloat(opt.dataset.lng);
+    }
+    if(isNaN(lat) || isNaN(lng)){ out.style.display='none'; return; }
+    const kaabaLat = 21.4225, kaabaLng = 39.8262;
+    const toRad = d => d*Math.PI/180;
+    const toDeg = r => r*180/Math.PI;
+    const lat1 = toRad(lat), lat2 = toRad(kaabaLat);
+    const dLng = toRad(kaabaLng - lng);
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng);
+    let bearing = toDeg(Math.atan2(y, x));
+    bearing = (bearing + 360) % 360;
+    const dirKeys = ['qibla_dir_n','qibla_dir_ne','qibla_dir_e','qibla_dir_se','qibla_dir_s','qibla_dir_sw','qibla_dir_w','qibla_dir_nw'];
+    const dirIdx = Math.round(bearing/45) % 8;
+    out.innerHTML = `<span class="big">${bearing.toFixed(1)}\u00b0</span> <span class="muted">(${I18N[dirKeys[dirIdx]][LANG]})</span>`;
+    out.style.display='block';
+  },
+
+  // ===== Tasbih Counter =====
+  _tasbihCount: 0,
+  _tasbihTarget: 99,
+  _tasbihRounds: 0,
+  loadTasbih(){
+    try{
+      const saved = JSON.parse(localStorage.getItem('toolkit_tasbih') || '{}');
+      Tools._tasbihCount = saved.count || 0;
+      Tools._tasbihTarget = saved.target || 99;
+      Tools._tasbihRounds = saved.rounds || 0;
+    }catch(e){}
+    const sel = document.getElementById('tasbih-target');
+    if(sel) sel.value = String(Tools._tasbihTarget);
+    Tools._renderTasbih();
+  },
+  _saveTasbih(){
+    try{
+      localStorage.setItem('toolkit_tasbih', JSON.stringify({
+        count: Tools._tasbihCount, target: Tools._tasbihTarget, rounds: Tools._tasbihRounds
+      }));
+    }catch(e){}
+  },
+  _renderTasbih(){
+    const countEl = document.getElementById('tasbih-count');
+    if(!countEl) return;
+    const progEl = document.getElementById('tasbih-progress');
+    const roundsEl = document.getElementById('tasbih-rounds');
+    countEl.textContent = Tools._tasbihCount;
+    progEl.textContent = `${Tools._tasbihCount} / ${Tools._tasbihTarget}`;
+    roundsEl.textContent = Tools._tasbihRounds > 0 ? `${I18N.tasbih_rounds_word[LANG]}: ${Tools._tasbihRounds}` : '';
+  },
+  tasbihSetTarget(){
+    const sel = document.getElementById('tasbih-target');
+    Tools._tasbihTarget = parseInt(sel.value, 10) || 33;
+    Tools._saveTasbih();
+    Tools._renderTasbih();
+  },
+  tasbihTap(){
+    Tools._tasbihCount++;
+    if(Tools._tasbihCount >= Tools._tasbihTarget){
+      Tools._tasbihCount = 0;
+      Tools._tasbihRounds++;
+      if(navigator.vibrate) navigator.vibrate([40,30,40,30,80]);
+    } else if(navigator.vibrate){
+      navigator.vibrate(15);
+    }
+    Tools._saveTasbih();
+    Tools._renderTasbih();
+  },
+  tasbihUndo(){
+    if(Tools._tasbihCount > 0) Tools._tasbihCount--;
+    Tools._saveTasbih();
+    Tools._renderTasbih();
+  },
+  tasbihReset(){
+    Tools._tasbihCount = 0;
+    Tools._tasbihRounds = 0;
+    Tools._saveTasbih();
+    Tools._renderTasbih();
   },
 
   cleanSpaces(){
@@ -2718,6 +4211,384 @@ const Tools = {
     document.getElementById('pdfcompress-out').style.display = 'none';
   },
 
+  // ===== Shared: PDF thumbnail + generic drag-reorder (used by merge & reorder tools) =====
+  async _pdfThumbDataUrl(file, scale){
+    if(typeof pdfjsLib === 'undefined') return null;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.worker.min.js';
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: scale || 0.3 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    return canvas.toDataURL('image/png');
+  },
+  _wireDragHandlesGeneric(containerId, arr, auxArr, renderFn){
+    document.querySelectorAll(`#${containerId} .drag-handle`).forEach(handle=>{
+      handle.onpointerdown = function(e){
+        e.preventDefault();
+        const item = handle.closest('.pdf-order-item');
+        let dragIdx = parseInt(item.dataset.idx, 10);
+        item.classList.add('dragging');
+        const onMove = (ev)=>{
+          const point = ev.touches ? ev.touches[0] : ev;
+          const elUnder = document.elementFromPoint(point.clientX, point.clientY);
+          const hoverItem = elUnder ? elUnder.closest('.pdf-order-item') : null;
+          if(hoverItem){
+            const hoverIdx = parseInt(hoverItem.dataset.idx, 10);
+            if(!isNaN(hoverIdx) && hoverIdx !== dragIdx){
+              const [moved] = arr.splice(dragIdx, 1);
+              arr.splice(hoverIdx, 0, moved);
+              if(auxArr){
+                const [movedAux] = auxArr.splice(dragIdx, 1);
+                auxArr.splice(hoverIdx, 0, movedAux);
+              }
+              dragIdx = hoverIdx;
+              renderFn();
+              const newItem = document.querySelector(`#${containerId} .pdf-order-item[data-idx="${dragIdx}"]`);
+              if(newItem) newItem.classList.add('dragging');
+            }
+          }
+        };
+        const onUp = ()=>{
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          document.querySelectorAll(`#${containerId} .dragging`).forEach(el=>el.classList.remove('dragging'));
+        };
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      };
+    });
+  },
+
+  // ===== PDF Merge =====
+  _pdfMergeFiles: [],
+  _pdfMergeThumbs: [],
+  async loadPdfsForMerge(e){
+    Tools._pdfMergeFiles = Array.from(e.target.files || []);
+    Tools._pdfMergeThumbs = new Array(Tools._pdfMergeFiles.length).fill(null);
+    Tools.renderPdfMergePreview();
+    for(let i=0;i<Tools._pdfMergeFiles.length;i++){
+      try{
+        Tools._pdfMergeThumbs[i] = await Tools._pdfThumbDataUrl(Tools._pdfMergeFiles[i]);
+      }catch(err){ /* keep null -> fallback shown */ }
+      Tools.renderPdfMergePreview();
+    }
+  },
+  renderPdfMergePreview(){
+    const box = document.getElementById('pdfmerge-preview');
+    if(!box) return;
+    box.innerHTML = '';
+    Tools._pdfMergeFiles.forEach((file, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'pdf-order-item';
+      row.dataset.idx = idx;
+      const thumb = Tools._pdfMergeThumbs[idx];
+      const thumbHtml = thumb
+        ? `<img class="thumb" src="${thumb}">`
+        : `<span class="thumb" style="display:flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:10px;">PDF</span>`;
+      row.innerHTML = `
+        <span class="drag-handle" title="Drag to reorder">\u283F</span>
+        ${thumbHtml}
+        <div class="meta">${idx+1}. ${Tools._escapeHtml(file.name)}</div>
+        <div class="order-actions">
+          <button type="button" class="btn secondary" onclick="Tools.movePdfMerge(${idx},-1)" ${idx===0?'disabled':''}>\u2191</button>
+          <button type="button" class="btn secondary" onclick="Tools.movePdfMerge(${idx},1)" ${idx===Tools._pdfMergeFiles.length-1?'disabled':''}>\u2193</button>
+          <button type="button" class="btn ghost" onclick="Tools.removePdfMerge(${idx})">\u2715</button>
+        </div>`;
+      box.appendChild(row);
+    });
+    Tools._wireDragHandlesGeneric('pdfmerge-preview', Tools._pdfMergeFiles, Tools._pdfMergeThumbs, Tools.renderPdfMergePreview);
+  },
+  movePdfMerge(idx, dir){
+    const newIdx = idx + dir;
+    if(newIdx < 0 || newIdx >= Tools._pdfMergeFiles.length) return;
+    const arr = Tools._pdfMergeFiles, thumbs = Tools._pdfMergeThumbs;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    [thumbs[idx], thumbs[newIdx]] = [thumbs[newIdx], thumbs[idx]];
+    Tools.renderPdfMergePreview();
+  },
+  removePdfMerge(idx){
+    Tools._pdfMergeFiles.splice(idx,1);
+    Tools._pdfMergeThumbs.splice(idx,1);
+    Tools.renderPdfMergePreview();
+  },
+  async mergePdfs(){
+    const out = document.getElementById('pdfmerge-out');
+    if(Tools._pdfMergeFiles.length < 2){
+      out.innerHTML = `<span class="muted">${I18N.pdfmerge_need_two[LANG]}</span>`;
+      out.style.display = 'block';
+      return;
+    }
+    if(typeof PDFLib === 'undefined'){
+      const reason = window.__pdflibLoadFailed
+        ? 'Script failed to load from CDN (network/blocked).'
+        : 'Script loaded but did not expose PDFLib.';
+      out.innerHTML = `<span class="muted">${I18N.pdflib_error[LANG]}<br><span style="font-size:10px;opacity:.75">${reason}</span></span>`;
+      out.style.display = 'block';
+      return;
+    }
+    try{
+      const { PDFDocument } = PDFLib;
+      const merged = await PDFDocument.create();
+      for(const file of Tools._pdfMergeFiles){
+        const buf = await file.arrayBuffer();
+        const src = await PDFDocument.load(buf, { ignoreEncryption: true });
+        const pages = await merged.copyPages(src, src.getPageIndices());
+        pages.forEach(p => merged.addPage(p));
+      }
+      const bytes = await merged.save();
+      const blob = new Blob([bytes], { type:'application/pdf' });
+      await Tools.saveFile('merged.pdf', blob);
+      const sizeKB = Math.round(blob.size/1024);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.pdfmerge_done[LANG]}</span> <span class="muted">(${merged.getPageCount()} ${I18N.pdfsplit_pages_word[LANG]} \u00b7 ${sizeKB} KB)</span>`;
+      out.style.display = 'block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.pdfmerge_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display = 'block';
+    }
+  },
+  clearPdfMerge(){
+    Tools._pdfMergeFiles = [];
+    Tools._pdfMergeThumbs = [];
+    document.getElementById('pdfmerge-file').value = '';
+    document.getElementById('pdfmerge-preview').innerHTML = '';
+    document.getElementById('pdfmerge-out').style.display = 'none';
+  },
+
+  // ===== PDF Split =====
+  _pdfSplitFile: null,
+  _pdfSplitPageCount: 0,
+  async loadPdfForSplit(e){
+    Tools._pdfSplitFile = e.target.files[0] || null;
+    Tools._pdfSplitPageCount = 0;
+    const info = document.getElementById('pdfsplit-info');
+    info.textContent = '';
+    document.getElementById('pdfsplit-out').style.display = 'none';
+    document.getElementById('pdfsplit-out2').style.display = 'none';
+    if(!Tools._pdfSplitFile || typeof PDFLib === 'undefined') return;
+    try{
+      const buf = await Tools._pdfSplitFile.arrayBuffer();
+      const { PDFDocument } = PDFLib;
+      const doc = await PDFDocument.load(buf, { ignoreEncryption:true });
+      Tools._pdfSplitPageCount = doc.getPageCount();
+      info.textContent = `${Tools._pdfSplitPageCount} ${I18N.pdfsplit_pages_word[LANG]}`;
+    }catch(err){ /* surfaces on action instead */ }
+  },
+  _parsePageRange(rangeStr, maxPages){
+    const indices = [];
+    const parts = rangeStr.split(',').map(s=>s.trim()).filter(Boolean);
+    for(const part of parts){
+      const m = part.match(/^(\d+)(?:-(\d+))?$/);
+      if(!m) continue;
+      let start = parseInt(m[1],10);
+      let end = m[2] ? parseInt(m[2],10) : start;
+      if(start > end) [start,end] = [end,start];
+      for(let p=start; p<=end; p++){
+        if(p>=1 && p<=maxPages) indices.push(p-1);
+      }
+    }
+    return [...new Set(indices)].sort((a,b)=>a-b);
+  },
+  async splitPdfRange(){
+    const out = document.getElementById('pdfsplit-out');
+    if(!Tools._pdfSplitFile){
+      out.innerHTML = `<span class="muted">${I18N.pdfsplit_need_file[LANG]}</span>`;
+      out.style.display='block';
+      return;
+    }
+    if(typeof PDFLib === 'undefined'){
+      const reason = window.__pdflibLoadFailed
+        ? 'Script failed to load from CDN (network/blocked).'
+        : 'Script loaded but did not expose PDFLib.';
+      out.innerHTML = `<span class="muted">${I18N.pdflib_error[LANG]}<br><span style="font-size:10px;opacity:.75">${reason}</span></span>`;
+      out.style.display = 'block';
+      return;
+    }
+    const rangeStr = document.getElementById('pdfsplit-range').value.trim();
+    try{
+      const { PDFDocument } = PDFLib;
+      const buf = await Tools._pdfSplitFile.arrayBuffer();
+      const src = await PDFDocument.load(buf, { ignoreEncryption:true });
+      const total = src.getPageCount();
+      const indices = rangeStr ? Tools._parsePageRange(rangeStr, total) : src.getPageIndices();
+      if(!indices.length){
+        out.innerHTML = `<span class="muted">${I18N.pdfsplit_invalid_range[LANG]}</span>`;
+        out.style.display='block';
+        return;
+      }
+      const outDoc = await PDFDocument.create();
+      const pages = await outDoc.copyPages(src, indices);
+      pages.forEach(p=>outDoc.addPage(p));
+      const bytes = await outDoc.save();
+      const blob = new Blob([bytes], { type:'application/pdf' });
+      await Tools.saveFile('extracted.pdf', blob);
+      const sizeKB = Math.round(blob.size/1024);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.pdfsplit_done[LANG]}</span> <span class="muted">(${indices.length} ${I18N.pdfsplit_pages_word[LANG]} \u00b7 ${sizeKB} KB)</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.pdfsplit_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  async splitPdfAllPages(){
+    const out = document.getElementById('pdfsplit-out2');
+    if(!Tools._pdfSplitFile){
+      out.innerHTML = `<span class="muted">${I18N.pdfsplit_need_file[LANG]}</span>`;
+      out.style.display='block';
+      return;
+    }
+    if(typeof PDFLib === 'undefined' || typeof JSZip === 'undefined'){
+      out.innerHTML = `<span class="muted">${I18N.pdflib_error[LANG]}</span>`;
+      out.style.display='block';
+      return;
+    }
+    try{
+      const { PDFDocument } = PDFLib;
+      const buf = await Tools._pdfSplitFile.arrayBuffer();
+      const src = await PDFDocument.load(buf, { ignoreEncryption:true });
+      const total = src.getPageCount();
+      const zip = new JSZip();
+      for(let i=0;i<total;i++){
+        const outDoc = await PDFDocument.create();
+        const [p] = await outDoc.copyPages(src, [i]);
+        outDoc.addPage(p);
+        const bytes = await outDoc.save();
+        zip.file(`page-${i+1}.pdf`, bytes);
+      }
+      const content = await zip.generateAsync({ type:'blob' });
+      await Tools.saveFile('pdf-pages-split.zip', content);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.pdfsplit_done[LANG]}</span> <span class="muted">(${total} ${I18N.pdfsplit_pages_word[LANG]})</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.pdfsplit_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  clearPdfSplit(){
+    Tools._pdfSplitFile = null;
+    Tools._pdfSplitPageCount = 0;
+    document.getElementById('pdfsplit-file').value = '';
+    document.getElementById('pdfsplit-info').textContent = '';
+    document.getElementById('pdfsplit-range').value = '';
+    document.getElementById('pdfsplit-out').style.display = 'none';
+    document.getElementById('pdfsplit-out2').style.display = 'none';
+  },
+
+  // ===== PDF Reorder / Delete Pages =====
+  _pdfReorderFile: null,
+  _pdfReorderPages: [],
+  async loadPdfForReorder(e){
+    const file = e.target.files[0] || null;
+    Tools._pdfReorderFile = file;
+    Tools._pdfReorderPages = [];
+    const box = document.getElementById('pdfreorder-preview');
+    const loading = document.getElementById('pdfreorder-loading');
+    box.innerHTML = '';
+    document.getElementById('pdfreorder-out').style.display = 'none';
+    if(!file) return;
+    if(typeof pdfjsLib === 'undefined'){
+      box.innerHTML = `<span class="muted">${I18N.pdf2img_error[LANG]}</span>`;
+      return;
+    }
+    loading.style.display = 'block';
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.worker.min.js';
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      for(let p=1; p<=pdf.numPages; p++){
+        const page = await pdf.getPage(p);
+        const viewport = page.getViewport({ scale: 0.3 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width; canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        Tools._pdfReorderPages.push({ origIndex: p-1, thumb: canvas.toDataURL('image/png') });
+        Tools.renderPdfReorderPreview();
+      }
+    }catch(err){
+      box.innerHTML = `<span class="muted">${I18N.pdf2img_error[LANG]}</span>`;
+    }
+    loading.style.display = 'none';
+  },
+  renderPdfReorderPreview(){
+    const box = document.getElementById('pdfreorder-preview');
+    if(!box) return;
+    box.innerHTML = '';
+    Tools._pdfReorderPages.forEach((pg, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'pdf-order-item';
+      row.dataset.idx = idx;
+      row.innerHTML = `
+        <span class="drag-handle" title="Drag to reorder">\u283F</span>
+        <img class="thumb" src="${pg.thumb}">
+        <div class="meta">${I18N.pdfreorder_page_word[LANG]} ${pg.origIndex+1}</div>
+        <div class="order-actions">
+          <button type="button" class="btn secondary" onclick="Tools.movePdfReorderPage(${idx},-1)" ${idx===0?'disabled':''}>\u2191</button>
+          <button type="button" class="btn secondary" onclick="Tools.movePdfReorderPage(${idx},1)" ${idx===Tools._pdfReorderPages.length-1?'disabled':''}>\u2193</button>
+          <button type="button" class="btn ghost" onclick="Tools.removePdfReorderPage(${idx})">\u2715</button>
+        </div>`;
+      box.appendChild(row);
+    });
+    Tools._wireDragHandlesGeneric('pdfreorder-preview', Tools._pdfReorderPages, null, Tools.renderPdfReorderPreview);
+  },
+  movePdfReorderPage(idx, dir){
+    const newIdx = idx + dir;
+    if(newIdx < 0 || newIdx >= Tools._pdfReorderPages.length) return;
+    const arr = Tools._pdfReorderPages;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    Tools.renderPdfReorderPreview();
+  },
+  removePdfReorderPage(idx){
+    Tools._pdfReorderPages.splice(idx,1);
+    Tools.renderPdfReorderPreview();
+  },
+  async savePdfReorder(){
+    const out = document.getElementById('pdfreorder-out');
+    if(!Tools._pdfReorderFile || !Tools._pdfReorderPages.length){
+      out.innerHTML = `<span class="muted">${I18N.pdfreorder_need_pages[LANG]}</span>`;
+      out.style.display = 'block';
+      return;
+    }
+    if(typeof PDFLib === 'undefined'){
+      const reason = window.__pdflibLoadFailed
+        ? 'Script failed to load from CDN (network/blocked).'
+        : 'Script loaded but did not expose PDFLib.';
+      out.innerHTML = `<span class="muted">${I18N.pdflib_error[LANG]}<br><span style="font-size:10px;opacity:.75">${reason}</span></span>`;
+      out.style.display = 'block';
+      return;
+    }
+    try{
+      const { PDFDocument } = PDFLib;
+      const buf = await Tools._pdfReorderFile.arrayBuffer();
+      const src = await PDFDocument.load(buf, { ignoreEncryption:true });
+      const outDoc = await PDFDocument.create();
+      const indices = Tools._pdfReorderPages.map(pg=>pg.origIndex);
+      const pages = await outDoc.copyPages(src, indices);
+      pages.forEach(p=>outDoc.addPage(p));
+      const bytes = await outDoc.save();
+      const blob = new Blob([bytes], { type:'application/pdf' });
+      await Tools.saveFile('reordered.pdf', blob);
+      const sizeKB = Math.round(blob.size/1024);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.pdfreorder_done[LANG]}</span> <span class="muted">(${indices.length} ${I18N.pdfsplit_pages_word[LANG]} \u00b7 ${sizeKB} KB)</span>`;
+      out.style.display = 'block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.pdfreorder_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display = 'block';
+    }
+  },
+  clearPdfReorder(){
+    Tools._pdfReorderFile = null;
+    Tools._pdfReorderPages = [];
+    document.getElementById('pdfreorder-file').value = '';
+    document.getElementById('pdfreorder-preview').innerHTML = '';
+    document.getElementById('pdfreorder-out').style.display = 'none';
+  },
+
   async saveFile(filename, blob){
     try{
       const downloads = await claude.use('downloads');
@@ -2882,6 +4753,404 @@ const Tools = {
     document.getElementById('imgformat-downloadall').style.display = 'none';
   },
 
+  // ===== Image Cropper =====
+  _imgCropFile: null,
+  _imgCropNatural: {w:0,h:0},
+  loadImageForCrop(e){
+    const file = e.target.files[0];
+    Tools._imgCropFile = file || null;
+    const stage = document.getElementById('imgcrop-stage');
+    const imgEl = document.getElementById('imgcrop-img');
+    document.getElementById('imgcrop-out').style.display = 'none';
+    if(!file){ stage.style.display='none'; return; }
+    imgEl.onload = ()=>{
+      Tools._imgCropNatural = { w: imgEl.naturalWidth, h: imgEl.naturalHeight };
+      stage.style.display = 'inline-block';
+      Tools._initCropBox();
+    };
+    imgEl.src = URL.createObjectURL(file);
+  },
+  _initCropBox(){
+    const imgEl = document.getElementById('imgcrop-img');
+    const box = document.getElementById('imgcrop-box');
+    requestAnimationFrame(()=>{
+      const w = imgEl.clientWidth, h = imgEl.clientHeight;
+      const bw = w*0.7, bh = h*0.7;
+      box.style.left = ((w-bw)/2)+'px';
+      box.style.top = ((h-bh)/2)+'px';
+      box.style.width = bw+'px';
+      box.style.height = bh+'px';
+      Tools._wireCropBox();
+    });
+  },
+  _wireCropBox(){
+    const imgEl = document.getElementById('imgcrop-img');
+    const box = document.getElementById('imgcrop-box');
+    const minSize = 20;
+    const clamp = ()=>{
+      let left = parseFloat(box.style.left), top = parseFloat(box.style.top);
+      const w = parseFloat(box.style.width), h = parseFloat(box.style.height);
+      const maxW = imgEl.clientWidth, maxH = imgEl.clientHeight;
+      if(left < 0) left = 0;
+      if(top < 0) top = 0;
+      if(left+w > maxW) left = maxW - w;
+      if(top+h > maxH) top = maxH - h;
+      box.style.left = left+'px'; box.style.top = top+'px';
+    };
+    box.onpointerdown = (e)=>{
+      if(e.target.classList.contains('crop-handle')) return;
+      e.preventDefault();
+      const startX = e.clientX, startY = e.clientY;
+      const origLeft = parseFloat(box.style.left), origTop = parseFloat(box.style.top);
+      const onMove = (ev)=>{
+        const dx = ev.clientX-startX, dy = ev.clientY-startY;
+        box.style.left = (origLeft+dx)+'px';
+        box.style.top = (origTop+dy)+'px';
+        clamp();
+      };
+      const onUp = ()=>{
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+      };
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    };
+    box.querySelectorAll('.crop-handle').forEach(handle=>{
+      handle.onpointerdown = (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const h = handle.dataset.h;
+        const startX = e.clientX, startY = e.clientY;
+        const orig = {
+          left: parseFloat(box.style.left), top: parseFloat(box.style.top),
+          w: parseFloat(box.style.width), h: parseFloat(box.style.height)
+        };
+        const maxW = imgEl.clientWidth, maxH = imgEl.clientHeight;
+        const onMove = (ev)=>{
+          const dx = ev.clientX-startX, dy = ev.clientY-startY;
+          let {left, top, w:bw, h:bh} = orig;
+          if(h==='se'){
+            bw = Math.max(minSize, Math.min(maxW-left, orig.w+dx));
+            bh = Math.max(minSize, Math.min(maxH-top, orig.h+dy));
+          } else if(h==='sw'){
+            bw = Math.max(minSize, orig.w-dx); left = orig.left+orig.w-bw;
+            if(left<0){ bw += left; left=0; }
+            bh = Math.max(minSize, Math.min(maxH-top, orig.h+dy));
+          } else if(h==='ne'){
+            bh = Math.max(minSize, orig.h-dy); top = orig.top+orig.h-bh;
+            if(top<0){ bh += top; top=0; }
+            bw = Math.max(minSize, Math.min(maxW-left, orig.w+dx));
+          } else if(h==='nw'){
+            bw = Math.max(minSize, orig.w-dx); left = orig.left+orig.w-bw;
+            if(left<0){ bw += left; left=0; }
+            bh = Math.max(minSize, orig.h-dy); top = orig.top+orig.h-bh;
+            if(top<0){ bh += top; top=0; }
+          }
+          box.style.left = left+'px'; box.style.top = top+'px';
+          box.style.width = bw+'px'; box.style.height = bh+'px';
+        };
+        const onUp = ()=>{
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+        };
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      };
+    });
+  },
+  async cropImage(){
+    const out = document.getElementById('imgcrop-out');
+    if(!Tools._imgCropFile){ out.style.display='none'; return; }
+    try{
+      const imgEl = document.getElementById('imgcrop-img');
+      const box = document.getElementById('imgcrop-box');
+      const scaleX = Tools._imgCropNatural.w / imgEl.clientWidth;
+      const scaleY = Tools._imgCropNatural.h / imgEl.clientHeight;
+      const sx = parseFloat(box.style.left) * scaleX;
+      const sy = parseFloat(box.style.top) * scaleY;
+      const sw = parseFloat(box.style.width) * scaleX;
+      const sh = parseFloat(box.style.height) * scaleY;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(sw));
+      canvas.height = Math.max(1, Math.round(sh));
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgEl, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const isPng = Tools._imgCropFile.type === 'image/png' || /\.png$/i.test(Tools._imgCropFile.name);
+      const mime = isPng ? 'image/png' : 'image/jpeg';
+      const blob = await new Promise(res=>canvas.toBlob(res, mime, 0.92));
+      if(!blob) throw new Error('toBlob returned null');
+      await Tools.saveFile('cropped.'+(isPng?'png':'jpg'), blob);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.imgcrop_done[LANG]}</span> <span class="muted">(${canvas.width}\u00d7${canvas.height})</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.imgcrop_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  clearImageCrop(){
+    Tools._imgCropFile = null;
+    document.getElementById('imgcrop-file').value = '';
+    document.getElementById('imgcrop-stage').style.display = 'none';
+    document.getElementById('imgcrop-out').style.display = 'none';
+  },
+
+  // ===== Image Rotator/Flipper =====
+  _imgRotateFile: null,
+  _imgRotateImgEl: null,
+  _imgRotateState: {angle:0, flipH:false, flipV:false},
+  loadImageForRotate(e){
+    const file = e.target.files[0];
+    Tools._imgRotateFile = file || null;
+    Tools._imgRotateState = {angle:0, flipH:false, flipV:false};
+    const wrap = document.getElementById('imgrotate-preview-wrap');
+    document.getElementById('imgrotate-out').style.display = 'none';
+    if(!file){ wrap.style.display='none'; return; }
+    const img = new Image();
+    img.onload = ()=>{
+      Tools._imgRotateImgEl = img;
+      wrap.style.display = 'block';
+      Tools._renderRotatedCanvas();
+    };
+    img.src = URL.createObjectURL(file);
+  },
+  _renderRotatedCanvas(){
+    const img = Tools._imgRotateImgEl;
+    if(!img) return;
+    const {angle, flipH, flipV} = Tools._imgRotateState;
+    const canvas = document.getElementById('imgrotate-canvas');
+    const rad = angle*Math.PI/180;
+    const swapped = (Math.abs(angle)%180) === 90;
+    const w = swapped ? img.naturalHeight : img.naturalWidth;
+    const h = swapped ? img.naturalWidth : img.naturalHeight;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.translate(w/2, h/2);
+    ctx.rotate(rad);
+    ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+    ctx.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
+    ctx.restore();
+  },
+  rotateImage(delta){
+    if(!Tools._imgRotateImgEl) return;
+    Tools._imgRotateState.angle = ((Tools._imgRotateState.angle + delta) % 360 + 360) % 360;
+    Tools._renderRotatedCanvas();
+  },
+  flipImage(dir){
+    if(!Tools._imgRotateImgEl) return;
+    if(dir==='h') Tools._imgRotateState.flipH = !Tools._imgRotateState.flipH;
+    else Tools._imgRotateState.flipV = !Tools._imgRotateState.flipV;
+    Tools._renderRotatedCanvas();
+  },
+  async downloadRotatedImage(){
+    const out = document.getElementById('imgrotate-out');
+    if(!Tools._imgRotateImgEl){ out.style.display='none'; return; }
+    try{
+      const canvas = document.getElementById('imgrotate-canvas');
+      const isPng = Tools._imgRotateFile && (Tools._imgRotateFile.type === 'image/png' || /\.png$/i.test(Tools._imgRotateFile.name));
+      const mime = isPng ? 'image/png' : 'image/jpeg';
+      const blob = await new Promise(res=>canvas.toBlob(res, mime, 0.92));
+      if(!blob) throw new Error('toBlob returned null');
+      await Tools.saveFile('rotated.'+(isPng?'png':'jpg'), blob);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.imgrotate_done[LANG]}</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.imgrotate_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  clearImageRotate(){
+    Tools._imgRotateFile = null;
+    Tools._imgRotateImgEl = null;
+    Tools._imgRotateState = {angle:0, flipH:false, flipV:false};
+    document.getElementById('imgrotate-file').value = '';
+    document.getElementById('imgrotate-preview-wrap').style.display = 'none';
+    document.getElementById('imgrotate-out').style.display = 'none';
+  },
+
+  // ===== Watermark =====
+  _watermarkFile: null,
+  _watermarkImgEl: null,
+  loadImageForWatermark(e){
+    const file = e.target.files[0];
+    Tools._watermarkFile = file || null;
+    const wrap = document.getElementById('watermark-preview-wrap');
+    document.getElementById('watermark-out').style.display = 'none';
+    if(!file){ wrap.style.display='none'; return; }
+    const img = new Image();
+    img.onload = ()=>{
+      Tools._watermarkImgEl = img;
+      wrap.style.display = 'block';
+      Tools.renderWatermark();
+    };
+    img.src = URL.createObjectURL(file);
+  },
+  renderWatermark(){
+    const img = Tools._watermarkImgEl;
+    if(!img) return;
+    const canvas = document.getElementById('watermark-canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const text = document.getElementById('watermark-text').value;
+    if(!text) return;
+    const size = parseInt(document.getElementById('watermark-size').value, 10) || 36;
+    const opacity = parseFloat(document.getElementById('watermark-opacity').value) || 0.5;
+    const color = document.getElementById('watermark-color').value || '#ffffff';
+    const pos = document.getElementById('watermark-pos').value;
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color;
+    ctx.font = `bold ${size}px sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const tw = ctx.measureText(text).width;
+    const pad = size*0.6;
+    if(pos === 'tile'){
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(-25*Math.PI/180);
+      const stepX = tw + pad*2, stepY = size + pad*2;
+      const diag = Math.sqrt(canvas.width**2 + canvas.height**2);
+      for(let y=-diag/2; y<diag/2; y+=stepY){
+        for(let x=-diag/2; x<diag/2; x+=stepX){
+          ctx.fillText(text, x, y);
+        }
+      }
+    } else {
+      let x, y;
+      if(pos==='center'){ x = (canvas.width-tw)/2; y = canvas.height/2; }
+      else if(pos==='tl'){ x = pad; y = pad+size/2; }
+      else if(pos==='tr'){ x = canvas.width-tw-pad; y = pad+size/2; }
+      else if(pos==='bl'){ x = pad; y = canvas.height-pad-size/2; }
+      else { x = canvas.width-tw-pad; y = canvas.height-pad-size/2; }
+      ctx.fillText(text, x, y);
+    }
+    ctx.restore();
+  },
+  async downloadWatermark(){
+    const out = document.getElementById('watermark-out');
+    if(!Tools._watermarkImgEl){ out.style.display='none'; return; }
+    try{
+      const canvas = document.getElementById('watermark-canvas');
+      const isPng = Tools._watermarkFile && (Tools._watermarkFile.type === 'image/png' || /\.png$/i.test(Tools._watermarkFile.name));
+      const mime = isPng ? 'image/png' : 'image/jpeg';
+      const blob = await new Promise(res=>canvas.toBlob(res, mime, 0.92));
+      if(!blob) throw new Error('toBlob returned null');
+      await Tools.saveFile('watermarked.'+(isPng?'png':'jpg'), blob);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.watermark_done[LANG]}</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.watermark_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  clearWatermark(){
+    Tools._watermarkFile = null;
+    Tools._watermarkImgEl = null;
+    document.getElementById('watermark-file').value = '';
+    document.getElementById('watermark-text').value = '';
+    document.getElementById('watermark-preview-wrap').style.display = 'none';
+    document.getElementById('watermark-out').style.display = 'none';
+  },
+
+  // ===== Meme Generator =====
+  _memeFile: null,
+  _memeImgEl: null,
+  loadImageForMeme(e){
+    const file = e.target.files[0];
+    Tools._memeFile = file || null;
+    const wrap = document.getElementById('memegen-preview-wrap');
+    document.getElementById('memegen-out').style.display = 'none';
+    if(!file){ wrap.style.display='none'; return; }
+    const img = new Image();
+    img.onload = ()=>{
+      Tools._memeImgEl = img;
+      wrap.style.display = 'block';
+      Tools.renderMeme();
+    };
+    img.src = URL.createObjectURL(file);
+  },
+  _wrapMemeText(ctx, text, maxWidth){
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    for(const w of words){
+      const test = line ? line+' '+w : w;
+      if(ctx.measureText(test).width > maxWidth && line){
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    }
+    if(line) lines.push(line);
+    return lines;
+  },
+  renderMeme(){
+    const img = Tools._memeImgEl;
+    if(!img) return;
+    const canvas = document.getElementById('memegen-canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const topText = document.getElementById('memegen-top').value.trim().toUpperCase();
+    const bottomText = document.getElementById('memegen-bottom').value.trim().toUpperCase();
+    const fontSize = Math.max(20, Math.round(canvas.width/12));
+    ctx.font = `bold ${fontSize}px Impact, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.lineWidth = Math.max(2, fontSize/12);
+    ctx.strokeStyle = '#000';
+    ctx.fillStyle = '#fff';
+    const maxWidth = canvas.width*0.92;
+    const lineHeight = fontSize*1.15;
+    if(topText){
+      const lines = Tools._wrapMemeText(ctx, topText, maxWidth);
+      lines.forEach((line, i)=>{
+        const y = fontSize + i*lineHeight + 4;
+        ctx.strokeText(line, canvas.width/2, y);
+        ctx.fillText(line, canvas.width/2, y);
+      });
+    }
+    if(bottomText){
+      const lines = Tools._wrapMemeText(ctx, bottomText, maxWidth);
+      lines.forEach((line, i)=>{
+        const y = canvas.height - 14 - (lines.length-1-i)*lineHeight;
+        ctx.strokeText(line, canvas.width/2, y);
+        ctx.fillText(line, canvas.width/2, y);
+      });
+    }
+  },
+  async downloadMeme(){
+    const out = document.getElementById('memegen-out');
+    if(!Tools._memeImgEl){ out.style.display='none'; return; }
+    try{
+      const canvas = document.getElementById('memegen-canvas');
+      const blob = await new Promise(res=>canvas.toBlob(res, 'image/png'));
+      if(!blob) throw new Error('toBlob returned null');
+      await Tools.saveFile('meme.png', blob);
+      out.innerHTML = `<span class="big" style="font-size:16px">${I18N.memegen_done[LANG]}</span>`;
+      out.style.display='block';
+    }catch(err){
+      const msg = (err && err.message) ? Tools._escapeHtml(String(err.message)) : 'unknown error';
+      out.innerHTML = `<span class="muted">${I18N.memegen_error[LANG]}<br><span style="font-size:10px;opacity:.75">${msg}</span></span>`;
+      out.style.display='block';
+    }
+  },
+  clearMeme(){
+    Tools._memeFile = null;
+    Tools._memeImgEl = null;
+    document.getElementById('memegen-file').value = '';
+    document.getElementById('memegen-top').value = '';
+    document.getElementById('memegen-bottom').value = '';
+    document.getElementById('memegen-preview-wrap').style.display = 'none';
+    document.getElementById('memegen-out').style.display = 'none';
+  },
+
   imageToBase64(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -2986,7 +5255,789 @@ const Tools = {
     document.getElementById('notes-area').value = '';
     try{ localStorage.removeItem('toolkit_notes'); }catch(e){}
     Tools.pushUndo(()=>{ document.getElementById('notes-area').value = prev; Tools.saveNotes(); });
+  },
+
+  // ===== Zakat =====
+  zakat(){
+    const nisabBasis = document.getElementById('zakat-nisab').value;
+    // Weights are converted to grams and prices to price-per-gram, whatever unit is chosen (tola, masha, ratti ...)
+    const U = Tools.goldUnits;
+    const goldG = (parseFloat(document.getElementById('zakat-gold-g').value) || 0) * U[document.getElementById('zakat-gold-u').value];
+    const goldP = (parseFloat(document.getElementById('zakat-gold-p').value) || 0) / U[document.getElementById('zakat-gold-pu').value];
+    const silverG = (parseFloat(document.getElementById('zakat-silver-g').value) || 0) * U[document.getElementById('zakat-silver-u').value];
+    const silverP = (parseFloat(document.getElementById('zakat-silver-p').value) || 0) / U[document.getElementById('zakat-silver-pu').value];
+    const cash = parseFloat(document.getElementById('zakat-cash').value) || 0;
+    const debt = parseFloat(document.getElementById('zakat-debt').value) || 0;
+    const box = document.getElementById('zakat-out');
+    const total = (goldG*goldP) + (silverG*silverP) + cash - debt;
+    const nisabVal = nisabBasis === 'gold' ? 87.48 * goldP : 612.36 * silverP;
+    if(!nisabVal){
+      box.innerHTML = `<span class="muted">${I18N.zakat_need_price[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    if(total < nisabVal){
+      box.innerHTML = `<span class="big">0</span><br><span class="muted">${I18N.zakat_below_nisab[LANG]}</span>`;
+    } else {
+      const zakatDue = total * 0.025;
+      box.innerHTML = `<span class="big">${zakatDue.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`
+        + `<br><span class="muted">${I18N.zakat_total_wealth[LANG]}: ${total.toLocaleString(undefined,{maximumFractionDigits:2})} · ${I18N.zakat_nisab_value[LANG]}: ${nisabVal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`;
+    }
+    const wParts = [];
+    if(goldG) wParts.push(`${I18N.zakat_gold_word[LANG]} ${+goldG.toFixed(3)} g`);
+    if(silverG) wParts.push(`${I18N.zakat_silver_word[LANG]} ${+silverG.toFixed(3)} g`);
+    if(wParts.length) box.innerHTML += `<br><span class="muted">${I18N.zakat_weight_in_g[LANG]}: ${wParts.join(' \u00b7 ')}</span>`;
+    box.style.display='block';
+  },
+
+  // ===== GPA =====
+  _gpaGrades: [
+    {label:'A+ (4.0)', v:4.0}, {label:'A (4.0)', v:4.0}, {label:'A- (3.7)', v:3.7},
+    {label:'B+ (3.3)', v:3.3}, {label:'B (3.0)', v:3.0}, {label:'B- (2.7)', v:2.7},
+    {label:'C+ (2.3)', v:2.3}, {label:'C (2.0)', v:2.0}, {label:'C- (1.7)', v:1.7},
+    {label:'D+ (1.3)', v:1.3}, {label:'D (1.0)', v:1.0}, {label:'F (0.0)', v:0.0}
+  ],
+  _gpaRowsCount: 0,
+  gpaAddRow(){
+    const wrap = document.getElementById('gpa-rows');
+    const idx = Tools._gpaRowsCount++;
+    const row = document.createElement('div');
+    row.className = 'dyn-row';
+    row.dataset.idx = idx;
+    const gradeOpts = Tools._gpaGrades.map(g=>`<option value="${g.v}">${g.label}</option>`).join('');
+    row.innerHTML = `<input type="number" min="0" step="0.5" placeholder="3" class="dyn-credit" oninput="Tools.gpaCalc()">
+      <select onchange="Tools.gpaCalc()">${gradeOpts}</select>
+      <span class="icon-x" onclick="Tools.gpaRemoveRow(${idx})">✕</span>`;
+    wrap.appendChild(row);
+  },
+  gpaRemoveRow(idx){
+    const row = document.querySelector(`#gpa-rows .dyn-row[data-idx="${idx}"]`);
+    if(row) row.remove();
+    Tools.gpaCalc();
+  },
+  gpaCalc(){
+    const rows = document.querySelectorAll('#gpa-rows .dyn-row');
+    let totalCredits = 0, totalPoints = 0;
+    rows.forEach(row=>{
+      const credit = parseFloat(row.querySelector('.dyn-credit').value) || 0;
+      const grade = parseFloat(row.querySelector('select').value) || 0;
+      totalCredits += credit;
+      totalPoints += credit*grade;
+    });
+    const box = document.getElementById('gpa-out');
+    if(totalCredits <= 0){ box.style.display='none'; return; }
+    const gpa = totalPoints/totalCredits;
+    box.innerHTML = `<span class="big">${gpa.toFixed(2)}</span> <span class="muted">/ 4.0</span>`
+      + `<br><span class="muted">${I18N.gpa_total_credits[LANG]}: ${totalCredits}</span>`;
+    box.style.display='block';
+  },
+  gpaClear(){
+    document.getElementById('gpa-rows').innerHTML = '';
+    Tools._gpaRowsCount = 0;
+    document.getElementById('gpa-out').style.display='none';
+    Tools.gpaAddRow();
+    Tools.gpaAddRow();
+  },
+
+  // ===== Fuel average =====
+  fuelAvg(){
+    const dist = parseFloat(document.getElementById('fuel-distance').value);
+    const used = parseFloat(document.getElementById('fuel-used').value);
+    const price = parseFloat(document.getElementById('fuel-price').value) || 0;
+    const box = document.getElementById('fuel-out');
+    if(!dist || !used){ box.style.display='none'; return; }
+    const kmpl = dist/used;
+    const lp100 = (used/dist)*100;
+    let html = `<span class="big">${kmpl.toFixed(2)}</span> <span class="muted">${I18N.fuel_kmpl[LANG]}</span>`
+      + `<br><span class="muted">${lp100.toFixed(2)} ${I18N.fuel_lp100[LANG]}</span>`;
+    if(price){
+      const costPerKm = (used*price)/dist;
+      html += `<br><span class="muted">${I18N.fuel_cost_per_km[LANG]}: ${costPerKm.toFixed(2)}</span>`;
+    }
+    box.innerHTML = html;
+    box.style.display='block';
+  },
+
+  // ===== Retirement planner =====
+  retirementPlan(){
+    const current = parseFloat(document.getElementById('ret-current').value) || 0;
+    const monthly = parseFloat(document.getElementById('ret-monthly').value) || 0;
+    const rate = parseFloat(document.getElementById('ret-rate').value) || 0;
+    const years = parseFloat(document.getElementById('ret-years').value);
+    const box = document.getElementById('ret-out');
+    if(!years){ box.style.display='none'; return; }
+    const n = years*12;
+    const r = (rate/100)/12;
+    let fv;
+    if(r === 0){ fv = current + monthly*n; }
+    else { fv = current*Math.pow(1+r, n) + monthly*((Math.pow(1+r,n)-1)/r); }
+    const totalContributed = current + monthly*n;
+    const growth = fv - totalContributed;
+    box.innerHTML = `<span class="big">${Math.round(fv).toLocaleString()}</span>`
+      + `<br><span class="muted">${I18N.ret_contributed[LANG]}: ${Math.round(totalContributed).toLocaleString()} · ${I18N.ret_growth[LANG]}: ${Math.round(growth).toLocaleString()}</span>`;
+    box.style.display='block';
+  },
+
+  // ===== Hijri/Gregorian date converter =====
+  _hijriMode: 'g2h',
+  hijriMode(mode){
+    Tools._hijriMode = mode;
+    document.querySelectorAll('#hijri-mode-row button').forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
+    document.getElementById('hijri-g2h-box').style.display = mode==='g2h' ? '' : 'none';
+    document.getElementById('hijri-h2g-box').style.display = mode==='h2g' ? '' : 'none';
+    document.getElementById('hijri-out').style.display='none';
+  },
+  _gregToJDN(y,m,d){
+    const a = Math.floor((14-m)/12);
+    const y2 = y + 4800 - a;
+    const m2 = m + 12*a - 3;
+    return d + Math.floor((153*m2+2)/5) + 365*y2 + Math.floor(y2/4) - Math.floor(y2/100) + Math.floor(y2/400) - 32045;
+  },
+  _jdnToGreg(jdn){
+    const a = jdn + 32044;
+    const b = Math.floor((4*a+3)/146097);
+    const c = a - Math.floor((146097*b)/4);
+    const d = Math.floor((4*c+3)/1461);
+    const e = c - Math.floor((1461*d)/4);
+    const m = Math.floor((5*e+2)/153);
+    const day = e - Math.floor((153*m+2)/5) + 1;
+    const month = m + 3 - 12*Math.floor(m/10);
+    const year = 100*b + d - 4800 + Math.floor(m/10);
+    return {year, month, day};
+  },
+  _hijriToJDN(y,m,d){
+    return Math.floor((11*y+3)/30) + 354*y + 30*m - Math.floor((m-1)/2) + d + 1948440 - 385;
+  },
+  _jdnToHijri(jdn){
+    let l = jdn - 1948440 + 10632;
+    const n = Math.floor((l-1)/10631);
+    l = l - 10631*n + 354;
+    const j = (Math.floor((10985-l)/5316))*(Math.floor((50*l)/17719)) + (Math.floor(l/5670))*(Math.floor((43*l)/15238));
+    l = l - (Math.floor((30-j)/15))*(Math.floor((17719*j)/50)) - (Math.floor(j/16))*(Math.floor((15238*j)/43)) + 29;
+    const month = Math.floor((24*l)/709);
+    const day = l - Math.floor((709*month)/24);
+    const year = 30*n + j - 30;
+    return {year, month, day};
+  },
+  _hijriMonthNames: {
+    ur: ['محرم','صفر','ربیع الاول','ربیع الثانی','جمادی الاول','جمادی الثانی','رجب','شعبان','رمضان','شوال','ذوالقعدہ','ذوالحجہ'],
+    en: ['Muharram','Safar',"Rabi' al-Awwal","Rabi' al-Thani",'Jumada al-Awwal','Jumada al-Thani','Rajab',"Sha'ban",'Ramadan','Shawwal',"Dhu al-Qi'dah","Dhu al-Hijjah"]
+  },
+  _desiMonths: {
+    ur: ['پوہ','ماگھ','پھاگن','چیت','ویساکھ','جیٹھ','ہاڑ','ساون','بھادوں','اسو','کاتک','مگھر'],
+    en: ['Poh','Magh','Phagun','Chet','Vaisakh','Jeth','Har','Sawan','Bhadon','Assu','Katak','Maghar']
+  },
+  _desiMonthBounds: [14,13,14,14,15,15,16,16,16,16,15,15],
+  _desiMonthFor(month, day){
+    const bounds = Tools._desiMonthBounds;
+    const gm = month-1;
+    const cutover = bounds[gm];
+    return day < cutover ? gm : (gm+1)%12;
+  },
+  _desiYearFor(year, month, day){
+    const afterVaisakh = (month > 4) || (month === 4 && day >= 14);
+    return afterVaisakh ? year + 57 : year + 56;
+  },
+  _desiMonthStart(idx){
+    const bounds = Tools._desiMonthBounds;
+    const month = idx === 0 ? 12 : idx;
+    const day = bounds[idx === 0 ? 11 : idx-1];
+    return {month, day};
+  },
+  _desiDateFor(year, month, day){
+    const idx = Tools._desiMonthFor(month, day);
+    const start = Tools._desiMonthStart(idx);
+    const startYear = start.month > month ? year - 1 : year;
+    const curMs = Date.UTC(year, month-1, day);
+    const startMs = Date.UTC(startYear, start.month-1, start.day);
+    const desiDay = Math.round((curMs - startMs) / 86400000) + 1;
+    return { idx, day: desiDay, year: Tools._desiYearFor(year, month, day) };
+  },
+  hijriConvert(){
+    const box = document.getElementById('hijri-out');
+    if(Tools._hijriMode === 'g2h'){
+      const val = document.getElementById('hijri-g-date').value;
+      if(!val){ box.style.display='none'; return; }
+      const [y,m,d] = val.split('-').map(Number);
+      const jdn = Tools._gregToJDN(y,m,d);
+      const h = Tools._jdnToHijri(jdn);
+      const hNames = Tools._hijriMonthNames[LANG==='ur'?'ur':'en'];
+      const desi = Tools._desiDateFor(y,m,d);
+      const desiNames = Tools._desiMonths[LANG==='ur'?'ur':'en'];
+      box.innerHTML = `<span class="big" style="font-size:19px">${h.day} ${hNames[h.month-1]} ${h.year} ${LANG==='ur'?'ھ':'AH'}</span>`
+        + `<br><span class="muted">${I18N.hijri_desi_label[LANG]}: ${desi.day} ${desiNames[desi.idx]} ${desi.year} (${I18N.hijri_bikrami_label[LANG]})</span>`;
+    } else {
+      const d = parseInt(document.getElementById('hijri-h-day').value);
+      const m = parseInt(document.getElementById('hijri-h-month').value);
+      const y = parseInt(document.getElementById('hijri-h-year').value);
+      if(!d || !m || !y){ box.style.display='none'; return; }
+      const jdn = Tools._hijriToJDN(y,m,d);
+      const g = Tools._jdnToGreg(jdn);
+      const gDate = new Date(Date.UTC(g.year, g.month-1, g.day));
+      const formatted = new Intl.DateTimeFormat(LANG==='ur'?'ur-PK':'en-US', { day:'numeric', month:'long', year:'numeric' }).format(gDate);
+      box.innerHTML = `<span class="big" style="font-size:19px">${formatted}</span>`;
+    }
+    box.style.display='block';
+  },
+
+  // ===== Prayer times (astronomical calculation) =====
+  _dsin(d){ return Math.sin(d*Math.PI/180); },
+  _dcos(d){ return Math.cos(d*Math.PI/180); },
+  _dtan(d){ return Math.tan(d*Math.PI/180); },
+  _darcsin(x){ return Math.asin(x)*180/Math.PI; },
+  _darccos(x){ return Math.acos(x)*180/Math.PI; },
+  _darctan2(y,x){ return Math.atan2(y,x)*180/Math.PI; },
+  _darccot(x){ return Math.atan(1/x)*180/Math.PI; },
+  _fixAngle(a){ a = a - 360*Math.floor(a/360); return a<0? a+360 : a; },
+  _fixHour(h){ h = h - 24*Math.floor(h/24); return h<0? h+24 : h; },
+  _sunPosition(jd){
+    const D = jd - 2451545.0;
+    const g = Tools._fixAngle(357.529 + 0.98560028*D);
+    const q = Tools._fixAngle(280.459 + 0.98564736*D);
+    const L = Tools._fixAngle(q + 1.915*Tools._dsin(g) + 0.020*Tools._dsin(2*g));
+    const e = 23.439 - 0.00000036*D;
+    let RA = Tools._darctan2(Tools._dcos(e)*Tools._dsin(L), Tools._dcos(L))/15;
+    RA = Tools._fixHour(RA);
+    const eqt = q/15 - RA;
+    const decl = Tools._darcsin(Tools._dsin(e)*Tools._dsin(L));
+    return {decl, eqt};
+  },
+  _julianDate(y,m,d){
+    if(m<=2){ y -= 1; m += 12; }
+    const A = Math.floor(y/100);
+    const B = 2 - A + Math.floor(A/4);
+    return Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d + B - 1524.5;
+  },
+  _sunAngleTime(angle, lat, decl){
+    const denom = Tools._dcos(lat)*Tools._dcos(decl);
+    let val = (-Tools._dsin(angle) - Tools._dsin(lat)*Tools._dsin(decl)) / denom;
+    val = Math.max(-1, Math.min(1, val));
+    return Tools._darccos(val)/15;
+  },
+  prayerTimes(){
+    const citySel = document.getElementById('prayer-city');
+    const opt = citySel.options[citySel.selectedIndex];
+    const lat = parseFloat(opt.dataset.lat);
+    const lng = parseFloat(opt.dataset.lng);
+    const tz = parseFloat(opt.dataset.tz);
+    const dateVal = document.getElementById('prayer-date').value;
+    const table = document.getElementById('prayer-table');
+    if(!dateVal){ table.style.display='none'; return; }
+    const [y,m,d] = dateVal.split('-').map(Number);
+    const jd = Tools._julianDate(y,m,d) - lng/(15*24);
+    const {decl, eqt} = Tools._sunPosition(jd);
+    const dhuhr = 12 + tz - lng/15 - eqt;
+    const fajrAngle = 18, ishaAngle = 18, sunsetAngle = 0.833;
+    const fajrT = Tools._sunAngleTime(fajrAngle, lat, decl);
+    const sunriseT = Tools._sunAngleTime(sunsetAngle, lat, decl);
+    const ishaT = Tools._sunAngleTime(ishaAngle, lat, decl);
+    const asrFactor = parseFloat(document.getElementById('prayer-asr').value) === 1 ? 2 : 1;
+    const asrAngle = Tools._darccot(asrFactor + Tools._dtan(Math.abs(lat-decl)));
+    let asrVal = (Tools._dsin(asrAngle) - Tools._dsin(lat)*Tools._dsin(decl)) / (Tools._dcos(lat)*Tools._dcos(decl));
+    asrVal = Math.max(-1, Math.min(1, asrVal));
+    const asrT = Tools._darccos(asrVal)/15;
+
+    const fajr = Tools._fixHour(dhuhr - fajrT);
+    const sunrise = Tools._fixHour(dhuhr - sunriseT);
+    const dhuhrTime = Tools._fixHour(dhuhr + 0.0333);
+    const asr = Tools._fixHour(dhuhr + asrT);
+    const maghrib = Tools._fixHour(dhuhr + sunriseT);
+    const isha = Tools._fixHour(dhuhr + ishaT);
+
+    const fmt = (h)=>{
+      let hh = Math.floor(h);
+      let mm = Math.round((h-hh)*60);
+      if(mm===60){ mm=0; hh+=1; }
+      hh = ((hh%24)+24)%24;
+      const period = hh>=12 ? (LANG==='ur'?'شام':'PM') : (LANG==='ur'?'صبح':'AM');
+      let hh12 = hh % 12; if(hh12===0) hh12=12;
+      return `${hh12}:${mm.toString().padStart(2,'0')} ${period}`;
+    };
+    const rows = [
+      [I18N.prayer_fajr[LANG], fajr],
+      [I18N.prayer_sunrise[LANG], sunrise],
+      [I18N.prayer_dhuhr[LANG], dhuhrTime],
+      [I18N.prayer_asr[LANG], asr],
+      [I18N.prayer_maghrib[LANG], maghrib],
+      [I18N.prayer_isha[LANG], isha]
+    ];
+    table.innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td></tr>`).join('');
+    table.style.display='';
+  },
+
+  // ===== Speed converter =====
+  speedData: { 'km/h':1, 'mph':1.60934, 'm/s':3.6, 'knot':1.852 },
+  speedConvert(){
+    const from = document.getElementById('speed-from').value;
+    const to = document.getElementById('speed-to').value;
+    const val = parseFloat(document.getElementById('speed-val').value);
+    const box = document.getElementById('speed-out');
+    if(isNaN(val)){ box.style.display='none'; return; }
+    const kmh = val * Tools.speedData[from];
+    const result = kmh / Tools.speedData[to];
+    box.innerHTML = `<span class="big">${result.toFixed(4).replace(/\.?0+$/,'')}</span> ${to}`;
+    box.style.display='block';
+  },
+
+  // ===== Data storage converter =====
+  dsUnits: { B:1, KB:1024, MB:1024**2, GB:1024**3, TB:1024**4, PB:1024**5 },
+  dataStorageConvert(){
+    const from = document.getElementById('ds-from').value;
+    const to = document.getElementById('ds-to').value;
+    const val = parseFloat(document.getElementById('ds-val').value);
+    const box = document.getElementById('ds-out');
+    if(isNaN(val)){ box.style.display='none'; return; }
+    const bytes = val * Tools.dsUnits[from];
+    const result = bytes / Tools.dsUnits[to];
+    box.innerHTML = `<span class="big">${result.toFixed(6).replace(/\.?0+$/,'')}</span> ${to}`;
+    box.style.display='block';
+  },
+
+  // ===== Roman numerals =====
+  _romanMap: [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']],
+  numToRoman(){
+    let n = parseInt(document.getElementById('roman-num').value);
+    const box = document.getElementById('roman-out1');
+    if(!n || n<1 || n>3999){
+      box.innerHTML = `<span class="muted">${I18N.roman_range_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    let result = '';
+    for(const [val,sym] of Tools._romanMap){
+      while(n >= val){ result += sym; n -= val; }
+    }
+    box.innerHTML = `<span class="big">${result}</span>`;
+    box.style.display='block';
+  },
+  romanToNum(){
+    const s = document.getElementById('roman-input').value.trim().toUpperCase();
+    const box = document.getElementById('roman-out2');
+    if(!s || !/^[MDCLXVI]+$/.test(s)){
+      box.innerHTML = `<span class="muted">${I18N.roman_invalid_error[LANG]}</span>`;
+      box.style.display='block';
+      return;
+    }
+    const vals = { M:1000, D:500, C:100, L:50, X:10, V:5, I:1 };
+    let total = 0;
+    for(let i=0;i<s.length;i++){
+      const cur = vals[s[i]];
+      const next = vals[s[i+1]];
+      if(next && cur < next) total -= cur; else total += cur;
+    }
+    box.innerHTML = `<span class="big">${total}</span>`;
+    box.style.display='block';
+  },
+
+  // ===== Shared: copy text with visual feedback =====
+  copyText(text, btn){
+    const done = ()=>{
+      if(!btn) return;
+      const key = btn.dataset.i18n;
+      const orig = (key && I18N[key]) ? I18N[key][LANG] : btn.textContent;
+      btn.textContent = I18N.copied_label[LANG];
+      clearTimeout(btn._copyTimer);
+      btn._copyTimer = setTimeout(()=>{ btn.textContent = orig; }, 1200);
+    };
+    const fallback = ()=>{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      done();
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  },
+
+  // ===== Fancy / Stylish Font Generator =====
+  // Builds a converter for the Unicode "Mathematical Alphanumeric" blocks: u/l/d are the code points of
+  // A, a and 0 in the target block; ex holds the characters that live elsewhere in Unicode (e.g. script "B").
+  _fmap(u, l, d, ex){
+    ex = ex || {};
+    return function(str){
+      let out = '';
+      for(const ch of str){
+        const c = ch.codePointAt(0);
+        if(ex[ch] !== undefined) out += ex[ch];
+        else if(u && c >= 65 && c <= 90) out += String.fromCodePoint(u + c - 65);
+        else if(l && c >= 97 && c <= 122) out += String.fromCodePoint(l + c - 97);
+        else if(d && c >= 48 && c <= 57) out += String.fromCodePoint(d + c - 48);
+        else out += ch;
+      }
+      return out;
+    };
+  },
+  _fEach(str, fn){
+    let out = '';
+    for(const ch of str){ out += fn(ch, ch.codePointAt(0)); }
+    return out;
+  },
+  _fancyStyles: null,
+  _fancyList(){
+    if(Tools._fancyStyles) return Tools._fancyStyles;
+    const M = Tools._fmap, E = Tools._fEach;
+    const smallCaps = {a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ǫ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ'};
+    const supLower = Array.from('ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖqʳˢᵗᵘᵛʷˣʸᶻ');
+    const supDigit = Array.from('⁰¹²³⁴⁵⁶⁷⁸⁹');
+    const flip = {
+      a:'ɐ',b:'q',c:'ɔ',d:'p',e:'ǝ',f:'ɟ',g:'ƃ',h:'ɥ',i:'ᴉ',j:'ɾ',k:'ʞ',l:'l',m:'ɯ',n:'u',o:'o',p:'d',q:'b',r:'ɹ',s:'s',t:'ʇ',u:'n',v:'ʌ',w:'ʍ',x:'x',y:'ʎ',z:'z',
+      A:'∀',B:'ᗺ',C:'Ɔ',D:'ᗡ',E:'Ǝ',F:'Ⅎ',G:'⅁',H:'H',I:'I',J:'ſ',K:'⋊',L:'⅂',M:'W',N:'N',O:'O',P:'Ԁ',Q:'Ό',R:'ᴚ',S:'S',T:'⊥',U:'∩',V:'Λ',W:'M',X:'X',Y:'⅄',Z:'Z',
+      '0':'0','1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6',
+      '.':'˙',',':"'","'":',','"':'„','!':'¡','?':'¿','(':')',')':'(','[':']',']':'[','{':'}','}':'{','<':'>','>':'<','&':'⅋','_':'‾'
+    };
+    const combine = mark => str => E(str, ch => /\s/.test(ch) ? ch : ch + mark);
+    const frame = (a, b) => str => a + str + b;
+
+    Tools._fancyStyles = [
+      { name:'Bold',              fn: M(0x1D400, 0x1D41A, 0x1D7CE) },
+      { name:'Italic',            fn: M(0x1D434, 0x1D44E, null, {h:'\u210E'}) },
+      { name:'Bold Italic',       fn: M(0x1D468, 0x1D482, 0x1D7CE) },
+      { name:'Script',            fn: M(0x1D49C, 0x1D4B6, null, {B:'\u212C',E:'\u2130',F:'\u2131',H:'\u210B',I:'\u2110',L:'\u2112',M:'\u2133',R:'\u211B',e:'\u212F',g:'\u210A',o:'\u2134'}) },
+      { name:'Bold Script',       fn: M(0x1D4D0, 0x1D4EA, 0x1D7CE) },
+      { name:'Fraktur',           fn: M(0x1D504, 0x1D51E, null, {C:'\u212D',H:'\u210C',I:'\u2111',R:'\u211C',Z:'\u2124'}) },
+      { name:'Bold Fraktur',      fn: M(0x1D56C, 0x1D586, 0x1D7CE) },
+      { name:'Double-struck',     fn: M(0x1D538, 0x1D552, 0x1D7D8, {C:'\u2102',H:'\u210D',N:'\u2115',P:'\u2119',Q:'\u211A',R:'\u211D',Z:'\u2124'}) },
+      { name:'Sans',              fn: M(0x1D5A0, 0x1D5BA, 0x1D7E2) },
+      { name:'Sans Bold',         fn: M(0x1D5D4, 0x1D5EE, 0x1D7EC) },
+      { name:'Sans Italic',       fn: M(0x1D608, 0x1D622, null) },
+      { name:'Sans Bold Italic',  fn: M(0x1D63C, 0x1D656, 0x1D7EC) },
+      { name:'Monospace',         fn: M(0x1D670, 0x1D68A, 0x1D7F6) },
+      { name:'Bubble',            fn: str => E(str, (ch, c) => {
+          if(c >= 65 && c <= 90) return String.fromCodePoint(0x24B6 + c - 65);
+          if(c >= 97 && c <= 122) return String.fromCodePoint(0x24D0 + c - 97);
+          if(c === 48) return '\u24EA';
+          if(c >= 49 && c <= 57) return String.fromCodePoint(0x2460 + c - 49);
+          return ch;
+        }) },
+      { name:'Dark Bubble',       fn: str => E(str, (ch, c) => {
+          if(c >= 65 && c <= 90) return String.fromCodePoint(0x1F150 + c - 65);
+          if(c >= 97 && c <= 122) return String.fromCodePoint(0x1F150 + c - 97);
+          if(c === 48) return '\u24FF';
+          if(c >= 49 && c <= 57) return String.fromCodePoint(0x2776 + c - 49);
+          return ch;
+        }) },
+      { name:'Square',            fn: str => E(str, (ch, c) => {
+          if(c >= 65 && c <= 90) return String.fromCodePoint(0x1F130 + c - 65);
+          if(c >= 97 && c <= 122) return String.fromCodePoint(0x1F130 + c - 97);
+          return ch;
+        }) },
+      { name:'Dark Square',       fn: str => E(str, (ch, c) => {
+          if(c >= 65 && c <= 90) return String.fromCodePoint(0x1F170 + c - 65);
+          if(c >= 97 && c <= 122) return String.fromCodePoint(0x1F170 + c - 97);
+          return ch;
+        }) },
+      { name:'Parenthesized',     fn: str => E(str, (ch, c) => {
+          if(c >= 65 && c <= 90) return String.fromCodePoint(0x249C + c - 65);
+          if(c >= 97 && c <= 122) return String.fromCodePoint(0x249C + c - 97);
+          if(c >= 49 && c <= 57) return String.fromCodePoint(0x2474 + c - 49);
+          return ch;
+        }) },
+      { name:'Fullwidth',         fn: str => E(str, (ch, c) => c === 32 ? '\u3000' : (c >= 33 && c <= 126 ? String.fromCodePoint(c + 0xFEE0) : ch)) },
+      { name:'Small Caps',        fn: str => E(str, ch => smallCaps[ch.toLowerCase()] || ch) },
+      { name:'Superscript',       fn: str => E(str, (ch, c) => {
+          const lc = ch.toLowerCase().charCodeAt(0);
+          if(lc >= 97 && lc <= 122 && ch.length === 1) return supLower[lc - 97];
+          if(c >= 48 && c <= 57) return supDigit[c - 48];
+          return ch;
+        }) },
+      { name:'Upside Down',       fn: str => Array.from(str).map(ch => flip[ch] !== undefined ? flip[ch] : ch).reverse().join('') },
+      { name:'Spaced',            fn: str => Array.from(str).join(' ') },
+      { name:'Strikethrough',     fn: combine('\u0336') },
+      { name:'Underline',         fn: combine('\u0332') },
+      { name:'Double Underline',  fn: combine('\u0333') },
+      { name:'Slashed',           fn: combine('\u0338') },
+      { name:'Royal',             fn: frame('꧁༒ ', ' ༒꧂') },
+      { name:'Stars',             fn: frame('★彡 ', ' 彡★') },
+      { name:'Flowers',           fn: frame('✿ ', ' ✿') },
+      { name:'Sparkle',           fn: frame('✧･ﾟ: *✧･ﾟ:* ', ' *:･ﾟ✧*:･ﾟ✧') },
+      { name:'Dots',              fn: frame('•·.·´¯`·.·• ', ' •·.·´¯`·.·•') },
+      { name:'Brackets',          fn: frame('『', '』') },
+      { name:'Lenticular',        fn: frame('【 ', ' 】') },
+      { name:'Crown',             fn: frame('♛ ', ' ♛') }
+    ];
+    return Tools._fancyStyles;
+  },
+  fancyRender(){
+    const t = document.getElementById('fancy-input').value;
+    const box = document.getElementById('fancy-out');
+    box.textContent = '';
+    if(!t.trim()) return;
+    const frag = document.createDocumentFragment();
+    Tools._fancyList().forEach(st=>{
+      const out = st.fn(t);
+      const row = document.createElement('div');
+      row.className = 'fancy-row';
+      const main = document.createElement('div');
+      main.className = 'fancy-main';
+      const nm = document.createElement('span');
+      nm.className = 'fancy-name';
+      nm.textContent = st.name;
+      const tx = document.createElement('span');
+      tx.className = 'fancy-text';
+      tx.textContent = out;
+      main.appendChild(nm); main.appendChild(tx);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn secondary';
+      btn.setAttribute('data-i18n', 'copy_btn');
+      btn.textContent = I18N.copy_btn[LANG];
+      btn.onclick = ()=> Tools.copyText(out, btn);
+      row.appendChild(main); row.appendChild(btn);
+      frag.appendChild(row);
+    });
+    box.appendChild(frag);
+  },
+  clearFancy(){
+    const inp = document.getElementById('fancy-input');
+    const prev = inp.value;
+    inp.value = '';
+    Tools.fancyRender();
+    if(prev) Tools.pushUndo(()=>{ inp.value = prev; Tools.fancyRender(); });
+  },
+
+  // ===== Ideal Weight & Daily Water Intake =====
+  idealWeight(){
+    const male = document.getElementById('iw-gender').value === 'male';
+    const hcm = parseFloat(document.getElementById('iw-height').value);
+    const cw = parseFloat(document.getElementById('iw-weight').value);
+    const ex = parseFloat(document.getElementById('iw-exercise').value) || 0;
+    const box = document.getElementById('iw-out');
+    if(!hcm || hcm < 100 || hcm > 250){ box.style.display = 'none'; return; }
+    const hm = hcm / 100;
+    const lo = 18.5 * hm * hm, hi = 24.9 * hm * hm;
+    const over = hcm / 2.54 - 60;   // inches over 5 ft
+    let html = `<div class="muted">${I18N.iw_healthy_range[LANG]}</div>`
+      + `<span class="big" dir="ltr">${lo.toFixed(1)} \u2013 ${hi.toFixed(1)}</span> <span class="muted">kg</span>`;
+    if(over >= 0){
+      const f = male
+        ? { Devine: 50 + 2.3*over,   Robinson: 52 + 1.9*over, Miller: 56.2 + 1.41*over, Hamwi: 48 + 2.7*over }
+        : { Devine: 45.5 + 2.3*over, Robinson: 49 + 1.7*over, Miller: 53.1 + 1.36*over, Hamwi: 45.5 + 2.2*over };
+      html += `<br><span class="muted">${I18N.iw_formulas[LANG]}: `
+        + Object.keys(f).map(k => `${k} ${f[k].toFixed(1)}`).join(' \u00b7 ') + ' kg</span>';
+    } else {
+      html += `<br><span class="muted">${I18N.iw_short_note[LANG]}</span>`;
+    }
+    // Water: ~33 ml per kg of body weight, plus ~350 ml for every 30 minutes of exercise.
+    const basis = cw > 0 ? cw : 22 * hm * hm;   // no current weight given: use BMI 22 (middle of the healthy range)
+    const litres = basis * 0.033 + (ex / 30) * 0.35;
+    const glasses = Math.round(litres * 1000 / 250);
+    html += `<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">`
+      + `<div class="muted">${I18N.iw_water[LANG]} (${cw > 0 ? I18N.iw_basis_current[LANG] : I18N.iw_basis_ideal[LANG]})</div>`
+      + `<span class="big">${litres.toFixed(1)}</span> <span class="muted">L</span>`
+      + `<br><span class="muted">\u2248 ${glasses} ${I18N.iw_glasses[LANG]}</span>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Body Fat % (US Navy method) =====
+  bodyFatGender(){
+    const female = document.getElementById('bf-gender').value === 'female';
+    document.getElementById('bf-hip-wrap').style.display = female ? 'block' : 'none';
+  },
+  bodyFat(){
+    const male = document.getElementById('bf-gender').value === 'male';
+    const h = parseFloat(document.getElementById('bf-height').value);
+    const neck = parseFloat(document.getElementById('bf-neck').value);
+    const waist = parseFloat(document.getElementById('bf-waist').value);
+    const hip = parseFloat(document.getElementById('bf-hip').value);
+    const wt = parseFloat(document.getElementById('bf-weight').value);
+    const box = document.getElementById('bf-out');
+    if(!h || !neck || !waist || (!male && !hip)){ box.style.display = 'none'; return; }
+    let bf;
+    if(male){
+      bf = (waist > neck)
+        ? 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(h)) - 450
+        : NaN;
+    } else {
+      bf = (waist + hip > neck)
+        ? 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(h)) - 450
+        : NaN;
+    }
+    if(!isFinite(bf) || bf < 2 || bf > 60){
+      box.innerHTML = `<span class="muted">${I18N.bf_invalid[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    // American Council on Exercise ranges
+    const cuts = male ? [6, 14, 18, 25] : [14, 21, 25, 32];
+    const keys = ['bf_cat_essential', 'bf_cat_athlete', 'bf_cat_fit', 'bf_cat_average', 'bf_cat_high'];
+    let idx = cuts.findIndex(c => bf < c);
+    if(idx < 0) idx = 4;
+    let html = `<span class="big">${bf.toFixed(1)}%</span><br><span class="muted">${I18N[keys[idx]][LANG]}</span>`;
+    if(wt > 0){
+      const fat = wt * bf / 100;
+      html += `<br><span class="muted">${I18N.bf_fat_mass[LANG]}: ${fat.toFixed(1)} kg \u00b7 ${I18N.bf_lean_mass[LANG]}: ${(wt - fat).toFixed(1)} kg</span>`;
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Gold / Silver weight converter (Tola, Masha, Ratti ...) =====
+  // Pakistani standard: 1 tola = 11.664 g (matches the zakat nisab of 7.5 tola = 87.48 g).
+  goldUnits: { tola:11.664, masha:0.972, ratti:0.1215, g:1, mg:0.001, kg:1000, ozt:31.1034768, oz:28.349523125 },
+  goldConvert(){
+    const from = document.getElementById('gold-from').value;
+    const to = document.getElementById('gold-to').value;
+    const val = parseFloat(document.getElementById('gold-val').value);
+    const price = parseFloat(document.getElementById('gold-price').value);
+    const box = document.getElementById('gold-out');
+    if(isNaN(val) || val < 0){ box.style.display = 'none'; return; }
+    const U = Tools.goldUnits;
+    const grams = val * U[from];
+    const result = grams / U[to];
+    const fmt = n => n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    let html = `<span class="big">${fmt(result)}</span>`;
+    if(to !== 'g') html += ` <span class="muted">(= ${fmt(grams)} g)</span>`;
+    // tola / masha / ratti breakdown (1 tola = 12 masha, 1 masha = 8 ratti)
+    const totalRatti = Math.round(grams / U.ratti * 100) / 100;
+    const tola = Math.floor(totalRatti / 96);
+    const masha = Math.floor((totalRatti - tola * 96) / 8);
+    const ratti = Math.round((totalRatti - tola * 96 - masha * 8) * 100) / 100;
+    html += `<br><span class="muted">${I18N.gold_breakdown[LANG]}: ${tola} ${I18N.gold_tola[LANG]} \u00b7 ${masha} ${I18N.gold_masha[LANG]} \u00b7 ${ratti} ${I18N.gold_ratti[LANG]}</span>`;
+    if(price > 0){
+      const worth = grams / U.tola * price;
+      html += `<br><span class="muted">${I18N.gold_value[LANG]}: PKR ${Math.round(worth).toLocaleString()}</span>`;
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== WhatsApp Click-to-Chat link =====
+  _wappLink: '',
+  wappBuild(){
+    const sel = document.getElementById('wapp-cc');
+    const cc = sel.value;
+    const natLen = parseInt(sel.options[sel.selectedIndex].dataset.len) || 0;
+    const raw = document.getElementById('wapp-phone').value.trim();
+    const msg = document.getElementById('wapp-msg').value.trim();
+    const box = document.getElementById('wapp-box');
+    const err = document.getElementById('wapp-err');
+    if(!raw){ box.style.display = 'none'; err.style.display = 'none'; return; }
+    let d = raw.replace(/\D/g, '');
+    let full;
+    if(raw.startsWith('+')) full = d;                       // typed with +country code
+    else if(d.startsWith('00')) full = d.replace(/^0+/, ''); // 00 international prefix
+    else if(!cc) full = d;                                  // "code already included" mode
+    else if(d.startsWith(cc) && d.length === cc.length + natLen) full = d;   // code typed without +
+    else full = cc + d.replace(/^0+/, '');                  // local number: drop trunk 0, add code
+    if(full.length < 8 || full.length > 15){
+      box.style.display = 'none';
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    const link = 'https://wa.me/' + full + (msg ? '?text=' + encodeURIComponent(msg) : '');
+    if(link !== Tools._wappLink){ document.getElementById('wappqrbox').innerHTML = ''; }
+    Tools._wappLink = link;
+    document.getElementById('wapp-out').value = link;
+    box.style.display = 'block';
+  },
+  wappOpen(){
+    if(Tools._wappLink) window.open(Tools._wappLink, '_blank', 'noopener');
+  },
+  wappQR(){
+    const qb = document.getElementById('wappqrbox');
+    qb.innerHTML = '';
+    if(!Tools._wappLink) return;
+    try{ new QRCode(qb, { text: Tools._wappLink, width: 180, height: 180 }); }
+    catch(e){ qb.innerHTML = '<span class="muted">Error generating QR</span>'; }
+  },
+
+  // ===== Daily Quote / Hadith / Quran verse =====
+  // o = original text (Arabic or Urdu verse), ur / en = translations, su / se = source (Urdu / English)
+  _quotes: [
+    // --- Hadith (Sahih al-Bukhari, Sahih Muslim, Jami at-Tirmidhi) ---
+    { t:'hadith', ur:`اعمال کا دارومدار نیتوں پر ہے۔`, en:`Actions are judged by intentions.`, su:`صحیح بخاری 1، صحیح مسلم 1907`, se:`Sahih al-Bukhari 1, Sahih Muslim 1907` },
+    { t:'hadith', ur:`تم میں سے کوئی اس وقت تک (کامل) مومن نہیں ہو سکتا جب تک اپنے بھائی کے لیے وہی پسند نہ کرے جو اپنے لیے پسند کرتا ہے۔`, en:`None of you truly believes until he loves for his brother what he loves for himself.`, su:`صحیح بخاری 13، صحیح مسلم 45`, se:`Sahih al-Bukhari 13, Sahih Muslim 45` },
+    { t:'hadith', ur:`طاقتور وہ نہیں جو کشتی میں دوسرے کو پچھاڑ دے، بلکہ طاقتور وہ ہے جو غصے کے وقت اپنے آپ پر قابو رکھے۔`, en:`The strong person is not the one who overpowers others, but the one who controls himself when angry.`, su:`صحیح بخاری 6114، صحیح مسلم 2609`, se:`Sahih al-Bukhari 6114, Sahih Muslim 2609` },
+    { t:'hadith', ur:`جو اللہ اور آخرت کے دن پر ایمان رکھتا ہے وہ اچھی بات کہے یا خاموش رہے۔`, en:`Whoever believes in Allah and the Last Day should speak good or remain silent.`, su:`صحیح بخاری 6018، صحیح مسلم 47`, se:`Sahih al-Bukhari 6018, Sahih Muslim 47` },
+    { t:'hadith', ur:`آسانی پیدا کرو، سختی نہ کرو؛ خوشخبری دو، نفرت نہ دلاؤ۔`, en:`Make things easy and do not make them difficult; give glad tidings and do not drive people away.`, su:`صحیح بخاری 69، صحیح مسلم 1734`, se:`Sahih al-Bukhari 69, Sahih Muslim 1734` },
+    { t:'hadith', ur:`جو رحم نہیں کرتا اس پر رحم نہیں کیا جاتا۔`, en:`Whoever shows no mercy will not be shown mercy.`, su:`صحیح بخاری 6013، صحیح مسلم 2318`, se:`Sahih al-Bukhari 6013, Sahih Muslim 2318` },
+    { t:'hadith', ur:`اللہ کو سب سے پسندیدہ عمل وہ ہے جو ہمیشگی کے ساتھ کیا جائے، چاہے تھوڑا ہی ہو۔`, en:`The most beloved deeds to Allah are those done consistently, even if they are small.`, su:`صحیح بخاری 6464، صحیح مسلم 783`, se:`Sahih al-Bukhari 6464, Sahih Muslim 783` },
+    { t:'hadith', ur:`دو نعمتوں کے معاملے میں بہت سے لوگ گھاٹے میں رہتے ہیں: صحت اور فراغت۔`, en:`There are two blessings in which many people incur loss: health and free time.`, su:`صحیح بخاری 6412`, se:`Sahih al-Bukhari 6412` },
+    { t:'hadith', ur:`تم میں بہترین وہ ہے جو قرآن سیکھے اور سکھائے۔`, en:`The best among you are those who learn the Quran and teach it.`, su:`صحیح بخاری 5027`, se:`Sahih al-Bukhari 5027` },
+    { t:'hadith', ur:`تم میں بہترین وہ ہے جو اپنے گھر والوں کے لیے بہترین ہو، اور میں اپنے گھر والوں کے لیے تم سب سے بہتر ہوں۔`, en:`The best of you are those who are best to their families, and I am the best of you to my family.`, su:`جامع ترمذی 3895`, se:`Jami at-Tirmidhi 3895` },
+    { t:'hadith', ur:`اپنے بھائی کے سامنے مسکرانا تمہارے لیے صدقہ ہے۔`, en:`Your smile in the face of your brother is charity.`, su:`جامع ترمذی 1956`, se:`Jami at-Tirmidhi 1956` },
+    { t:'hadith', ur:`اللہ تمہاری شکلوں اور مالوں کو نہیں دیکھتا، بلکہ تمہارے دلوں اور اعمال کو دیکھتا ہے۔`, en:`Allah does not look at your appearance or your wealth, but He looks at your hearts and your deeds.`, su:`صحیح مسلم 2564`, se:`Sahih Muslim 2564` },
+    { t:'hadith', ur:`جو علم کی تلاش میں کسی راستے پر چلتا ہے، اللہ اس کے لیے جنت کا راستہ آسان کر دیتا ہے۔`, en:`Whoever travels a path seeking knowledge, Allah makes easy for him the path to Paradise.`, su:`صحیح مسلم 2699`, se:`Sahih Muslim 2699` },
+    { t:'hadith', ur:`پاکیزگی نصف ایمان ہے۔`, en:`Cleanliness is half of faith.`, su:`صحیح مسلم 223`, se:`Sahih Muslim 223` },
+    { t:'hadith', ur:`ایمان میں سب سے کامل مومن وہ ہے جس کے اخلاق سب سے اچھے ہوں۔`, en:`The most complete believer in faith is the one with the best character.`, su:`جامع ترمذی 1162`, se:`Jami at-Tirmidhi 1162` },
+    { t:'hadith', ur:`ایک شخص نے نصیحت مانگی تو نبی ﷺ نے فرمایا: غصہ نہ کیا کرو۔`, en:`A man asked the Prophet ﷺ for advice, and he said: Do not become angry.`, su:`صحیح بخاری 6116`, se:`Sahih al-Bukhari 6116` },
+
+    // --- Quran (short verses) ---
+    { t:'quran', o:`فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا`, ur:`بے شک مشکل کے ساتھ آسانی ہے۔ بے شک مشکل کے ساتھ آسانی ہے۔`, en:`Indeed, with hardship comes ease. Indeed, with hardship comes ease.`, su:`سورۃ الشرح 94:5-6`, se:`Surah Ash-Sharh 94:5-6` },
+    { t:'quran', o:`لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا`, ur:`اللہ کسی جان پر اس کی طاقت سے زیادہ بوجھ نہیں ڈالتا۔`, en:`Allah does not burden a soul beyond its capacity.`, su:`سورۃ البقرہ 2:286`, se:`Surah Al-Baqarah 2:286` },
+    { t:'quran', o:`إِنَّ اللَّهَ مَعَ الصَّابِرِينَ`, ur:`بے شک اللہ صبر کرنے والوں کے ساتھ ہے۔`, en:`Indeed, Allah is with the patient.`, su:`سورۃ البقرہ 2:153`, se:`Surah Al-Baqarah 2:153` },
+    { t:'quran', o:`وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ`, ur:`اور جو اللہ پر بھروسا کرے تو وہ اس کے لیے کافی ہے۔`, en:`And whoever relies upon Allah, He is sufficient for him.`, su:`سورۃ الطلاق 65:3`, se:`Surah At-Talaq 65:3` },
+    { t:'quran', o:`أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ`, ur:`سنو! اللہ کے ذکر ہی سے دلوں کو اطمینان ملتا ہے۔`, en:`Surely, in the remembrance of Allah do hearts find rest.`, su:`سورۃ الرعد 13:28`, se:`Surah Ar-Ra'd 13:28` },
+    { t:'quran', o:`لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ`, ur:`اللہ کی رحمت سے مایوس نہ ہو۔`, en:`Do not despair of the mercy of Allah.`, su:`سورۃ الزمر 39:53`, se:`Surah Az-Zumar 39:53` },
+    { t:'quran', o:`وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ`, ur:`اور یہ کہ انسان کے لیے وہی ہے جس کی اس نے کوشش کی۔`, en:`And that man will have only what he strives for.`, su:`سورۃ النجم 53:39`, se:`Surah An-Najm 53:39` },
+    { t:'quran', o:`إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ`, ur:`بے شک اللہ کسی قوم کی حالت نہیں بدلتا جب تک وہ خود اپنی حالت نہ بدلے۔`, en:`Indeed, Allah will not change the condition of a people until they change what is within themselves.`, su:`سورۃ الرعد 13:11`, se:`Surah Ar-Ra'd 13:11` },
+
+    // --- Motivational quotes, verses and proverbs ---
+    { t:'quote', o:`خودی کو کر بلند اتنا کہ ہر تقدیر سے پہلے\nخدا بندے سے خود پوچھے بتا تیری رضا کیا ہے`, en:`Raise your selfhood so high that before every decree, God Himself asks you: what is your wish?`, su:`علامہ اقبال`, se:`Allama Iqbal` },
+    { t:'quote', o:`ستاروں سے آگے جہاں اور بھی ہیں\nابھی عشق کے امتحاں اور بھی ہیں`, en:`Beyond the stars there are more worlds; more trials of love still await.`, su:`علامہ اقبال`, se:`Allama Iqbal` },
+    { t:'quote', o:`نہیں ہے ناامید اقبال اپنی کشتِ ویراں سے\nذرا نم ہو تو یہ مٹی بہت زرخیز ہے ساقی`, en:`Iqbal is not without hope for his barren field; with a little moisture, this soil is very fertile.`, su:`علامہ اقبال`, se:`Allama Iqbal` },
+    { t:'quote', o:`ایمان، اتحاد، نظم`, en:`Faith, Unity, Discipline.`, su:`قائدِ اعظم محمد علی جناح کا رہنما اصول`, se:`The guiding motto of Quaid-e-Azam Muhammad Ali Jinnah` },
+    { t:'quote', o:`ہمتِ مرداں، مددِ خدا`, en:`Divine help comes to those who have the courage to try.`, su:`ضرب المثل`, se:`Proverb` },
+    { t:'quote', o:`صبر کا پھل میٹھا ہوتا ہے`, en:`The fruit of patience is sweet.`, su:`ضرب المثل`, se:`Proverb` },
+    { t:'quote', ur:`عظیم کام کرنے کا واحد طریقہ یہ ہے کہ آپ جو کام کرتے ہیں اس سے محبت کریں۔`, en:`The only way to do great work is to love what you do.`, su:`اسٹیو جابز`, se:`Steve Jobs` },
+    { t:'quote', ur:`کامیابی چھوٹی چھوٹی کوششوں کا مجموعہ ہے جو روز بار بار دہرائی جائیں۔`, en:`Success is the sum of small efforts, repeated day in and day out.`, su:`رابرٹ کولیئر`, se:`Robert Collier` },
+    { t:'quote', ur:`ہزار میل کا سفر بھی ایک قدم سے شروع ہوتا ہے۔`, en:`A journey of a thousand miles begins with a single step.`, su:`لاؤ تسو`, se:`Lao Tzu` },
+    { t:'quote', ur:`آپ ان تمام شاٹس میں ناکام ہو جاتے ہیں جو آپ کھیلتے ہی نہیں۔`, en:`You miss 100% of the shots you do not take.`, su:`وین گریٹزکی`, se:`Wayne Gretzky` },
+    { t:'quote', ur:`چاہے آپ سوچیں کہ آپ کر سکتے ہیں یا نہیں کر سکتے، دونوں صورتوں میں آپ ٹھیک ہیں۔`, en:`Whether you think you can, or you think you cannot, you are right.`, su:`ہنری فورڈ سے منسوب`, se:`Attributed to Henry Ford` },
+    { t:'quote', ur:`سات بار گرو تو آٹھویں بار اٹھ کھڑے ہو۔`, en:`Fall seven times, stand up eight.`, su:`جاپانی کہاوت`, se:`Japanese proverb` }
+  ],
+  _quoteCur: null,
+  _quotePool(){
+    const ty = document.getElementById('quote-type').value;
+    return Tools._quotes.filter(q => ty === 'all' || q.t === ty);
+  },
+  quoteToday(){
+    const pool = Tools._quotePool();
+    const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+    Tools._quoteCur = pool[day % pool.length];
+    Tools.renderQuote();
+  },
+  quoteRandom(){
+    const pool = Tools._quotePool();
+    let q, tries = 0;
+    do { q = pool[Math.floor(Math.random() * pool.length)]; tries++; }
+    while(pool.length > 1 && q === Tools._quoteCur && tries < 20);
+    Tools._quoteCur = q;
+    Tools.renderQuote();
+  },
+  _quotePlain(){
+    const q = Tools._quoteCur;
+    if(!q) return '';
+    return [q.o, q[LANG], '\u2014 ' + (LANG === 'ur' ? q.su : q.se)].filter(Boolean).join('\n');
+  },
+  renderQuote(){
+    const q = Tools._quoteCur;
+    const box = document.getElementById('quote-out');
+    if(!q || !box) return;
+    const esc = Tools._escapeHtml;
+    const nl = s => esc(s).replace(/\n/g, '<br>');
+    const typeKey = { hadith:'quote_type_hadith', quran:'quote_type_quran', quote:'quote_type_quote' }[q.t];
+    let html = `<div class="quote-card"><div class="quote-type">${I18N[typeKey][LANG]}</div>`;
+    if(q.o) html += `<div class="quote-orig ${q.t === 'quran' ? 'ar' : 'ur'}" dir="rtl" lang="${q.t === 'quran' ? 'ar' : 'ur'}">${nl(q.o)}</div>`;
+    const tr = q[LANG];
+    if(tr) html += `<div class="quote-text">${nl(tr)}</div>`;
+    html += `<div class="quote-src">${esc(LANG === 'ur' ? q.su : q.se)}</div></div>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+  quoteCopy(btn){
+    Tools.copyText(Tools._quotePlain(), btn);
+  },
+  quoteShare(){
+    const text = Tools._quotePlain();
+    if(text) window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
   }
+
 };
 
 document.getElementById('wc-input').addEventListener('input', Tools.updateWordCount);
@@ -2996,6 +6047,24 @@ Tools.unitTypeChange();
 Tools.loadTodos();
 Tools.loadNotes();
 applyLang();
+
+// ===== New tools: init =====
+Tools.gpaAddRow();
+Tools.gpaAddRow();
+(function(){
+  const units = Object.keys(Tools.speedData);
+  const from = document.getElementById('speed-from');
+  const to = document.getElementById('speed-to');
+  units.forEach(u=>{
+    from.innerHTML += `<option value="${u}">${u}</option>`;
+    to.innerHTML += `<option value="${u}">${u}</option>`;
+  });
+  to.selectedIndex = 1;
+})();
+document.getElementById('prayer-date').valueAsDate = new Date();
+Tools.loadTasbih();
+Tools.bodyFatGender();
+Tools.quoteToday();
 
 // ===== Hints for info (?) button =====
 const HINTS = {
@@ -3039,7 +6108,40 @@ const HINTS = {
   todo: { en:'A simple to-do list saved in this browser.', ur:'اس براؤزر میں محفوظ ہونے والی ٹو-ڈو لسٹ۔' },
   pomodoro: { en:'A 25/5-minute focus timer.', ur:'25/5 منٹ کا فوکس ٹائمر۔' },
   stopwatch: { en:'A simple start/stop/reset stopwatch.', ur:'ایک سادہ اسٹاپ واچ۔' },
-  notes: { en:'Quick notes that save automatically in this browser.', ur:'خودکار محفوظ ہونے والے نوٹس۔' }
+  notes: { en:'Quick notes that save automatically in this browser.', ur:'خودکار محفوظ ہونے والے نوٹس۔' },
+  zakat: { en:'Calculates zakat due on gold, silver, and cash against the nisab threshold.', ur:'سونے، چاندی اور نقدی پر واجب زکوٰۃ نصاب کے مطابق نکالتا ہے۔' },
+  gpa: { en:'Calculates weighted GPA from credit hours and grades.', ur:'کریڈٹ آورز اور گریڈز سے وزنی GPA نکالتا ہے۔' },
+  fuel: { en:'Calculates fuel average (km/litre) and cost per km.', ur:'فیول ایوریج (کلومیٹر فی لیٹر) اور لاگت فی کلومیٹر نکالتا ہے۔' },
+  retirement: { en:'Projects retirement savings growth from monthly contributions.', ur:'ماہانہ بچت سے ریٹائرمنٹ کارپس کا اندازہ لگاتا ہے۔' },
+  hijri: { en:'Converts between Gregorian and Hijri dates, with the approximate desi month.', ur:'عیسوی اور ہجری تاریخ کو باہم بدلتا ہے، ساتھ تخمینی دیسی مہینہ بھی دکھاتا ہے۔' },
+  prayertimes: { en:'Calculates daily prayer times for Pakistani cities, fully offline.', ur:'پاکستانی شہروں کے لیے نماز کے اوقات مکمل آف لائن نکالتا ہے۔' },
+  speedconv: { en:'Converts speed between km/h, mph, m/s, and knots.', ur:'رفتار کو km/h، mph، m/s اور knot میں بدلتا ہے۔' },
+  datastorage: { en:'Converts data storage sizes between Bytes, KB, MB, GB, TB, and PB.', ur:'ڈیٹا سائز کو بائٹ، KB، MB، GB، TB اور PB میں بدلتا ہے۔' },
+  romannum: { en:'Converts numbers to Roman numerals and back.', ur:'عدد کو رومن نمرلز میں اور واپس بدلتا ہے۔' },
+  pdfmerge: { en:'Merges multiple PDF files into one, in the order you choose.', ur:'کئی PDF فائلوں کو آپ کی منتخب کردہ ترتیب میں ایک PDF میں ملاتا ہے۔' },
+  pdfsplit: { en:'Extracts a page range from a PDF, or splits every page into a separate PDF.', ur:'PDF سے مخصوص صفحات نکالتا ہے، یا ہر صفحے کو الگ PDF میں تقسیم کرتا ہے۔' },
+  pdfreorder: { en:'Reorders or deletes pages in a PDF and saves a new file.', ur:'PDF کے صفحات کی ترتیب بدلتا یا حذف کرتا ہے اور نئی فائل بناتا ہے۔' },
+  imgcrop: { en:'Crops an image using a draggable, resizable crop box.', ur:'گھسیٹنے اور سائز بدلنے والے باکس سے تصویر کراپ کرتا ہے۔' },
+  imgrotate: { en:'Rotates an image in 90° steps and flips it horizontally or vertically.', ur:'تصویر کو 90° کے زاویے میں گھماتا ہے اور افقی/عمودی فلپ کرتا ہے۔' },
+  watermark: { en:'Adds a text watermark to an image — size, color, opacity, and position adjustable.', ur:'تصویر پر ٹیکسٹ واٹرمارک لگاتا ہے — سائز، رنگ، شفافیت اور پوزیشن قابلِ تبدیل۔' },
+  memegen: { en:'Adds classic top/bottom meme captions to an image.', ur:'تصویر پر کلاسک میم انداز میں اوپر/نیچے کیپشن لگاتا ہے۔' },
+  romanurdu: { en:'Converts Roman Urdu text to an approximate Urdu script (beta phonetic conversion).', ur:'رومن اردو ٹیکسٹ کو تخمینی اردو رسم الخط میں بدلتا ہے (beta صوتی کنورژن)۔' },
+  incometax: { en:'Estimates monthly/annual income tax for salaried individuals using FBR Tax Year 2027 slabs.', ur:'FBR کے Tax Year 2027 سلیبز کے مطابق تنخواہ دار افراد کا ماہانہ/سالانہ انکم ٹیکس نکالتا ہے۔' },
+  areaconv: { en:'Converts land area between Marla, Kanal, Sq. Ft, Sq. Yard, Acre, and Sq. Meter.', ur:'زمین کے رقبے کو مرلہ، کنال، مربع فٹ، مربع گز، ایکڑ اور مربع میٹر میں بدلتا ہے۔' },
+  qibla: { en:'Calculates the Qibla bearing angle from a Pakistani city or custom coordinates.', ur:'پاکستانی شہر یا خود درج کردہ کوآرڈینیٹس سے قبلے کا زاویہ نکالتا ہے۔' },
+  tasbih: { en:'A tap counter for dhikr/tasbih with adjustable target (33/99/100/1000) and round tracking.', ur:'ذکر/تسبیح کے لیے ٹیپ کاؤنٹر، قابلِ تبدیل ٹارگٹ (33/99/100/1000) اور راؤنڈ ٹریکنگ کے ساتھ۔' },
+  cnic: { en:'Auto-formats a 13-digit CNIC number as XXXXX-XXXXXXX-X.', ur:'13 ہندسوں کے CNIC نمبر کو خودکار طور پر XXXXX-XXXXXXX-X میں فارمیٹ کرتا ہے۔' },
+  mobnet: { en:'Identifies the original network (Jazz/Zong/Ufone/Telenor) of a Pakistani mobile number from its prefix.', ur:'پاکستانی موبائل نمبر کے پریفکس سے اصل نیٹ ورک (Jazz/Zong/Ufone/Telenor) شناخت کرتا ہے۔' },
+  vcard: { en:'Generates a scannable QR code containing a contact card (vCard) with name, phone, email, and organization.', ur:'نام، فون، ای میل اور ادارے پر مشتمل کانٹیکٹ کارڈ (vCard) کا اسکین ایبل QR کوڈ بناتا ہے۔' },
+  elecbill: { en:'Estimates an electricity bill from units consumed, rate per unit, GST, and fixed charges.', ur:'استعمال شدہ یونٹس، فی یونٹ ریٹ، جی ایس ٹی اور فکسڈ چارجز سے بجلی کے بل کا تخمینہ لگاتا ہے۔' },
+  extract: { en:'Pulls email addresses and phone numbers out of any pasted block of text.', ur:'پیسٹ کیے گئے کسی بھی متن سے ای میل ایڈریس اور فون نمبر نکال دیتا ہے۔' },
+  sigpad: { en:'A drawing pad for creating a handwritten signature and saving it as a transparent PNG.', ur:'ہاتھ سے دستخط بنانے اور اسے شفاف پس منظر والی PNG کے طور پر محفوظ کرنے کا خانہ۔' },
+  fancyfont: { en:'Turns your text into dozens of Unicode styles (bold, script, bubble, upside-down...) you can copy and paste anywhere.', ur:'آپ کے ٹیکسٹ کو درجنوں یونی کوڈ اسٹائلز (بولڈ، اسکرپٹ، بلبلے، الٹا...) میں بدلتا ہے جنہیں کہیں بھی کاپی پیسٹ کیا جا سکتا ہے۔' },
+  idealweight: { en:'Shows your healthy weight range from height, plus how much water to drink daily.', ur:'قد کے مطابق صحت مند وزن کی حد اور روزانہ پینے کے پانی کی مقدار بتاتا ہے۔' },
+  bodyfat: { en:'Estimates body fat % from height, neck, waist (and hip for women) using the US Navy method.', ur:'US Navy طریقے سے قد، گردن، کمر (اور خواتین کے لیے کولہوں) کی ناپ سے جسم میں چربی کی فیصد کا اندازہ لگاتا ہے۔' },
+  goldconv: { en:'Converts gold and silver weight between tola, masha, ratti, gram, ounce and more — with optional price value.', ur:'سونے چاندی کے وزن کو تولہ، ماشہ، رتی، گرام، اونس وغیرہ میں بدلتا ہے — چاہیں تو قیمت کا اندازہ بھی دیتا ہے۔' },
+  wapp: { en:'Creates a wa.me link (and QR code) that opens a WhatsApp chat with your number and an optional ready-made message.', ur:'ایسا wa.me لنک (اور QR کوڈ) بناتا ہے جو آپ کے نمبر اور چاہیں تو پہلے سے لکھے پیغام کے ساتھ واٹس ایپ چیٹ کھول دیتا ہے۔' },
+  quote: { en:'Shows a hadith, Quran verse, or motivational quote — a fresh pick every day, or draw a random one.', ur:'حدیث، قرآنی آیت یا حوصلہ افزا اقتباس دکھاتا ہے — روزانہ نیا انتخاب، یا اپنی مرضی سے رینڈم۔' }
 };
 
 // ===== Inject favorite star + info button into every tool head =====
@@ -3098,7 +6200,21 @@ const LIVE_CALC = [
   { ids:['loan-principal','loan-rate','loan-months'], fn:()=>Tools.loanEmi() },
   { ids:['bmr-weight','bmr-height','bmr-age','bmr-gender','bmr-activity'], fn:()=>Tools.bmr() },
   { ids:['unit-val'], fn:()=>Tools.unitConvert() },
-  { ids:['base-value','base-from','base-to'], fn:()=>Tools.baseConvert() }
+  { ids:['base-value','base-from','base-to'], fn:()=>Tools.baseConvert() },
+  { ids:['zakat-nisab','zakat-gold-g','zakat-gold-u','zakat-gold-p','zakat-gold-pu','zakat-silver-g','zakat-silver-u','zakat-silver-p','zakat-silver-pu','zakat-cash','zakat-debt'], fn:()=>Tools.zakat() },
+  { ids:['fuel-distance','fuel-used','fuel-price'], fn:()=>Tools.fuelAvg() },
+  { ids:['ret-current','ret-monthly','ret-rate','ret-years'], fn:()=>Tools.retirementPlan() },
+  { ids:['speed-val','speed-from','speed-to'], fn:()=>Tools.speedConvert() },
+  { ids:['ds-val','ds-from','ds-to'], fn:()=>Tools.dataStorageConvert() },
+  { ids:['roman-num'], fn:()=>Tools.numToRoman() },
+  { ids:['roman-input'], fn:()=>Tools.romanToNum() },
+  { ids:['incometax-amount','incometax-period'], fn:()=>Tools.incomeTax() },
+  { ids:['area-val','area-from','area-to'], fn:()=>Tools.areaConvert() },
+  { ids:['elecbill-units','elecbill-rate','elecbill-gst','elecbill-fixed'], fn:()=>Tools.electricityBill() },
+  { ids:['iw-gender','iw-height','iw-weight','iw-exercise'], fn:()=>Tools.idealWeight() },
+  { ids:['bf-gender','bf-height','bf-weight','bf-neck','bf-waist','bf-hip'], fn:()=>Tools.bodyFat() },
+  { ids:['gold-val','gold-from','gold-to','gold-price'], fn:()=>Tools.goldConvert() },
+  { ids:['wapp-cc','wapp-phone','wapp-msg'], fn:()=>Tools.wappBuild() }
 ];
 LIVE_CALC.forEach(group=>{
   group.ids.forEach(id=>{
@@ -3148,6 +6264,9 @@ document.getElementById('themeToggle').addEventListener('click', updateThemeIcon
 
 // ===== Restore last opened tool =====
 Tools.restoreLastTool();
+
+// ===== Signature pad init =====
+Tools.initSignaturePad();
 
 // ===== Hide splash screen =====
 window.addEventListener('load', ()=>{
