@@ -13,6 +13,8 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.min.js" onerror="window.__pdfjsLoadFailed=true"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" onerror="window.__jspdfLoadFailed=true"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" onerror="window.__pdflibLoadFailed=true"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__xlsxLoadFailed=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" onerror="window.__autotableLoadFailed=true"></script>
 <style>
   :root{
     --bg:#E7E9EC;
@@ -473,6 +475,43 @@
 
     footer{ margin-top:44px; font-size:12px; max-width:900px; }
   }
+
+  /* ===== Image Splitter (live preview + editable boxes) ===== */
+  .isp-drop{ display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; padding:22px 12px; border:2px dashed var(--border); border-radius:12px; background:var(--surface-2); cursor:pointer; transition:all .15s ease; }
+  .isp-drop:hover, .isp-drop.drag{ border-color:var(--coral); background:var(--coral-bg); }
+  .isp-drop-t{ font-weight:700; font-size:13px; color:var(--text); }
+  .isp-drop input{ display:none; }
+  .isp-seg{ display:flex; gap:6px; margin-top:14px; }
+  .isp-seg button{ flex:1; padding:9px 6px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; font-family:inherit; font-size:12px; cursor:pointer; }
+  .isp-seg button.on{ background:var(--coral-bg); border-color:var(--coral); color:var(--coral); font-weight:700; }
+  .isp-panel{ margin-top:10px; padding:4px 12px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; }
+  .isp-panel .muted{ margin-top:6px; display:block; }
+  .isp-panel input[type=range], .isp-sel input[type=range], #isp-q{ width:100%; }
+  .isp-panel .row input[type=range]{ width:100%; }
+  .isp-btnline{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .isp-stage{ margin-top:12px; border:1px solid var(--border); border-radius:8px; overflow:hidden; line-height:0; text-align:center;
+    background: repeating-conic-gradient(var(--surface-2) 0% 25%, var(--surface) 0% 50%) 0 0 / 16px 16px; }
+  .isp-stage canvas{ display:inline-block; max-width:100%; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .isp-status{ margin-top:8px; font-size:12px; font-weight:600; color:var(--text); }
+  .isp-tb{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .isp-tb button, .isp-btnline button{ padding:7px 11px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; font-family:inherit; font-size:12px; cursor:pointer; }
+  .isp-tb button.on, .isp-btnline button.on{ background:var(--coral-bg); border-color:var(--coral); color:var(--coral); font-weight:700; }
+  .isp-tb button:disabled{ opacity:.4; cursor:default; }
+  .isp-sel{ margin-top:12px; padding:2px 12px 12px; border:1px solid var(--coral); border-radius:10px; background:var(--surface); }
+  .isp-sel-t{ font-weight:700; color:var(--coral); font-size:13px; margin-top:10px; }
+  .isp-h{ margin-top:18px; font-weight:700; font-size:13px; }
+  .isp-thumbs{ display:grid; grid-template-columns:repeat(auto-fill, minmax(112px,1fr)); gap:10px; margin-top:8px; }
+  .isp-tile{ border:2px solid var(--border); border-radius:10px; background:var(--surface); padding:6px; cursor:pointer; }
+  .isp-tile.sel{ border-color:var(--coral); box-shadow:0 2px 8px rgba(194,75,75,.25); }
+  .isp-tile.off{ opacity:.5; }
+  .isp-tile-img{ height:120px; display:flex; align-items:center; justify-content:center; border-radius:6px; overflow:hidden;
+    background: repeating-conic-gradient(var(--surface-2) 0% 25%, var(--surface) 0% 50%) 0 0 / 12px 12px; }
+  .isp-tile-img canvas{ max-width:100%; max-height:100%; display:block; }
+  .isp-tile-meta{ display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:6px; font-size:11px; }
+  .isp-chk{ display:inline-flex; align-items:center; gap:4px; margin:0; cursor:pointer; font-size:11px; }
+  .isp-sz{ color:var(--text-muted); font-size:10px; direction:ltr; }
+  .isp-tile-btns{ display:flex; gap:4px; margin-top:6px; }
+  .isp-tile-btns button{ flex:1; padding:5px 0; border:1px solid var(--border); background:var(--surface-2); color:var(--text); border-radius:6px; cursor:pointer; font-size:13px; }
 </style>
 </head>
 <body>
@@ -1035,6 +1074,203 @@
         <div class="btn-row"><button class="btn" onclick="Tools.zakat()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="zakat-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="zakat_hint">نوٹ: یہ اندازاً حساب ہے — قیمتیں مقامی مارکیٹ کے مطابق خود درج کریں اور حتمی مسئلے میں اپنے مقامی عالم دین سے رہنمائی لیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="fitrana">
+      <button class="tool-head"><span data-i18n="tool_fitrana_title">فطرانہ (صدقہ فطر) کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="fit_persons_label">افراد کی تعداد</label><input type="number" id="fit-persons" placeholder="5" min="1"></div>
+          <div>
+            <label data-i18n="fit_item_label">کس چیز کے حساب سے</label>
+            <select id="fit-item">
+              <option value="wheat" data-i18n="fit_item_wheat">گندم / آٹا</option>
+              <option value="barley" data-i18n="fit_item_barley">جو</option>
+              <option value="dates" data-i18n="fit_item_dates">کھجور</option>
+              <option value="raisins" data-i18n="fit_item_raisins">کشمش</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="fit_qty_label">فی فرد مقدار (کلوگرام)</label><input type="number" id="fit-qty" value="1.75" step="0.01"></div>
+          <div><label data-i18n="fit_price_label">فی کلو قیمت</label><input type="number" id="fit-price" placeholder="0"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.fitrana()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="fit-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="fit_hint">نوٹ: مقدار میں علماء کے ہاں معمولی فرق ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="ushr">
+      <button class="tool-head"><span data-i18n="tool_ushr_title">عشر کیلکولیٹر (زرعی پیداوار)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="ushr_qty_label">کل پیداوار</label><input type="number" id="ushr-qty" placeholder="0"></div>
+          <div>
+            <label data-i18n="unit_from_label">اکائی</label>
+            <select id="ushr-unit">
+              <option value="40" selected>من (Maund, 40 kg)</option>
+              <option value="1">کلوگرام (kg)</option>
+              <option value="1000">ٹن (Ton)</option>
+            </select>
+          </div>
+        </div>
+        <label data-i18n="ushr_type_label">آبپاشی کا طریقہ</label>
+        <select id="ushr-type">
+          <option value="0.10" data-i18n="ushr_type_rain">بارانی / قدرتی پانی (10%)</option>
+          <option value="0.05" data-i18n="ushr_type_paid">ٹیوب ویل / خرچ سے پانی (5%)</option>
+          <option value="0.075" data-i18n="ushr_type_mixed">دونوں طرح (7.5%)</option>
+        </select>
+        <label data-i18n="ushr_price_label">فی کلو قیمت (اختیاری)</label>
+        <input type="number" id="ushr-price" placeholder="0">
+        <div class="btn-row"><button class="btn" onclick="Tools.ushr()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="ushr-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="ushr_hint">نوٹ: مسالک کے لحاظ سے احکام میں فرق ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="bc">
+      <button class="tool-head"><span data-i18n="tool_bc_title">کمیٹی (BC) کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="bc_members_label">ممبرز کی تعداد</label><input type="number" id="bc-members" placeholder="10" min="2" max="100"></div>
+          <div><label data-i18n="bc_amount_label">ماہانہ قسط فی ممبر</label><input type="number" id="bc-amount" placeholder="10000"></div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="bc_turn_label">آپ کا نمبر (اختیاری)</label><input type="number" id="bc-turn" placeholder="3" min="1"></div>
+          <div><label data-i18n="bc_start_label">ابتدائی مہینہ (اختیاری)</label><input type="month" id="bc-start"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="Tools.bc()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="bc-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="bc_hint">نوٹ: فرض کیا گیا ہے کہ ہر ماہ ایک ممبر کی کمیٹی نکلتی ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="bcdraw">
+      <button class="tool-head"><span data-i18n="tool_bcdraw_title">کمیٹی قرعہ اندازی</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="bcd_names_label">ممبرز کے نام (ہر نام نئی لائن میں)</label>
+        <textarea id="bcd-names" rows="6" oninput="Tools.bcdOrgRefresh()" data-i18n-ph="bcd_names_ph" placeholder="Ali&#10;Ahmed&#10;Sara"></textarea>
+        <div class="row">
+          <div><label data-i18n="bc_start_label">ابتدائی مہینہ (اختیاری)</label><input type="month" id="bcd-start"></div>
+          <div><label data-i18n="bcd_amt_label">ماہانہ قسط (اختیاری)</label><input type="number" id="bcd-amt" placeholder="10000"></div>
+        </div>
+        <label data-i18n="bcd_org_label">منتظم کا نام (پہلا نمبر اسی کا) — اختیاری</label>
+        <select id="bcd-org">
+          <option value="" data-i18n="bcd_org_none">کوئی نہیں — سب کا قرعہ</option>
+        </select>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.bcdNext()" data-i18n="bcd_draw_next">اگلا قرعہ نکالیں</button>
+          <button class="btn secondary" onclick="Tools.bcdAll()" data-i18n="bcd_draw_all">پوری ترتیب کا قرعہ</button>
+          <button class="btn ghost" onclick="Tools.bcdReset()" data-i18n="bcd_reset">دوبارہ شروع کریں</button>
+        </div>
+        <div class="result" id="bcd-out" style="display:none"></div>
+        <div class="btn-row" id="bcd-actions" style="display:none">
+          <button class="btn secondary" onclick="Tools.bcdCopy(this)" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn secondary" onclick="Tools.bcdShare()" data-i18n="quote_share_btn">واٹس ایپ پر شیئر کریں</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="bcd_hint">نوٹ: قرعہ رینڈم طریقے سے نکلتا ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="tilepaint">
+      <button class="tool-head"><span data-i18n="tool_tilepaint_title">ٹائل / پینٹ / فلورنگ کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div>
+            <label data-i18n="tp_mode_label">کیا حساب کرنا ہے</label>
+            <select id="tp-mode">
+              <option value="tile" data-i18n="tp_mode_tile">ٹائل / فلورنگ</option>
+              <option value="paint" data-i18n="tp_mode_paint">دیواروں کا پینٹ</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="tp_unit_label">پیمائش کی اکائی</label>
+            <select id="tp-unit">
+              <option value="ft" selected>فٹ (Feet)</option>
+              <option value="m">میٹر (Meter)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="tp_len_label">کمرے کی لمبائی</label><input type="number" id="tp-len" placeholder="14"></div>
+          <div><label data-i18n="tp_wid_label">کمرے کی چوڑائی</label><input type="number" id="tp-wid" placeholder="12"></div>
+        </div>
+
+        <div id="tp-tile-fields">
+          <label data-i18n="tp_tilesize_label">ٹائل کا سائز</label>
+          <select id="tp-tilesize">
+            <option value="12x12">12 × 12 in (1×1 ft)</option>
+            <option value="16x16">16 × 16 in</option>
+            <option value="24x24" selected>24 × 24 in (2×2 ft)</option>
+            <option value="12x24">12 × 24 in (1×2 ft)</option>
+            <option value="24x48">24 × 48 in (2×4 ft)</option>
+            <option value="23.62x23.62">600 × 600 mm</option>
+            <option value="custom" data-i18n="tp_custom">اپنی مرضی کا (انچ)</option>
+          </select>
+          <div class="row" id="tp-custom-fields" style="display:none">
+            <div><label data-i18n="tp_tl_label">ٹائل لمبائی (انچ)</label><input type="number" id="tp-tl" placeholder="24"></div>
+            <div><label data-i18n="tp_tw_label">ٹائل چوڑائی (انچ)</label><input type="number" id="tp-tw" placeholder="24"></div>
+          </div>
+          <div class="row">
+            <div><label data-i18n="tp_waste_label">ویسٹیج %</label><input type="number" id="tp-waste" value="10"></div>
+            <div><label data-i18n="tp_box_label">ڈبے میں ٹائل (اختیاری)</label><input type="number" id="tp-box" placeholder="4"></div>
+          </div>
+        </div>
+
+        <div id="tp-paint-fields" style="display:none">
+          <div class="row">
+            <div><label data-i18n="tp_hei_label">دیوار کی اونچائی</label><input type="number" id="tp-hei" placeholder="10"></div>
+            <div><label data-i18n="tp_coats_label">کوٹس</label><input type="number" id="tp-coats" value="2" min="1"></div>
+          </div>
+          <div class="row">
+            <div><label data-i18n="tp_doors_label">دروازے</label><input type="number" id="tp-doors" value="1" min="0"></div>
+            <div><label data-i18n="tp_windows_label">کھڑکیاں</label><input type="number" id="tp-windows" value="2" min="0"></div>
+          </div>
+          <div class="row">
+            <div>
+              <label data-i18n="tp_ceiling_label">چھت بھی پینٹ کرنی ہے؟</label>
+              <select id="tp-ceiling">
+                <option value="0" data-i18n="tp_no">نہیں</option>
+                <option value="1" data-i18n="tp_yes">ہاں</option>
+              </select>
+            </div>
+            <div><label data-i18n="tp_cover_label">کوریج (مربع فٹ فی لیٹر)</label><input type="number" id="tp-cover" value="108"></div>
+          </div>
+        </div>
+
+        <div class="btn-row"><button class="btn" onclick="Tools.tilePaint()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="tp-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="tp_hint">نوٹ: ٹائل میں عموماً 5 سے 10 فیصد ویسٹیج رکھی جاتی ہے۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="profit">
+      <button class="tool-head"><span data-i18n="tool_profit_title">منافع / مارجن کیلکولیٹر</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pm_mode_label">کیا معلوم کرنا ہے</label>
+        <select id="pm-mode">
+          <option value="profit" data-i18n="pm_mode_profit">لاگت اور فروخت سے منافع</option>
+          <option value="price" data-i18n="pm_mode_price">لاگت اور منافع % سے فروخت کی قیمت</option>
+        </select>
+        <div class="row">
+          <div><label data-i18n="pm_cost_label">لاگت (فی یونٹ)</label><input type="number" id="pm-cost" placeholder="100"></div>
+          <div id="pm-sell-wrap"><label data-i18n="pm_sell_label">فروخت کی قیمت (فی یونٹ)</label><input type="number" id="pm-sell" placeholder="150"></div>
+          <div id="pm-pct-wrap" style="display:none"><label data-i18n="pm_pct_label">منافع %</label><input type="number" id="pm-pct" placeholder="25"></div>
+        </div>
+        <div id="pm-basis-wrap" style="display:none">
+          <label data-i18n="pm_basis_label">منافع کی بنیاد</label>
+          <select id="pm-basis">
+            <option value="markup" data-i18n="pm_basis_markup">لاگت پر (Markup)</option>
+            <option value="margin" data-i18n="pm_basis_margin">فروخت پر (Margin)</option>
+          </select>
+        </div>
+        <label data-i18n="pm_qty_label">مقدار / یونٹس (اختیاری)</label>
+        <input type="number" id="pm-qty" placeholder="1">
+        <div class="btn-row"><button class="btn" onclick="Tools.profit()" data-i18n="calc_btn">حساب کریں</button></div>
+        <div class="result" id="pm-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="pm_hint">نوٹ: مارک اپ = منافع ÷ لاگت، مارجن = منافع ÷ فروخت کی قیمت۔</div>
       </div>
     </div>
 
@@ -1761,6 +1997,121 @@
       </div>
     </div>
 
+    <div class="tool" data-tool="imgsplit">
+      <button class="tool-head"><span data-i18n="tool_imgsplit_title">امیج اسپلٹر (ایک تصویر سے کئی تصاویر)</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label class="isp-drop" id="isp-drop" for="imgsplit-file" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="Tools.ispDrop(event)">
+          <span class="isp-drop-t" data-i18n="isp_drop">📂 یہاں تصویر ڈالیں یا کلک کر کے منتخب کریں</span>
+          <span class="muted" data-i18n="isp_drop_sub">پاسپورٹ سائز یا کسی بھی اسکین شدہ شیٹ کی تصویر</span>
+          <input type="file" id="imgsplit-file" accept="image/*" onchange="Tools.ispPickFile(event)">
+        </label>
+
+        <div id="isp-main" style="display:none">
+          <div class="isp-seg" id="isp-modes">
+            <button type="button" data-m="auto" class="on" onclick="Tools.ispSetMode('auto')" data-i18n="isp_mode_auto">خودکار</button>
+            <button type="button" data-m="grid" onclick="Tools.ispSetMode('grid')" data-i18n="isp_mode_grid">گرڈ</button>
+            <button type="button" data-m="manual" onclick="Tools.ispSetMode('manual')" data-i18n="isp_mode_manual">دستی</button>
+          </div>
+
+          <div class="isp-panel" id="isp-p-auto">
+            <span class="muted" data-i18n="isp_auto_help">بیک گراؤنڈ کے رنگ سے فرق دیکھ کر الگ تصویریں خود ڈھونڈتا ہے۔</span>
+            <label data-i18n="isp_bg">بیک گراؤنڈ رنگ</label>
+            <div class="row">
+              <div><input type="color" id="isp-bg" value="#ffffff" oninput="Tools.ispSched()"></div>
+              <div style="align-self:center"><button type="button" class="btn secondary small" onclick="Tools.ispAutoBg()" data-i18n="isp_autobg">🪄 خودکار رنگ</button></div>
+              <div style="align-self:center"><button type="button" class="btn secondary small" id="isp-pickbtn" onclick="Tools.ispPickMode()" data-i18n="isp_pickbg">🎯 تصویر سے چنیں</button></div>
+            </div>
+            <label><span data-i18n="isp_tol">فرق کی حد</span>: <span id="isp-tol-v">35</span></label>
+            <input type="range" id="isp-tol" min="5" max="120" value="35" oninput="Tools.ispSl(this,'isp-tol-v')">
+            <label><span data-i18n="isp_gap">جوڑنے کی دوری %</span>: <span id="isp-gap-v">0.5</span></label>
+            <input type="range" id="isp-gap" min="0" max="8" step="0.1" value="0.5" oninput="Tools.ispSl(this,'isp-gap-v')">
+            <span class="muted" data-i18n="isp_gap_help">اگر ایک تصویر کئی ٹکڑوں میں بٹ جائے تو اسے بڑھائیں؛ اگر دو تصویریں جڑ جائیں تو گھٹائیں۔</span>
+            <div class="row">
+              <div><label><span data-i18n="isp_min">کم از کم سائز %</span>: <span id="isp-min-v">0.5</span></label>
+                <input type="range" id="isp-min" min="0.05" max="15" step="0.05" value="0.5" oninput="Tools.ispSl(this,'isp-min-v')"></div>
+              <div><label><span data-i18n="isp_pad">حاشیہ px (منفی = اندر)</span>: <span id="isp-pad-v">0</span></label>
+                <input type="range" id="isp-pad" min="-40" max="60" step="1" value="0" oninput="Tools.ispSl(this,'isp-pad-v')"></div>
+            </div>
+          </div>
+
+          <div class="isp-panel" id="isp-p-grid" style="display:none">
+            <span class="muted" data-i18n="isp_grid_help">پوری تصویر کو برابر خانوں میں تقسیم کرتا ہے۔</span>
+            <div class="row">
+              <div><label data-i18n="isp_rows">قطاریں</label><input type="number" id="isp-rows" value="2" min="1" max="20" oninput="Tools.ispSched()"></div>
+              <div><label data-i18n="isp_cols">کالم</label><input type="number" id="isp-cols" value="3" min="1" max="20" oninput="Tools.ispSched()"></div>
+            </div>
+            <div class="row">
+              <div><label data-i18n="isp_margin">کنارے کا خالی حصہ (px)</label><input type="number" id="isp-margin" value="0" min="0" oninput="Tools.ispSched()"></div>
+              <div><label data-i18n="isp_gapc">خانوں کے بیچ فاصلہ (px)</label><input type="number" id="isp-gapc" value="0" min="0" oninput="Tools.ispSched()"></div>
+            </div>
+          </div>
+
+          <div class="isp-panel" id="isp-p-manual" style="display:none">
+            <span class="muted" data-i18n="isp_manual_help">“باکس” سے نیا باکس بنائیں، یا “ڈرا” آن کر کے تصویر پر کھینچیں۔</span>
+          </div>
+
+          <div class="isp-stage" id="isp-stage"><canvas id="isp-canvas"></canvas></div>
+          <div class="isp-status" id="isp-count"></div>
+          <div class="muted" data-i18n="isp_canvas_hint">باکس پر ٹیپ کر کے منتخب کریں، گھسیٹ کر ہلائیں، دائروں سے سائز بدلیں۔ نتیجہ نیچے لائیو نظر آتا ہے۔</div>
+
+          <div class="isp-tb">
+            <button type="button" onclick="Tools.ispAdd()" data-i18n="isp_btn_add">＋ باکس</button>
+            <button type="button" id="isp-drawbtn" onclick="Tools.ispDrawMode()" data-i18n="isp_btn_draw">✏️ ڈرا</button>
+            <button type="button" id="isp-undo" onclick="Tools.ispUndo()" data-i18n="isp_btn_undo">↶ واپس</button>
+            <button type="button" id="isp-del" onclick="Tools.ispDel()" data-i18n="isp_btn_del">🗑 حذف</button>
+            <button type="button" onclick="Tools.ispGrow(4)" data-i18n="isp_btn_grow">⤢ سب بڑے</button>
+            <button type="button" onclick="Tools.ispGrow(-4)" data-i18n="isp_btn_shrink">⤡ سب چھوٹے</button>
+          </div>
+
+          <div class="isp-sel" id="isp-sel" style="display:none">
+            <div class="isp-sel-t"><span data-i18n="isp_sel_title">منتخب باکس</span> <span id="isp-sel-n">#1</span></div>
+            <div class="row">
+              <div><label>X</label><input type="number" id="isp-x" onchange="Tools.ispSelEdit()"></div>
+              <div><label>Y</label><input type="number" id="isp-y" onchange="Tools.ispSelEdit()"></div>
+            </div>
+            <div class="row">
+              <div><label data-i18n="isp_w">چوڑائی</label><input type="number" id="isp-w" onchange="Tools.ispSelEdit()"></div>
+              <div><label data-i18n="isp_h">اونچائی</label><input type="number" id="isp-h" onchange="Tools.ispSelEdit()"></div>
+            </div>
+            <label><span data-i18n="isp_angle">سیدھا کریں (زاویہ)</span>: <span id="isp-ang-v">0</span>°</label>
+            <input type="range" id="isp-ang" min="-20" max="20" step="0.5" value="0" oninput="Tools.ispAng(this.value)">
+            <label data-i18n="isp_ratio">تناسب (سائز بدلتے وقت)</label>
+            <select id="isp-ratio" onchange="Tools.ispRatio()">
+              <option value="0" data-i18n="isp_ratio_free">آزاد</option>
+              <option value="35:45">35 : 45</option>
+              <option value="1:1">1 : 1</option>
+              <option value="3:4">3 : 4</option>
+              <option value="2:3">2 : 3</option>
+              <option value="4:5">4 : 5</option>
+            </select>
+            <div class="isp-btnline">
+              <button type="button" onclick="Tools.ispRot(Tools._isp.sel)" data-i18n="isp_rot">↻ 90° گھمائیں</button>
+              <button type="button" onclick="Tools.ispSameSize()" data-i18n="isp_same">سب کو اسی سائز کا کریں</button>
+            </div>
+          </div>
+
+          <div id="isp-thumbs-wrap" style="display:none">
+            <div class="isp-h" data-i18n="isp_preview_title">نتیجہ پریویو — ایسی آئیں گی</div>
+            <div class="isp-thumbs" id="isp-thumbs"></div>
+          </div>
+
+          <div class="row" style="margin-top:16px">
+            <div><label data-i18n="isp_fmt">فارمیٹ</label>
+              <select id="isp-fmt"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WEBP</option></select></div>
+            <div><label data-i18n="isp_prefix">فائل نام کا آغاز</label><input type="text" id="isp-prefix" value="photo"></div>
+          </div>
+          <label><span data-i18n="img_quality_label">کوالٹی:</span> <span id="isp-q-v">0.92</span></label>
+          <input type="range" id="isp-q" min="0.5" max="1" step="0.01" value="0.92" oninput="document.getElementById('isp-q-v').textContent=this.value">
+          <div class="btn-row">
+            <button class="btn" onclick="Tools.ispSaveAll()" data-i18n="isp_save_all">⬇ سب محفوظ کریں (ZIP)</button>
+            <button class="btn ghost" onclick="Tools.ispReset()" data-i18n="clear_btn">صاف کریں</button>
+          </div>
+          <div class="result" id="isp-out" style="display:none"></div>
+          <div class="muted" style="margin-top:8px" data-i18n="isp_hint">مشورہ: اگر پاسپورٹ تصویروں کا بیک گراؤنڈ بھی کاغذ جیسا سفید ہو تو “جوڑنے کی دوری” بڑھائیں؛ پھر بھی ٹھیک نہ آئے تو گرڈ یا دستی موڈ استعمال کریں۔ سارا کام آپ کے براؤزر میں ہوتا ہے، کچھ اپلوڈ نہیں ہوتا۔</div>
+        </div>
+      </div>
+    </div>
+
     <div class="tool" data-tool="imgrotate">
       <button class="tool-head"><span data-i18n="tool_imgrotate_title">امیج روٹیٹر/فلپر</span><span class="plus">+</span></button>
       <div class="tool-body">
@@ -1948,6 +2299,52 @@
       </div>
     </div>
 
+    <div class="tool" data-tool="excel2pdf">
+      <button class="tool-head"><span data-i18n="tool_excel2pdf_title">ایکسل ٹو PDF</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="excel2pdf_select_label">Excel فائل منتخب کریں (.xlsx, .xls, .csv)</label>
+        <input type="file" id="excel2pdf-file" accept=".xlsx,.xls,.csv" onchange="Tools.loadExcelForPdf(event)">
+        <div id="excel2pdf-sheetwrap" style="display:none">
+          <label data-i18n="excel2pdf_sheet_label">شیٹ منتخب کریں</label>
+          <select id="excel2pdf-sheet" onchange="Tools.previewExcelSheet()"></select>
+        </div>
+        <div class="row">
+          <div>
+            <label data-i18n="excel2pdf_orient_label">صفحہ کی سمت</label>
+            <select id="excel2pdf-orient">
+              <option value="p" data-i18n="excel2pdf_portrait">عمودی (Portrait)</option>
+              <option value="l" selected data-i18n="excel2pdf_landscape">افقی (Landscape)</option>
+            </select>
+          </div>
+          <div>
+            <label data-i18n="excel2pdf_header_label">پہلی قطار ہیڈر ہے؟</label>
+            <select id="excel2pdf-header">
+              <option value="1" selected data-i18n="tp_yes">ہاں</option>
+              <option value="0" data-i18n="tp_no">نہیں</option>
+            </select>
+          </div>
+        </div>
+        <div id="excel2pdf-preview" style="overflow:auto; max-height:220px; margin-top:8px; border:1px solid var(--border); border-radius:8px; display:none"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="Tools.excelToPdf()" data-i18n="excel2pdf_btn">PDF بنائیں</button>
+          <button class="btn ghost" onclick="Tools.clearExcel2Pdf()" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+        <div class="result" id="excel2pdf-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="excel2pdf_hint">نوٹ: خلیوں کا رنگ اور فارمولے شامل نہیں ہوتے، صرف ڈیٹا اور قطاریں/کالم بطور ٹیبل بنتے ہیں۔</div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pdf2excel">
+      <button class="tool-head"><span data-i18n="tool_pdf2excel_title">PDF ٹو ایکسل</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="pdf2img_select_label">PDF فائل منتخب کریں</label>
+        <input type="file" id="pdf2excel-file" accept="application/pdf" onchange="Tools.loadPdfForExcel(event)">
+        <div class="btn-row"><button class="btn" onclick="Tools.pdfToExcel()" data-i18n="pdf2excel_btn">Excel بنائیں</button></div>
+        <div class="result" id="pdf2excel-out" style="display:none"></div>
+        <div class="muted" style="margin-top:6px" data-i18n="pdf2excel_hint">نوٹ: یہ "بہترین کوشش" ٹول ہے — PDF میں اصل میں کوئی ٹیبل/کالم نہیں ہوتا، ٹیکسٹ کی پوزیشن سے اندازہ لگایا جاتا ہے۔ سادہ، صاف ٹیبل والی PDF میں نتیجہ اچھا آتا ہے؛ پیچیدہ لے آؤٹ یا اسکین شدہ (تصویری) PDF میں نتیجہ ناقص ہو سکتا ہے۔ ہر صفحہ الگ شیٹ میں آتا ہے۔</div>
+      </div>
+    </div>
+
     <div class="tool" data-tool="imgb64">
       <button class="tool-head"><span data-i18n="tool_imgb64_title">امیج ٹو بیس64</span><span class="plus">+</span></button>
       <div class="tool-body">
@@ -2066,7 +2463,7 @@
     <button onclick="Tools.undoLast()" data-i18n="undo_btn">Undo</button>
   </div>
 
-  <footer data-i18n="footer_text">75 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
+  <footer data-i18n="footer_text">84 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
 </div>
 
 <script>
@@ -2348,7 +2745,7 @@ const I18N = {
   notes_ph: { ur: 'کچھ بھی لکھیں...', en: 'Write anything...' },
   notes_saved: { ur: 'محفوظ ہو گیا ✓', en: 'Saved ✓' },
 
-  footer_text: { ur: '75 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '75 tools · 5 categories · everything runs in your browser' },
+  footer_text: { ur: '84 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '84 tools · 5 categories · everything runs in your browser' },
 
   search_ph: { ur: 'ٹولز تلاش کریں...', en: 'Search tools...' },
   nav_favorites: { ur: 'پسندیدہ', en: 'Favorites' },
@@ -2504,7 +2901,8 @@ const I18N = {
   zakat_hint: { ur: 'نوٹ: یہ اندازاً حساب ہے — قیمتیں مقامی مارکیٹ کے مطابق خود درج کریں اور حتمی مسئلے میں اپنے مقامی عالم دین سے رہنمائی لیں۔', en: 'Note: this is an estimate — enter current market prices yourself, and consult a local scholar for a final ruling.' },
   zakat_need_price: { ur: 'براہ کرم نصاب کی بنیاد کے مطابق قیمت درج کریں', en: 'Please enter a price for the selected nisab basis' },
   zakat_below_nisab: { ur: 'کل مالیت نصاب سے کم ہے — زکوٰۃ واجب نہیں', en: 'Total wealth is below nisab — zakat is not due' },
-  zakat_total_wealth: { ur: 'کل مالیت', en: 'Total wealth' },
+  zakat_total_wealth: { ur: 'کل اثاثوں کی مالیت', en: 'Total assets value' },
+  zakat_payable: { ur: 'واجب الادا زکوٰۃ (2.5%)', en: 'Payable zakat (2.5%)' },
   zakat_nisab_value: { ur: 'نصاب کی مالیت', en: 'Nisab value' },
 
   tool_gpa_title: { ur: 'GPA / گریڈ کیلکولیٹر', en: 'GPA / Grade Calculator' },
@@ -2651,7 +3049,196 @@ const I18N = {
   quote_random_btn: { ur: 'نیا اقتباس', en: 'New random' },
   quote_today_btn: { ur: 'آج کا اقتباس', en: 'Pick of the day' },
   quote_share_btn: { ur: 'واٹس ایپ پر شیئر کریں', en: 'Share on WhatsApp' },
-  quote_hint: { ur: 'نوٹ: احادیث کے حوالے کتاب کے نام (اور جہاں ممکن ہو نمبر) کے ساتھ دیے گئے ہیں — آگے شیئر کرنے سے پہلے مستند کتاب سے تصدیق کر لیں۔', en: 'Note: hadith are cited by collection (with number where available) — please verify against the original source before sharing further.' }
+  quote_hint: { ur: 'نوٹ: احادیث کے حوالے کتاب کے نام (اور جہاں ممکن ہو نمبر) کے ساتھ دیے گئے ہیں — آگے شیئر کرنے سے پہلے مستند کتاب سے تصدیق کر لیں۔', en: 'Note: hadith are cited by collection (with number where available) — please verify against the original source before sharing further.' },
+
+  // ----- Fitrana, Ushr, Committee -----
+  tool_fitrana_title: { ur: 'فطرانہ (صدقہ فطر) کیلکولیٹر', en: 'Fitrana (Sadaqat al-Fitr) Calculator' },
+  fit_persons_label: { ur: 'افراد کی تعداد', en: 'Number of persons' },
+  fit_item_label: { ur: 'کس چیز کے حساب سے', en: 'Calculate by' },
+  fit_item_wheat: { ur: 'گندم / آٹا', en: 'Wheat / flour' },
+  fit_item_barley: { ur: 'جو', en: 'Barley' },
+  fit_item_dates: { ur: 'کھجور', en: 'Dates' },
+  fit_item_raisins: { ur: 'کشمش', en: 'Raisins' },
+  fit_qty_label: { ur: 'فی فرد مقدار (کلوگرام)', en: 'Quantity per person (kg)' },
+  fit_price_label: { ur: 'فی کلو قیمت', en: 'Price per kg' },
+  fit_total: { ur: 'کل واجب الادا فطرانہ', en: 'Total payable fitrana' },
+  fit_per_person: { ur: 'فی فرد', en: 'Per person' },
+  fit_total_qty: { ur: 'کل مقدار', en: 'Total quantity' },
+  fit_need_price: { ur: 'فی کلو قیمت درج کریں۔', en: 'Enter the price per kg.' },
+  fit_hint: { ur: 'نوٹ: فی فرد مقدار میں علماء کے ہاں معمولی فرق ہے (عموماً گندم تقریباً 1.75 کلو)، اس لیے خانہ خود بدلا جا سکتا ہے۔ ریٹ اور حتمی مقدار اپنے مقامی عالم دین یا دارالافتاء سے معلوم کر لیں۔', en: 'Note: scholars differ slightly on the per-person quantity (commonly about 1.75 kg for wheat), so the field is editable. Confirm the rate and final quantity with your local scholar or Darul Ifta.' },
+
+  tool_ushr_title: { ur: 'عشر کیلکولیٹر (زرعی پیداوار)', en: 'Ushr Calculator (Agricultural Produce)' },
+  ushr_qty_label: { ur: 'کل پیداوار', en: 'Total produce' },
+  ushr_type_label: { ur: 'آبپاشی کا طریقہ', en: 'Irrigation method' },
+  ushr_type_rain: { ur: 'بارانی / قدرتی پانی (10%)', en: 'Rain-fed / natural water (10%)' },
+  ushr_type_paid: { ur: 'ٹیوب ویل / خرچ سے پانی (5%)', en: 'Tubewell / paid irrigation (5%)' },
+  ushr_type_mixed: { ur: 'دونوں طرح (7.5%)', en: 'Mixed (7.5%)' },
+  ushr_price_label: { ur: 'فی کلو قیمت (اختیاری)', en: 'Price per kg (optional)' },
+  ushr_due: { ur: 'واجب الادا عشر', en: 'Payable ushr' },
+  ushr_value: { ur: 'اندازاً قیمت', en: 'Estimated value' },
+  ushr_hint: { ur: 'نوٹ: نصاب اور اخراجات کی کٹوتی کے احکام مسالک کے لحاظ سے مختلف ہیں (حنفی مسلک میں پیداوار کم ہو یا زیادہ، عشر واجب ہے؛ دیگر مسالک میں تقریباً 653 کلو کا نصاب ہے)۔ حتمی مسئلے کے لیے اپنے مقامی عالم دین سے رجوع کریں۔', en: 'Note: rulings on the nisab and deducting expenses differ between schools (in the Hanafi school ushr is due on any amount of produce; other schools set a nisab of roughly 653 kg). Ask your local scholar for a final ruling.' },
+
+  tool_bc_title: { ur: 'کمیٹی (BC) کیلکولیٹر', en: 'Committee (BC) Calculator' },
+  bc_members_label: { ur: 'ممبرز کی تعداد', en: 'Number of members' },
+  bc_amount_label: { ur: 'ماہانہ قسط فی ممبر', en: 'Monthly installment per member' },
+  bc_turn_label: { ur: 'آپ کا نمبر (اختیاری)', en: 'Your turn (optional)' },
+  bc_start_label: { ur: 'ابتدائی مہینہ (اختیاری)', en: 'Start month (optional)' },
+  bc_pot: { ur: 'ہر مہینے کی کمیٹی', en: 'Pot each month' },
+  bc_duration: { ur: 'کل مدت', en: 'Total duration' },
+  bc_months: { ur: 'مہینے', en: 'months' },
+  bc_total_pay: { ur: 'آپ کی کل ادائیگی', en: 'Your total payment' },
+  bc_before: { ur: 'کمیٹی ملنے سے پہلے قسطیں', en: 'Installments before you receive' },
+  bc_after: { ur: 'کمیٹی ملنے کے بعد قسطیں', en: 'Installments after you receive' },
+  bc_month_word: { ur: 'مہینہ', en: 'Month' },
+  bc_you: { ur: 'آپ', en: 'You' },
+  bc_bad_turn: { ur: 'آپ کا نمبر 1 سے ممبرز کی تعداد کے درمیان ہونا چاہیے۔', en: 'Your turn must be between 1 and the number of members.' },
+  bc_hint: { ur: 'نوٹ: فرض کیا گیا ہے کہ ہر ماہ ایک ممبر کی کمیٹی نکلتی ہے اور سب ممبرز برابر رقم دیتے ہیں۔ جس مہینے آپ کی کمیٹی ملے، اس مہینے کی آپ کی اپنی قسط بھی اسی رقم میں شمار ہے۔', en: 'Note: assumes one member receives the pot each month and everyone pays the same amount. In the month you receive, your own installment for that month is counted within the pot.' },
+
+  // ----- Tile / Paint / Flooring -----
+  tool_tilepaint_title: { ur: 'ٹائل / پینٹ / فلورنگ کیلکولیٹر', en: 'Tile / Paint / Flooring Calculator' },
+  tp_mode_label: { ur: 'کیا حساب کرنا ہے', en: 'What to calculate' },
+  tp_mode_tile: { ur: 'ٹائل / فلورنگ', en: 'Tiles / Flooring' },
+  tp_mode_paint: { ur: 'دیواروں کا پینٹ', en: 'Wall paint' },
+  tp_unit_label: { ur: 'پیمائش کی اکائی', en: 'Measurement unit' },
+  tp_len_label: { ur: 'کمرے کی لمبائی', en: 'Room length' },
+  tp_wid_label: { ur: 'کمرے کی چوڑائی', en: 'Room width' },
+  tp_hei_label: { ur: 'دیوار کی اونچائی', en: 'Wall height' },
+  tp_tilesize_label: { ur: 'ٹائل کا سائز', en: 'Tile size' },
+  tp_custom: { ur: 'اپنی مرضی کا (انچ)', en: 'Custom (inches)' },
+  tp_tl_label: { ur: 'ٹائل لمبائی (انچ)', en: 'Tile length (in)' },
+  tp_tw_label: { ur: 'ٹائل چوڑائی (انچ)', en: 'Tile width (in)' },
+  tp_waste_label: { ur: 'ویسٹیج %', en: 'Wastage %' },
+  tp_box_label: { ur: 'ڈبے میں ٹائل (اختیاری)', en: 'Tiles per box (optional)' },
+  tp_coats_label: { ur: 'کوٹس', en: 'Coats' },
+  tp_doors_label: { ur: 'دروازے', en: 'Doors' },
+  tp_windows_label: { ur: 'کھڑکیاں', en: 'Windows' },
+  tp_ceiling_label: { ur: 'چھت بھی پینٹ کرنی ہے؟', en: 'Paint the ceiling too?' },
+  tp_cover_label: { ur: 'کوریج (مربع فٹ فی لیٹر)', en: 'Coverage (sq ft per litre)' },
+  tp_no: { ur: 'نہیں', en: 'No' },
+  tp_yes: { ur: 'ہاں', en: 'Yes' },
+  tp_area: { ur: 'فرش کا رقبہ', en: 'Floor area' },
+  tp_sqft: { ur: 'مربع فٹ', en: 'sq ft' },
+  tp_tiles_needed: { ur: 'درکار ٹائلز (ویسٹیج سمیت)', en: 'Tiles needed (incl. wastage)' },
+  tp_tile_word: { ur: 'ٹائلز', en: 'tiles' },
+  tp_boxes: { ur: 'ڈبے', en: 'boxes' },
+  tp_paint_area: { ur: 'پینٹ کا رقبہ', en: 'Paintable area' },
+  tp_paint_needed: { ur: 'درکار پینٹ', en: 'Paint needed' },
+  tp_cans: { ur: '4 لیٹر کے ڈبے', en: '4-litre cans' },
+  tp_hint: { ur: 'نوٹ: ٹائل میں عموماً 5 سے 10 فیصد ویسٹیج رکھی جاتی ہے (ترچھی لگانے پر 15 فیصد تک)۔ پینٹ کی کوریج برانڈ کے مطابق مختلف ہوتی ہے (عموماً 100 سے 120 مربع فٹ فی لیٹر فی کوٹ) — ڈبے پر لکھی کوریج استعمال کریں۔ پینٹ میں دروازے کا 21 اور کھڑکی کا 15 مربع فٹ منہا کیا جاتا ہے۔', en: 'Note: tiles usually need 5–10% wastage (up to 15% for diagonal layouts). Paint coverage varies by brand (typically 100–120 sq ft per litre per coat) — use the coverage printed on the can. Paint mode deducts 21 sq ft per door and 15 sq ft per window.' },
+
+  // ----- Profit / Margin -----
+  tool_profit_title: { ur: 'منافع / مارجن کیلکولیٹر', en: 'Profit / Margin Calculator' },
+  pm_mode_label: { ur: 'کیا معلوم کرنا ہے', en: 'What do you want to find' },
+  pm_mode_profit: { ur: 'لاگت اور فروخت سے منافع', en: 'Profit from cost & selling price' },
+  pm_mode_price: { ur: 'لاگت اور منافع % سے فروخت کی قیمت', en: 'Selling price from cost & profit %' },
+  pm_cost_label: { ur: 'لاگت (فی یونٹ)', en: 'Cost (per unit)' },
+  pm_sell_label: { ur: 'فروخت کی قیمت (فی یونٹ)', en: 'Selling price (per unit)' },
+  pm_pct_label: { ur: 'منافع %', en: 'Profit %' },
+  pm_basis_label: { ur: 'منافع کی بنیاد', en: 'Profit basis' },
+  pm_basis_markup: { ur: 'لاگت پر (Markup)', en: 'On cost (markup)' },
+  pm_basis_margin: { ur: 'فروخت پر (Margin)', en: 'On selling price (margin)' },
+  pm_qty_label: { ur: 'مقدار / یونٹس (اختیاری)', en: 'Quantity / units (optional)' },
+  pm_sell_out: { ur: 'فروخت کی قیمت', en: 'Selling price' },
+  pm_profit: { ur: 'منافع (فی یونٹ)', en: 'Profit (per unit)' },
+  pm_loss: { ur: 'نقصان (فی یونٹ)', en: 'Loss (per unit)' },
+  pm_margin: { ur: 'مارجن', en: 'Margin' },
+  pm_markup: { ur: 'مارک اپ', en: 'Markup' },
+  pm_total_profit: { ur: 'کل منافع', en: 'Total profit' },
+  pm_total_loss: { ur: 'کل نقصان', en: 'Total loss' },
+  pm_bad_margin: { ur: 'مارجن 100% سے کم ہونا چاہیے۔', en: 'Margin must be below 100%.' },
+  pm_hint: { ur: 'نوٹ: مارک اپ = منافع ÷ لاگت، مارجن = منافع ÷ فروخت کی قیمت۔ دونوں الگ ہیں: مثلاً 100 کی لاگت والی چیز 150 میں بیچیں تو مارک اپ 50% اور مارجن تقریباً 33.3% ہے۔', en: 'Note: markup = profit ÷ cost, margin = profit ÷ selling price. They differ: an item costing 100 sold at 150 has a 50% markup but a margin of about 33.3%.' },
+
+  // ----- Committee draw -----
+  tool_bcdraw_title: { ur: 'کمیٹی قرعہ اندازی', en: 'Committee Draw (Qurah)' },
+  bcd_names_label: { ur: 'ممبرز کے نام (ہر نام نئی لائن میں)', en: 'Member names (one per line)' },
+  bcd_names_ph: { ur: 'علی\nاحمد\nسارہ', en: 'Ali\nAhmed\nSara' },
+  bcd_amt_label: { ur: 'ماہانہ قسط (اختیاری)', en: 'Installment (optional)' },
+  bcd_draw_next: { ur: 'اگلا قرعہ نکالیں', en: 'Draw next' },
+  bcd_draw_all: { ur: 'پوری ترتیب کا قرعہ', en: 'Draw full order' },
+  bcd_reset: { ur: 'دوبارہ شروع کریں', en: 'Start over' },
+  bcd_org_label: { ur: 'منتظم کا نام (پہلا نمبر اسی کا) — اختیاری', en: 'Organizer (gets turn 1) — optional' },
+  bcd_org_none: { ur: 'کوئی نہیں — سب کا قرعہ', en: 'None — draw everyone' },
+  bcd_org_tag: { ur: 'منتظم', en: 'organizer' },
+  bcd_need_names: { ur: 'کم از کم 2 نام لکھیں (زیادہ سے زیادہ 100)۔', en: 'Enter at least 2 names (max 100).' },
+  bcd_remaining: { ur: 'قرعہ باقی', en: 'Still to draw' },
+  bcd_done: { ur: 'تمام قرعے مکمل ہو گئے۔', en: 'All draws are complete.' },
+  bcd_hint: { ur: 'نوٹ: قرعہ آپ کے براؤزر کے رینڈم نمبر جنریٹر سے نکلتا ہے، اس لیے ہر نام کا چانس برابر ہے۔ نتیجہ اسی ڈیوائس میں محفوظ رہتا ہے۔ "اگلا قرعہ" سے ہر مہینے کا قرعہ ایک ایک کر کے نکلتا ہے، اور "پوری ترتیب" سے سب کی باری ایک ساتھ بن جاتی ہے (پرانا نتیجہ بدل جاتا ہے، لیکن Undo سے واپس آ سکتا ہے)۔ بہتر ہے کہ قرعہ سب ممبرز کے سامنے نکالیں اور نتیجہ گروپ میں شیئر کر دیں۔ اگر منتظم چنا ہو تو پہلا نمبر اسی کا ہوگا اور باقی ممبرز کا قرعہ نکلے گا۔', en: 'Note: the draw uses your browser random number generator, so every name has an equal chance. The result is saved on this device. "Draw next" picks one month at a time; "Draw full order" assigns every turn at once (it replaces the previous result, but Undo brings it back). Best to draw in front of all members and share the result in the group. If an organizer is selected, they get turn 1 and everyone else is drawn.' }
+  ,
+
+  // ----- Excel <-> PDF -----
+  tool_excel2pdf_title: { ur: 'ایکسل ٹو PDF', en: 'Excel to PDF' },
+  excel2pdf_select_label: { ur: 'Excel فائل منتخب کریں (.xlsx, .xls, .csv)', en: 'Select Excel file (.xlsx, .xls, .csv)' },
+  excel2pdf_sheet_label: { ur: 'شیٹ منتخب کریں', en: 'Select sheet' },
+  excel2pdf_orient_label: { ur: 'صفحہ کی سمت', en: 'Page orientation' },
+  excel2pdf_portrait: { ur: 'عمودی (Portrait)', en: 'Portrait' },
+  excel2pdf_landscape: { ur: 'افقی (Landscape)', en: 'Landscape' },
+  excel2pdf_header_label: { ur: 'پہلی قطار ہیڈر ہے؟', en: 'First row is header?' },
+  excel2pdf_btn: { ur: 'PDF بنائیں', en: 'Create PDF' },
+  excel2pdf_hint: { ur: 'نوٹ: خلیوں کا رنگ اور فارمولے شامل نہیں ہوتے، صرف ڈیٹا اور قطاریں/کالم بطور ٹیبل بنتے ہیں۔', en: 'Note: cell colours and formulas are not carried over — only the data is laid out as a table.' },
+  excel2pdf_error: { ur: 'فائل پڑھنے میں مسئلہ ہوا — یہ فائل خراب یا غیر مطابق ہو سکتی ہے۔', en: 'Could not read the file — it may be corrupted or unsupported.' },
+  excel2pdf_empty: { ur: 'اس شیٹ میں کوئی ڈیٹا نہیں ملا۔', en: 'No data found in this sheet.' },
+  excel2pdf_done: { ur: 'PDF تیار ہے', en: 'PDF ready' },
+  excel2pdf_rows: { ur: 'قطاریں', en: 'rows' },
+  tool_pdf2excel_title: { ur: 'PDF ٹو ایکسل', en: 'PDF to Excel' },
+  pdf2excel_btn: { ur: 'Excel بنائیں', en: 'Create Excel' },
+  pdf2excel_hint: { ur: 'نوٹ: یہ "بہترین کوشش" ٹول ہے — PDF میں اصل میں کوئی ٹیبل/کالم نہیں ہوتا، ٹیکسٹ کی پوزیشن سے اندازہ لگایا جاتا ہے۔ سادہ، صاف ٹیبل والی PDF میں نتیجہ اچھا آتا ہے؛ پیچیدہ لے آؤٹ یا اسکین شدہ (تصویری) PDF میں نتیجہ ناقص ہو سکتا ہے۔ ہر صفحہ الگ شیٹ میں آتا ہے۔', en: 'Note: this is a best-effort tool — a PDF has no real tables or columns, so rows and columns are guessed from text position. Simple, clean tables convert well; complex layouts or scanned (image) PDFs may convert poorly. Each page becomes its own sheet.' },
+  pdf2excel_error: { ur: 'PDF پڑھنے میں مسئلہ ہوا۔', en: 'Could not read the PDF.' },
+  pdf2excel_scanned: { ur: 'خبردار: اس PDF میں سلیکٹ ایبل ٹیکسٹ بہت کم ہے — یہ اسکین شدہ (تصویری) PDF ہو سکتی ہے، نتیجہ خالی یا ناقص آ سکتا ہے۔', en: 'Warning: very little selectable text found — this may be a scanned (image) PDF, so the result may be empty or poor.' },
+  pdf2excel_done: { ur: 'Excel تیار ہے', en: 'Excel ready' },
+  pdf2excel_pages: { ur: 'صفحات', en: 'pages' }  ,
+
+  // ----- Image Splitter -----
+  tool_imgsplit_title: { ur: 'امیج اسپلٹر (ایک تصویر سے کئی تصاویر)', en: 'Image Splitter (many photos from one image)' },
+  isp_drop: { ur: '📂 یہاں تصویر ڈالیں یا کلک کر کے منتخب کریں', en: '📂 Drop an image here or click to choose' },
+  isp_drop_sub: { ur: 'پاسپورٹ سائز یا کسی بھی اسکین شدہ شیٹ کی تصویر', en: 'A passport-photo sheet or any scanned page of photos' },
+  isp_mode_auto: { ur: 'خودکار', en: 'Auto' },
+  isp_mode_grid: { ur: 'گرڈ', en: 'Grid' },
+  isp_mode_manual: { ur: 'دستی', en: 'Manual' },
+  isp_auto_help: { ur: 'بیک گراؤنڈ کے رنگ سے فرق دیکھ کر الگ تصویریں خود ڈھونڈتا ہے۔', en: 'Finds each photo by how much it differs from the background colour.' },
+  isp_bg: { ur: 'بیک گراؤنڈ رنگ', en: 'Background colour' },
+  isp_autobg: { ur: '🪄 خودکار رنگ', en: '🪄 Auto colour' },
+  isp_pickbg: { ur: '🎯 تصویر سے چنیں', en: '🎯 Pick from image' },
+  isp_pickbg_on: { ur: 'تصویر پر بیک گراؤنڈ کی کسی جگہ ٹیپ کریں…', en: 'Tap a background spot on the image…' },
+  isp_tol: { ur: 'فرق کی حد', en: 'Sensitivity' },
+  isp_gap: { ur: 'جوڑنے کی دوری %', en: 'Merge distance %' },
+  isp_gap_help: { ur: 'اگر ایک تصویر کئی ٹکڑوں میں بٹ جائے تو اسے بڑھائیں؛ اگر دو تصویریں جڑ جائیں تو گھٹائیں۔', en: 'Raise it if one photo splits into pieces; lower it if two photos merge into one.' },
+  isp_min: { ur: 'کم از کم سائز %', en: 'Minimum size %' },
+  isp_pad: { ur: 'حاشیہ px (منفی = اندر)', en: 'Padding px (negative = trim)' },
+  isp_grid_help: { ur: 'پوری تصویر کو برابر خانوں میں تقسیم کرتا ہے۔', en: 'Cuts the whole image into equal cells.' },
+  isp_rows: { ur: 'قطاریں', en: 'Rows' },
+  isp_cols: { ur: 'کالم', en: 'Columns' },
+  isp_margin: { ur: 'کنارے کا خالی حصہ (px)', en: 'Outer margin (px)' },
+  isp_gapc: { ur: 'خانوں کے بیچ فاصلہ (px)', en: 'Gap between cells (px)' },
+  isp_manual_help: { ur: '“باکس” سے نیا باکس بنائیں، یا “ڈرا” آن کر کے تصویر پر کھینچیں۔', en: 'Add a box with “Box”, or turn on “Draw” and drag on the image.' },
+  isp_canvas_hint: { ur: 'باکس پر ٹیپ کر کے منتخب کریں، گھسیٹ کر ہلائیں، دائروں سے سائز بدلیں۔ نتیجہ نیچے لائیو نظر آتا ہے۔', en: 'Tap a box to select it, drag to move, use the round handles to resize. The result shows live below.' },
+  isp_btn_add: { ur: '＋ باکس', en: '＋ Box' },
+  isp_btn_draw: { ur: '✏️ ڈرا', en: '✏️ Draw' },
+  isp_btn_undo: { ur: '↶ واپس', en: '↶ Undo' },
+  isp_btn_del: { ur: '🗑 حذف', en: '🗑 Delete' },
+  isp_btn_grow: { ur: '⤢ سب بڑے', en: '⤢ Grow all' },
+  isp_btn_shrink: { ur: '⤡ سب چھوٹے', en: '⤡ Shrink all' },
+  isp_sel_title: { ur: 'منتخب باکس', en: 'Selected box' },
+  isp_w: { ur: 'چوڑائی', en: 'Width' },
+  isp_h: { ur: 'اونچائی', en: 'Height' },
+  isp_angle: { ur: 'سیدھا کریں (زاویہ)', en: 'Straighten (angle)' },
+  isp_ratio: { ur: 'تناسب (سائز بدلتے وقت)', en: 'Aspect ratio (when resizing)' },
+  isp_ratio_free: { ur: 'آزاد', en: 'Free' },
+  isp_rot: { ur: '↻ 90° گھمائیں', en: '↻ Rotate 90°' },
+  isp_same: { ur: 'سب کو اسی سائز کا کریں', en: 'Make all the same size' },
+  isp_preview_title: { ur: 'نتیجہ پریویو — ایسی آئیں گی', en: 'Result preview — this is what you will get' },
+  isp_found: { ur: 'تصاویر منتخب', en: 'photos selected' },
+  isp_none: { ur: 'کوئی تصویر نہیں ملی — رنگ/حد بدلیں، یا دستی موڈ میں باکس بنائیں۔', en: 'No photos found — change the colour/sensitivity, or draw boxes in Manual mode.' },
+  isp_note_manual: { ur: 'باکس ہاتھ سے بدلے گئے ہیں — سیٹنگ یا موڈ بدلنے پر دوبارہ شناخت ہوگی (“واپس” سے بحال ہو جائیں گے)', en: 'Boxes were edited by hand — changing a setting or mode re-detects them (Undo restores your edits)' },
+  isp_draw_on: { ur: 'ڈرا آن ہے: تصویر پر کھینچ کر باکس بنائیں', en: 'Draw is on: drag on the image to make a box' },
+  isp_fmt: { ur: 'فارمیٹ', en: 'Format' },
+  isp_prefix: { ur: 'فائل نام کا آغاز', en: 'File name prefix' },
+  isp_save_all: { ur: '⬇ سب محفوظ کریں (ZIP)', en: '⬇ Save all (ZIP)' },
+  isp_saving: { ur: 'تیار ہو رہا ہے…', en: 'Preparing…' },
+  isp_saved: { ur: 'فائلیں محفوظ ہو گئیں', en: 'file(s) saved' },
+  isp_noselect: { ur: 'محفوظ کرنے کے لیے کوئی باکس منتخب نہیں۔', en: 'No boxes are selected for export.' },
+  isp_err_load: { ur: 'یہ تصویر کھل نہیں سکی۔', en: 'This image could not be opened.' },
+  isp_hint: { ur: 'مشورہ: اگر پاسپورٹ تصویروں کا بیک گراؤنڈ بھی کاغذ جیسا سفید ہو تو “جوڑنے کی دوری” بڑھائیں؛ پھر بھی ٹھیک نہ آئے تو گرڈ یا دستی موڈ استعمال کریں۔ سارا کام آپ کے براؤزر میں ہوتا ہے، کچھ اپلوڈ نہیں ہوتا۔', en: 'Tip: if the photos have a paper-white background too, raise “Merge distance”; if that still is not right, use Grid or Manual mode. Everything runs in your browser — nothing is uploaded.' },
+
 };
 
 let LANG = 'en';
@@ -2670,7 +3257,7 @@ function applyLang(){
   Tools.updateWordCount();
   Tools.renderTodos();
   if(Tools._quoteCur) Tools.renderQuote();
-  Tools.idealWeight(); Tools.bodyFat(); Tools.goldConvert();
+  Tools.idealWeight(); Tools.bodyFat(); Tools.goldConvert(); if(document.getElementById('zakat-out').style.display==='block') Tools.zakat(); Tools.fitrana(); Tools.ushr(); Tools.bc(); Tools.tilePaint(); Tools.profit(); Tools.bcdRender(); Tools.ispStatus && Tools.ispStatus()
 }
 
 document.getElementById('langToggle').onclick = function(){
@@ -5159,6 +5746,205 @@ const Tools = {
     reader.readAsDataURL(file);
   },
 
+  // ===== Excel to PDF =====
+  _excelWb: null,
+  _excelFileBase: 'sheet',
+  loadExcelForPdf(e){
+    const file = e.target.files[0];
+    const box = document.getElementById('excel2pdf-out');
+    box.style.display = 'none';
+    document.getElementById('excel2pdf-preview').style.display = 'none';
+    if(!file) return;
+    Tools._excelFileBase = file.name.replace(/\.[^.]+$/, '') || 'sheet';
+    if(typeof XLSX === 'undefined'){
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_error[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        Tools._excelWb = wb;
+        const sel = document.getElementById('excel2pdf-sheet');
+        sel.innerHTML = '';
+        wb.SheetNames.forEach(name => {
+          const o = document.createElement('option');
+          o.value = name; o.textContent = name;
+          sel.appendChild(o);
+        });
+        document.getElementById('excel2pdf-sheetwrap').style.display = wb.SheetNames.length > 1 ? 'block' : 'none';
+        Tools.previewExcelSheet();
+      }catch(err){
+        Tools._excelWb = null;
+        box.innerHTML = `<span class="muted">${I18N.excel2pdf_error[LANG]}</span>`;
+        box.style.display = 'block';
+      }
+    };
+    reader.onerror = () => {
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_error[LANG]}</span>`;
+      box.style.display = 'block';
+    };
+    reader.readAsArrayBuffer(file);
+  },
+  _excelSheetAoa(){
+    if(!Tools._excelWb) return null;
+    const name = document.getElementById('excel2pdf-sheet').value || Tools._excelWb.SheetNames[0];
+    const ws = Tools._excelWb.Sheets[name];
+    if(!ws) return null;
+    return XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' })
+      .map(row => row.map(c => (c === null || c === undefined) ? '' : String(c)))
+      .filter(row => row.some(c => c !== ''));
+  },
+  previewExcelSheet(){
+    const aoa = Tools._excelSheetAoa();
+    const box = document.getElementById('excel2pdf-preview');
+    if(!aoa || !aoa.length){ box.style.display = 'none'; return; }
+    const esc = Tools._escapeHtml;
+    const rows = aoa.slice(0, 30);
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+    rows.forEach((r, i) => {
+      html += '<tr>' + r.map(c => `<td style="border:1px solid var(--border);padding:4px 6px;white-space:nowrap;${i===0?'font-weight:700':''}">${esc(c)}</td>`).join('') + '</tr>';
+    });
+    html += '</table>';
+    if(aoa.length > 30) html += `<div class="muted" style="padding:4px 6px">\u2026 +${aoa.length - 30}</div>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+  excelToPdf(){
+    const box = document.getElementById('excel2pdf-out');
+    const aoa = Tools._excelSheetAoa();
+    if(!aoa || !aoa.length){
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_empty[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (window.jsPDF || null);
+    if(!jsPDFCtor || typeof jsPDFCtor.API === 'undefined' || typeof jsPDFCtor.API.autoTable === 'undefined'){
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_error[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    try{
+      const orient = document.getElementById('excel2pdf-orient').value;
+      const hasHeader = document.getElementById('excel2pdf-header').value === '1';
+      const doc = new jsPDFCtor({ orientation: orient, unit: 'pt' });
+      const head = hasHeader ? [aoa[0]] : null;
+      const body = hasHeader ? aoa.slice(1) : aoa;
+      doc.autoTable({
+        head, body,
+        styles: { font: 'helvetica', fontSize: 8, cellPadding: 4, overflow: 'linebreak' },
+        headStyles: { fillColor: [91, 91, 214] },
+        margin: { top: 30, left: 24, right: 24 },
+        theme: 'grid'
+      });
+      const blob = doc.output('blob');
+      Tools.saveFile(Tools._excelFileBase + '.pdf', blob);
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_done[LANG]} \u00b7 ${aoa.length} ${I18N.excel2pdf_rows[LANG]}</span>`;
+      box.style.display = 'block';
+    }catch(err){
+      box.innerHTML = `<span class="muted">${I18N.excel2pdf_error[LANG]}</span>`;
+      box.style.display = 'block';
+    }
+  },
+  clearExcel2Pdf(){
+    Tools._excelWb = null;
+    document.getElementById('excel2pdf-file').value = '';
+    document.getElementById('excel2pdf-sheet').innerHTML = '';
+    document.getElementById('excel2pdf-sheetwrap').style.display = 'none';
+    document.getElementById('excel2pdf-preview').style.display = 'none';
+    document.getElementById('excel2pdf-preview').innerHTML = '';
+    document.getElementById('excel2pdf-out').style.display = 'none';
+  },
+
+  // ===== PDF to Excel (best-effort: text position -> rows/columns) =====
+  _pdf2excelFile: null,
+  _pdf2excelBase: 'document',
+  loadPdfForExcel(e){
+    Tools._pdf2excelFile = e.target.files[0] || null;
+    document.getElementById('pdf2excel-out').style.display = 'none';
+    if(Tools._pdf2excelFile) Tools._pdf2excelBase = Tools._pdf2excelFile.name.replace(/\.[^.]+$/, '') || 'document';
+  },
+  // Groups PDF.js text items into rows (by y-position), then finds column x-positions that
+  // recur across several rows (a real table) vs. one-off text runs (plain wrapped prose).
+  _pdf2excelBuildTable(items){
+    if(!items.length) return [];
+    const rowTol = Math.max(3, Math.min(...items.map(i => i.h || 10)) * 0.5);
+    const rows = [];
+    items.slice().sort((a, b) => b.y - a.y || a.x - b.x).forEach(it => {
+      let row = rows.find(r => Math.abs(r.y - it.y) <= rowTol);
+      if(!row){ row = { y: it.y, items: [] }; rows.push(row); }
+      row.items.push(it);
+    });
+    rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
+
+    const colTol = 10;
+    const xs = [];
+    rows.forEach((r, ri) => r.items.forEach(it => xs.push({ x: it.x, ri })));
+    xs.sort((a, b) => a.x - b.x);
+    const clusters = [];
+    xs.forEach(p => {
+      let c = clusters.find(c => Math.abs(c.x - p.x) <= colTol);
+      if(!c){ c = { x: p.x, n: 0, rows: new Set() }; clusters.push(c); }
+      c.x = (c.x * c.n + p.x) / (c.n + 1);
+      c.n++; c.rows.add(p.ri);
+    });
+    let cols = clusters.filter(c => c.rows.size >= 2 || rows.length <= 1).sort((a, b) => a.x - b.x);
+    if(!cols.length) cols = clusters.sort((a, b) => a.x - b.x);
+
+    return rows.map(row => {
+      const cells = cols.map(() => []);
+      row.items.forEach(it => {
+        let best = 0, bestD = Infinity;
+        cols.forEach((c, ci) => { const d = Math.abs(c.x - it.x); if(d < bestD){ bestD = d; best = ci; } });
+        cells[best].push(it);
+      });
+      return cells.map(arr => arr.sort((a, b) => a.x - b.x).map(it => it.str).join(' ').trim());
+    });
+  },
+  async pdfToExcel(){
+    const box = document.getElementById('pdf2excel-out');
+    if(!Tools._pdf2excelFile){ box.style.display = 'none'; return; }
+    if(typeof pdfjsLib === 'undefined' || typeof XLSX === 'undefined'){
+      box.innerHTML = `<span class="muted">${I18N.pdf2excel_error[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    box.innerHTML = `<span class="muted">\u2026</span>`;
+    box.style.display = 'block';
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.worker.min.js';
+      const buf = await Tools._pdf2excelFile.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const wb = XLSX.utils.book_new();
+      let totalChars = 0;
+      for(let p = 1; p <= pdf.numPages; p++){
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const items = content.items.map(it => ({
+          str: it.str,
+          x: it.transform[4],
+          y: it.transform[5],
+          w: it.width || (it.str.length * (it.height || 8) * 0.5),
+          h: it.height || 8
+        })).filter(it => it.str.trim() !== '');
+        totalChars += items.reduce((n, it) => n + it.str.length, 0);
+        const rows = Tools._pdf2excelBuildTable(items);
+        const ws = XLSX.utils.aoa_to_sheet(rows.length ? rows : [['']]);
+        let sheetName = `${LANG === 'ur' ? 'صفحہ' : 'Page'} ${p}`.slice(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      }
+      const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      Tools.saveFile(Tools._pdf2excelBase + '.xlsx', blob);
+      let html = `<span class="muted">${I18N.pdf2excel_done[LANG]} \u00b7 ${pdf.numPages} ${I18N.pdf2excel_pages[LANG]}</span>`;
+      if(totalChars < 20 * pdf.numPages) html += `<br><span class="muted">${I18N.pdf2excel_scanned[LANG]}</span>`;
+      box.innerHTML = html;
+    }catch(err){
+      box.innerHTML = `<span class="muted">${I18N.pdf2excel_error[LANG]}</span>`;
+    }
+  },
+
   _todos: [],
   loadTodos(){
     try{
@@ -5277,11 +6063,16 @@ const Tools = {
       return;
     }
     if(total < nisabVal){
-      box.innerHTML = `<span class="big">0</span><br><span class="muted">${I18N.zakat_below_nisab[LANG]}</span>`;
+      box.innerHTML = `<div class="muted">${I18N.zakat_payable[LANG]}</div><span class="big">0</span>`
+        + `<br><span class="muted">${I18N.zakat_total_wealth[LANG]}: ${total.toLocaleString(undefined,{maximumFractionDigits:2})} · ${I18N.zakat_nisab_value[LANG]}: ${nisabVal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`
+        + `<br><span class="muted">${I18N.zakat_below_nisab[LANG]}</span>`;
     } else {
       const zakatDue = total * 0.025;
-      box.innerHTML = `<span class="big">${zakatDue.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`
-        + `<br><span class="muted">${I18N.zakat_total_wealth[LANG]}: ${total.toLocaleString(undefined,{maximumFractionDigits:2})} · ${I18N.zakat_nisab_value[LANG]}: ${nisabVal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`;
+      box.innerHTML = `<div class="muted">${I18N.zakat_total_wealth[LANG]}</div>`
+        + `<div style="font-size:18px;font-weight:600;margin-bottom:8px">${total.toLocaleString(undefined,{maximumFractionDigits:2})}</div>`
+        + `<div class="muted">${I18N.zakat_payable[LANG]}</div>`
+        + `<span class="big">${zakatDue.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`
+        + `<br><span class="muted">${I18N.zakat_nisab_value[LANG]}: ${nisabVal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`;
     }
     const wParts = [];
     if(goldG) wParts.push(`${I18N.zakat_gold_word[LANG]} ${+goldG.toFixed(3)} g`);
@@ -5946,6 +6737,1024 @@ const Tools = {
     catch(e){ qb.innerHTML = '<span class="muted">Error generating QR</span>'; }
   },
 
+  // ===== Image Splitter: live preview + auto / grid / manual boxes =====
+  _isp: { img:null, url:null, psrc:null, psc:1, iw:0, ih:0, boxes:[], sel:-1, mode:'auto', dpr:1, off:null, work:null,
+          pick:false, draw:false, edited:false, drag:null, undo:[], timer:0, raf:0, rt:0, thumbs:[], note:'', ratio:0, bound:false, busy:false },
+  _ispPal: ['#C24B4B','#2E6DA4','#2F8A5B','#B8791E','#6E4FA8','#0E8A8A','#B04A8C','#6B7A1F'],
+  _ispC(v, a, b){ return Math.min(b, Math.max(a, v)); },
+  _ispEl(id){ return document.getElementById(id); },
+
+  // ---- loading ----
+  ispPickFile(e){
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(f) Tools.ispLoadFile(f);
+  },
+  ispDrop(e){
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f && /^image\//.test(f.type)) Tools.ispLoadFile(f);
+  },
+  ispLoadFile(file){
+    const st = Tools._isp;
+    Tools.ispBind();
+    Tools.ispReset(true);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      st.img = img; st.url = url; st.iw = img.naturalWidth; st.ih = img.naturalHeight;
+      const base = (file.name || 'photo').replace(/\.[^.]+$/, '').replace(/[^\w\u0600-\u06FF\-]+/g, '_') || 'photo';
+      Tools._ispEl('isp-prefix').value = base;
+      // mid-resolution copy used for fast thumbnails
+      const k = Math.min(1, 1600 / Math.max(st.iw, st.ih));
+      if(k < 1){
+        const p = document.createElement('canvas');
+        p.width = Math.round(st.iw * k); p.height = Math.round(st.ih * k);
+        const px = p.getContext('2d'); px.imageSmoothingQuality = 'high'; px.drawImage(img, 0, 0, p.width, p.height);
+        st.psrc = p; st.psc = p.width / st.iw;
+      } else { st.psrc = img; st.psc = 1; }
+      Tools._ispEl('isp-main').style.display = 'block';
+      Tools.ispAutoBg(true);
+      Tools.ispSetMode('auto', true);
+      Tools.ispLayout();
+      Tools.ispGenerate();
+    };
+    img.onerror = () => {
+      try{ URL.revokeObjectURL(url); }catch(e){}
+      const o = Tools._ispEl('isp-out'); o.textContent = I18N.isp_err_load[LANG]; o.style.display = 'block';
+    };
+    img.src = url;
+  },
+  ispReset(keep){
+    const st = Tools._isp;
+    if(st.url){ try{ URL.revokeObjectURL(st.url); }catch(e){} }
+    st.url = null; st.img = null; st.psrc = null; st.work = null; st.off = null;
+    st.boxes = []; st.sel = -1; st.undo = []; st.drag = null; st.pick = false; st.draw = false; st.note = ''; st.edited = false; st.thumbs = [];
+    if(!keep){
+      Tools._ispEl('isp-main').style.display = 'none';
+      Tools._ispEl('imgsplit-file').value = '';
+    }
+    Tools._ispEl('isp-thumbs').innerHTML = '';
+    Tools._ispEl('isp-thumbs-wrap').style.display = 'none';
+    Tools._ispEl('isp-sel').style.display = 'none';
+    const o = Tools._ispEl('isp-out'); o.style.display = 'none'; o.textContent = '';
+    const c = Tools._ispEl('isp-canvas'); c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  },
+
+  // ---- layout / drawing ----
+  ispLayout(){
+    const st = Tools._isp;
+    if(!st.img) return;
+    const stage = Tools._ispEl('isp-stage'), c = Tools._ispEl('isp-canvas');
+    const availW = stage.clientWidth || 320;
+    const maxH = Math.max(260, Math.min(640, window.innerHeight * 0.7));
+    const s = Math.min(availW / st.iw, maxH / st.ih);
+    st.dpr = window.devicePixelRatio || 1;
+    const cw = Math.max(1, Math.round(st.iw * s)), ch = Math.max(1, Math.round(st.ih * s));
+    c.style.width = cw + 'px'; c.style.height = ch + 'px';
+    c.width = Math.round(cw * st.dpr); c.height = Math.round(ch * st.dpr);
+    const o = document.createElement('canvas');
+    o.width = c.width; o.height = c.height;
+    const ox = o.getContext('2d'); ox.imageSmoothingQuality = 'high'; ox.drawImage(st.img, 0, 0, o.width, o.height);
+    st.off = o;
+    Tools.ispDraw();
+  },
+  _ispHandles(b){
+    const x0 = b.x, x1 = b.x + b.w, xm = b.x + b.w/2, y0 = b.y, y1 = b.y + b.h, ym = b.y + b.h/2;
+    return [{n:'nw',x:x0,y:y0},{n:'n',x:xm,y:y0},{n:'ne',x:x1,y:y0},{n:'e',x:x1,y:ym},
+            {n:'se',x:x1,y:y1},{n:'s',x:xm,y:y1},{n:'sw',x:x0,y:y1},{n:'w',x:x0,y:ym}];
+  },
+  ispDraw(){
+    const st = Tools._isp, c = Tools._ispEl('isp-canvas');
+    if(!st.off || !st.img) return;
+    const x = c.getContext('2d'), S = c.width / st.iw, dpr = st.dpr;
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.clearRect(0, 0, c.width, c.height);
+    x.drawImage(st.off, 0, 0);
+    if(st.boxes.length){
+      x.fillStyle = 'rgba(8,10,14,.5)';
+      x.fillRect(0, 0, c.width, c.height);
+      st.boxes.forEach(b => {
+        if(!b.on) return;
+        const sx = b.x*S, sy = b.y*S, sw = b.w*S, sh = b.h*S;
+        x.drawImage(st.off, sx, sy, sw, sh, sx, sy, sw, sh);
+      });
+    }
+    st.boxes.forEach((b, i) => {
+      const col = b.on ? Tools._ispPal[i % Tools._ispPal.length] : '#9AA3AF';
+      x.lineWidth = (i === st.sel ? 3 : 2) * dpr;
+      x.strokeStyle = col;
+      x.setLineDash(b.on ? [] : [6*dpr, 4*dpr]);
+      x.strokeRect(b.x*S, b.y*S, b.w*S, b.h*S);
+      x.setLineDash([]);
+      const r = 10*dpr, bx = b.x*S + r + 3*dpr, by = b.y*S + r + 3*dpr;
+      x.fillStyle = col; x.beginPath(); x.arc(bx, by, r, 0, Math.PI*2); x.fill();
+      x.fillStyle = '#fff'; x.font = '700 ' + (11*dpr) + 'px sans-serif';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(String(i + 1), bx, by + 0.5*dpr);
+    });
+    if(st.sel >= 0 && st.boxes[st.sel]){
+      const col = Tools._ispPal[st.sel % Tools._ispPal.length];
+      Tools._ispHandles(st.boxes[st.sel]).forEach(h => {
+        x.fillStyle = '#fff'; x.strokeStyle = col; x.lineWidth = 2*dpr;
+        x.beginPath(); x.arc(h.x*S, h.y*S, 7*dpr, 0, Math.PI*2); x.fill(); x.stroke();
+      });
+    }
+  },
+  ispRedraw(full){
+    Tools.ispDraw();
+    Tools.ispSelUI();
+    if(full !== false) Tools.ispThumbs();
+    Tools.ispStatus();
+    Tools._ispBtns();
+  },
+  _ispBtns(){
+    const st = Tools._isp;
+    const u = Tools._ispEl('isp-undo'); if(u) u.disabled = !st.undo.length;
+    const d = Tools._ispEl('isp-del'); if(d) d.disabled = st.sel < 0;
+    const dw = Tools._ispEl('isp-drawbtn'); if(dw) dw.classList.toggle('on', st.draw);
+    const pk = Tools._ispEl('isp-pickbtn'); if(pk) pk.classList.toggle('on', st.pick);
+  },
+  ispStatus(){
+    const st = Tools._isp, el = Tools._ispEl('isp-count');
+    if(!el || !st.img) return;
+    const on = st.boxes.filter(b => b.on).length;
+    let t = st.boxes.length ? (on + ' / ' + st.boxes.length + ' ' + I18N.isp_found[LANG]) : I18N.isp_none[LANG];
+    if(st.pick) t = I18N.isp_pickbg_on[LANG];
+    else if(st.draw) t = I18N.isp_draw_on[LANG];
+    else if(st.note) t += ' — ' + I18N[st.note][LANG];
+    el.textContent = t;
+  },
+
+  // ---- modes / generation ----
+  ispSetMode(m, silent){
+    const st = Tools._isp;
+    st.mode = m; st.pick = false; st.note = ''; st.edited = false;
+    document.querySelectorAll('#isp-modes button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    ['auto','grid','manual'].forEach(k => { Tools._ispEl('isp-p-' + k).style.display = (k === m) ? '' : 'none'; });
+    if(!silent) Tools.ispGenerate();
+  },
+  // A manual edit never switches the mode (that would collapse the settings panel and make the image jump
+  // under the finger); it only flags the boxes as edited so the status line can warn about re-detection.
+  _ispManual(){
+    const st = Tools._isp;
+    if(st.mode !== 'manual'){ st.edited = true; st.note = 'isp_note_manual'; }
+  },
+  ispSched(){
+    const st = Tools._isp;
+    clearTimeout(st.timer);
+    st.timer = setTimeout(() => Tools.ispGenerate(), 50);
+  },
+  ispSl(el, vid){
+    Tools._ispEl(vid).textContent = el.value;
+    Tools.ispSched();
+  },
+  ispGenerate(){
+    const st = Tools._isp;
+    if(!st.img) return;
+    if(st.mode !== 'manual' && st.edited){ Tools._ispSnap(); }   // keep the hand-made edits recoverable via Undo
+    if(st.mode === 'auto'){ st.boxes = Tools.ispDetect(); st.sel = -1; }
+    else if(st.mode === 'grid'){ st.boxes = Tools.ispGridBoxes(); st.sel = -1; }
+    st.edited = false; st.note = '';
+    if(st.sel >= st.boxes.length) st.sel = -1;
+    Tools.ispRedraw(true);
+  },
+  ispWork(){
+    const st = Tools._isp;
+    if(st.work || !st.img) return st.work;
+    const k = Math.min(1, 900 / Math.max(st.iw, st.ih));
+    const w = Math.max(1, Math.round(st.iw * k)), h = Math.max(1, Math.round(st.ih * k));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(st.img, 0, 0, w, h);
+    st.work = { w, h, fx: st.iw / w, fy: st.ih / h, data: x.getImageData(0, 0, w, h).data };
+    return st.work;
+  },
+  // Median colour of the outer border band -> background guess
+  ispAutoBg(silent){
+    const W = Tools.ispWork();
+    if(!W) return;
+    const hist = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)];
+    let n = 0;
+    const bw = Math.max(1, Math.round(Math.min(W.w, W.h) * 0.01));
+    const add = (xx, yy) => { const i = (yy*W.w + xx)*4; hist[0][W.data[i]]++; hist[1][W.data[i+1]]++; hist[2][W.data[i+2]]++; n++; };
+    for(let y = 0; y < W.h; y++){
+      if(y < bw || y >= W.h - bw){ for(let x = 0; x < W.w; x++) add(x, y); }
+      else { for(let x = 0; x < bw; x++) add(x, y); for(let x = W.w - bw; x < W.w; x++) add(x, y); }
+    }
+    const med = hh => { let s = 0; for(let v = 0; v < 256; v++){ s += hh[v]; if(s >= n/2) return v; } return 255; };
+    const hx = v => v.toString(16).padStart(2, '0');
+    Tools._ispEl('isp-bg').value = '#' + hx(med(hist[0])) + hx(med(hist[1])) + hx(med(hist[2]));
+    if(!silent) Tools.ispSched();
+  },
+  ispPickMode(){
+    const st = Tools._isp;
+    st.pick = !st.pick; if(st.pick) st.draw = false;
+    Tools._ispBtns(); Tools.ispStatus();
+  },
+  _ispSample(p){
+    const st = Tools._isp, W = Tools.ispWork();
+    if(!W) return;
+    const cx = Tools._ispC(Math.round(p.ix / W.fx), 0, W.w - 1), cy = Tools._ispC(Math.round(p.iy / W.fy), 0, W.h - 1);
+    let r = 0, g = 0, b = 0, n = 0;
+    for(let dy = -2; dy <= 2; dy++) for(let dx = -2; dx <= 2; dx++){
+      const x = Tools._ispC(cx + dx, 0, W.w - 1), y = Tools._ispC(cy + dy, 0, W.h - 1), i = (y*W.w + x)*4;
+      r += W.data[i]; g += W.data[i+1]; b += W.data[i+2]; n++;
+    }
+    const hx = v => Math.round(v / n).toString(16).padStart(2, '0');
+    Tools._ispEl('isp-bg').value = '#' + hx(r) + hx(g) + hx(b);
+    st.pick = false;
+    Tools.ispGenerate();
+  },
+  _ispDilate(m, w, h, r){
+    const a = new Uint8Array(m.length), b = new Uint8Array(m.length);
+    const pre = new Int32Array(Math.max(w, h) + 1);
+    for(let y = 0; y < h; y++){
+      const o = y*w; pre[0] = 0;
+      for(let x = 0; x < w; x++) pre[x+1] = pre[x] + m[o+x];
+      for(let x = 0; x < w; x++){ const l = Math.max(0, x - r), rr = Math.min(w, x + r + 1); a[o+x] = (pre[rr] - pre[l]) > 0 ? 1 : 0; }
+    }
+    for(let x = 0; x < w; x++){
+      pre[0] = 0;
+      for(let y = 0; y < h; y++) pre[y+1] = pre[y] + a[y*w + x];
+      for(let y = 0; y < h; y++){ const t = Math.max(0, y - r), bt = Math.min(h, y + r + 1); b[y*w + x] = (pre[bt] - pre[t]) > 0 ? 1 : 0; }
+    }
+    return b;
+  },
+  _ispOrder(bx){
+    if(bx.length < 2) return bx;
+    const s = bx.slice().sort((a, b) => (a.y + a.h/2) - (b.y + b.h/2));
+    const rows = [];
+    s.forEach(b => {
+      const cy = b.y + b.h/2;
+      const row = rows.find(r => Math.abs(cy - r.cy) < 0.5 * Math.min(b.h, r.h));
+      if(row){ row.items.push(b); row.cy = (row.cy * (row.items.length - 1) + cy) / row.items.length; row.h = Math.min(row.h, b.h); }
+      else rows.push({ cy, h: b.h, items: [b] });
+    });
+    rows.sort((a, b) => a.cy - b.cy);
+    const out = [];
+    rows.forEach(r => r.items.sort((a, b) => a.x - b.x).forEach(b => out.push(b)));
+    return out;
+  },
+  ispDetect(){
+    const st = Tools._isp, W = Tools.ispWork();
+    if(!W) return [];
+    const hex = Tools._ispEl('isp-bg').value || '#ffffff';
+    const br = parseInt(hex.slice(1,3), 16), bg = parseInt(hex.slice(3,5), 16), bb = parseInt(hex.slice(5,7), 16);
+    const tol = parseFloat(Tools._ispEl('isp-tol').value) || 35;
+    const gapPct = parseFloat(Tools._ispEl('isp-gap').value) || 0;
+    const minPct = (parseFloat(Tools._ispEl('isp-min').value) || 0.5) / 100;
+    const pad = parseInt(Tools._ispEl('isp-pad').value) || 0;
+    const { w, h, data } = W, N = w*h;
+    const mask = new Uint8Array(N);
+    for(let i = 0, p = 0; i < N; i++, p += 4){
+      const d = Math.max(Math.abs(data[p] - br), Math.abs(data[p+1] - bg), Math.abs(data[p+2] - bb));
+      if(d > tol) mask[i] = 1;
+    }
+    const r = Math.round(gapPct / 100 * Math.max(w, h));
+    const dil = r > 0 ? Tools._ispDilate(mask, w, h, r) : mask;
+    const lab = new Int32Array(N), stack = new Int32Array(N);
+    const boxes = [];
+    let id = 0;
+    for(let s0 = 0; s0 < N; s0++){
+      if(!dil[s0] || lab[s0]) continue;
+      id++;
+      let sp = 0; stack[sp++] = s0; lab[s0] = id;
+      let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      while(sp){
+        const idx = stack[--sp], cx = idx % w, cy = (idx / w) | 0;
+        if(mask[idx]){ if(cx < x0) x0 = cx; if(cx > x1) x1 = cx; if(cy < y0) y0 = cy; if(cy > y1) y1 = cy; }
+        if(cx > 0     && dil[idx-1] && !lab[idx-1]){ lab[idx-1] = id; stack[sp++] = idx-1; }
+        if(cx < w-1   && dil[idx+1] && !lab[idx+1]){ lab[idx+1] = id; stack[sp++] = idx+1; }
+        if(cy > 0     && dil[idx-w] && !lab[idx-w]){ lab[idx-w] = id; stack[sp++] = idx-w; }
+        if(cy < h-1   && dil[idx+w] && !lab[idx+w]){ lab[idx+w] = id; stack[sp++] = idx+w; }
+      }
+      if(x1 < 0) continue;
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+      if(bw < 6 || bh < 6 || bw*bh < minPct*N) continue;
+      let X = x0 * W.fx - pad, Y = y0 * W.fy - pad, X2 = (x1 + 1) * W.fx + pad, Y2 = (y1 + 1) * W.fy + pad;
+      X = Tools._ispC(X, 0, st.iw); Y = Tools._ispC(Y, 0, st.ih); X2 = Tools._ispC(X2, 0, st.iw); Y2 = Tools._ispC(Y2, 0, st.ih);
+      if(X2 - X < 6 || Y2 - Y < 6) continue;
+      boxes.push({ x: X, y: Y, w: X2 - X, h: Y2 - Y, on: true, rot: 0, ang: 0 });
+      if(boxes.length >= 300) break;
+    }
+    return Tools._ispOrder(boxes);
+  },
+  ispGridBoxes(){
+    const st = Tools._isp;
+    const rows = Tools._ispC(parseInt(Tools._ispEl('isp-rows').value) || 1, 1, 20);
+    const cols = Tools._ispC(parseInt(Tools._ispEl('isp-cols').value) || 1, 1, 20);
+    const m = Math.max(0, parseFloat(Tools._ispEl('isp-margin').value) || 0);
+    const gap = Math.max(0, parseFloat(Tools._ispEl('isp-gapc').value) || 0);
+    const cw = (st.iw - 2*m - (cols - 1)*gap) / cols, ch = (st.ih - 2*m - (rows - 1)*gap) / rows;
+    const out = [];
+    if(cw < 4 || ch < 4) return out;
+    for(let r = 0; r < rows; r++) for(let c = 0; c < cols; c++)
+      out.push({ x: m + c*(cw + gap), y: m + r*(ch + gap), w: cw, h: ch, on: true, rot: 0, ang: 0 });
+    return out;
+  },
+
+  // ---- pointer handling (mouse + touch) ----
+  ispBind(){
+    const st = Tools._isp;
+    if(st.bound) return;
+    st.bound = true;
+    const c = Tools._ispEl('isp-canvas');
+    c.addEventListener('mousedown', e => { if(e.button !== 0) return; if(Tools._ispDown(e.clientX, e.clientY, false)) e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if(st.drag) Tools._ispMove(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', () => { if(st.drag) Tools._ispUp(); });
+    c.addEventListener('touchstart', e => {
+      if(e.touches.length > 1){ st.drag = null; return; }
+      const t = e.touches[0];
+      if(Tools._ispDown(t.clientX, t.clientY, true)) e.preventDefault();
+    }, { passive: false });
+    c.addEventListener('touchmove', e => {
+      if(!st.drag) return;
+      const t = e.touches[0];
+      if(Tools._ispMove(t.clientX, t.clientY)) e.preventDefault();
+    }, { passive: false });
+    c.addEventListener('touchend', () => { if(st.drag) Tools._ispUp(); });
+    c.addEventListener('touchcancel', () => { st.drag = null; });
+    c.addEventListener('mousemove', e => {
+      if(st.drag || !st.img) return;
+      if(st.pick || st.draw){ c.style.cursor = 'crosshair'; return; }
+      const h = Tools._ispHit(Tools._ispPt(e.clientX, e.clientY), false);
+      const cur = { nw:'nwse-resize', se:'nwse-resize', ne:'nesw-resize', sw:'nesw-resize', n:'ns-resize', s:'ns-resize', e:'ew-resize', w:'ew-resize' };
+      c.style.cursor = !h ? 'default' : (h.t === 'b' ? 'move' : cur[h.h]);
+    });
+    window.addEventListener('resize', () => { clearTimeout(st.rt); st.rt = setTimeout(() => Tools.ispLayout(), 150); });
+  },
+  _ispPt(cx, cy){
+    const st = Tools._isp, r = Tools._ispEl('isp-canvas').getBoundingClientRect();
+    return { ix: (cx - r.left) / r.width * st.iw, iy: (cy - r.top) / r.height * st.ih, k: r.width / st.iw };
+  },
+  _ispHit(p, touch){
+    const st = Tools._isp, R = (touch ? 24 : 14) / p.k;
+    if(st.sel >= 0 && st.boxes[st.sel]){
+      for(const h of Tools._ispHandles(st.boxes[st.sel])){
+        if(Math.hypot(h.x - p.ix, h.y - p.iy) <= R) return { t:'h', h:h.n };
+      }
+    }
+    const inside = b => p.ix >= b.x && p.ix <= b.x + b.w && p.iy >= b.y && p.iy <= b.y + b.h;
+    if(st.sel >= 0 && st.boxes[st.sel] && inside(st.boxes[st.sel])) return { t:'b', i:st.sel };
+    for(let i = st.boxes.length - 1; i >= 0; i--) if(inside(st.boxes[i])) return { t:'b', i };
+    return null;
+  },
+  _ispSnap(){
+    const st = Tools._isp;
+    st.undo.push(JSON.stringify(st.boxes));
+    if(st.undo.length > 40) st.undo.shift();
+    Tools._ispBtns();
+  },
+  _ispDown(cx, cy, touch){
+    const st = Tools._isp;
+    if(!st.img) return false;
+    const p = Tools._ispPt(cx, cy);
+    if(st.pick){ Tools._ispSample(p); return true; }
+    if(st.draw){
+      Tools._ispSnap(); Tools._ispManual();
+      const ax = Tools._ispC(p.ix, 0, st.iw), ay = Tools._ispC(p.iy, 0, st.ih);
+      st.boxes.push({ x: ax, y: ay, w: 1, h: 1, on: true, rot: 0, ang: 0 });
+      st.sel = st.boxes.length - 1;
+      st.drag = { t:'new', i: st.sel, ax, ay, snap:true };
+      return true;
+    }
+    const hit = Tools._ispHit(p, touch);
+    if(hit && hit.t === 'h'){
+      st.drag = { t:'rs', h: hit.h, i: st.sel, o: Object.assign({}, st.boxes[st.sel]), snap:false };
+      return true;
+    }
+    if(hit && hit.t === 'b'){
+      if(hit.i === st.sel || !touch){
+        if(hit.i !== st.sel){ st.sel = hit.i; Tools.ispDraw(); Tools.ispSelUI(); Tools.ispThumbSel(); Tools._ispBtns(); }
+        st.drag = { t:'mv', i: hit.i, sx: p.ix, sy: p.iy, o: Object.assign({}, st.boxes[hit.i]), snap:false };
+        return true;
+      }
+      st.drag = { t:'tap', i: hit.i, cx, cy };   // touch: tap selects, drag still scrolls the page
+      return false;
+    }
+    st.drag = { t:'tap', i: -1, cx, cy };
+    return false;
+  },
+  _ispMove(cx, cy){
+    const st = Tools._isp, d = st.drag;
+    if(!d) return false;
+    if(d.t === 'tap'){ if(Math.hypot(cx - d.cx, cy - d.cy) > 8) st.drag = null; return false; }
+    const p = Tools._ispPt(cx, cy), b = st.boxes[d.i];
+    if(!b) return false;
+    if(!d.snap){ Tools._ispSnap(); Tools._ispManual(); d.snap = true; }
+    if(d.t === 'mv'){
+      b.x = Tools._ispC(d.o.x + (p.ix - d.sx), 0, st.iw - b.w);
+      b.y = Tools._ispC(d.o.y + (p.iy - d.sy), 0, st.ih - b.h);
+    } else if(d.t === 'rs'){
+      Tools._ispResize(b, d, p);
+    } else if(d.t === 'new'){
+      const px = Tools._ispC(p.ix, 0, st.iw), py = Tools._ispC(p.iy, 0, st.ih);
+      b.x = Math.min(d.ax, px); b.y = Math.min(d.ay, py);
+      b.w = Math.max(1, Math.abs(px - d.ax)); b.h = Math.max(1, Math.abs(py - d.ay));
+    }
+    Tools.ispDraw();
+    Tools.ispSelUI(true);
+    if(!st.raf) st.raf = requestAnimationFrame(() => { st.raf = 0; Tools.ispThumbOne(d.i); });
+    return true;
+  },
+  _ispResize(b, d, p){
+    const st = Tools._isp, o = d.o, MIN = 10, r = st.ratio, hh = d.h;
+    let x0 = o.x, y0 = o.y, x1 = o.x + o.w, y1 = o.y + o.h;
+    const px = Tools._ispC(p.ix, 0, st.iw), py = Tools._ispC(p.iy, 0, st.ih);
+    if(hh.includes('w')) x0 = Math.min(px, x1 - MIN);
+    if(hh.includes('e')) x1 = Math.max(px, x0 + MIN);
+    if(hh.includes('n')) y0 = Math.min(py, y1 - MIN);
+    if(hh.includes('s')) y1 = Math.max(py, y0 + MIN);
+    if(r){
+      let w = x1 - x0, h = y1 - y0;
+      if(hh.length === 2){
+        const nw = Math.max(w, h * r); h = nw / r; w = nw;
+        if(hh.includes('w')) x0 = x1 - w; else x1 = x0 + w;
+        if(hh.includes('n')) y0 = y1 - h; else y1 = y0 + h;
+      } else if(hh === 'e' || hh === 'w'){
+        h = w / r; const cy = o.y + o.h/2; y0 = cy - h/2; y1 = cy + h/2;
+      } else {
+        w = h * r; const cx = o.x + o.w/2; x0 = cx - w/2; x1 = cx + w/2;
+      }
+      if(x0 < 0 || y0 < 0 || x1 > st.iw || y1 > st.ih) return;   // keep previous valid size
+    }
+    b.x = x0; b.y = y0; b.w = x1 - x0; b.h = y1 - y0;
+  },
+  _ispUp(){
+    const st = Tools._isp, d = st.drag;
+    st.drag = null;
+    if(!d) return;
+    if(d.t === 'tap'){
+      st.sel = d.i;
+      Tools.ispDraw(); Tools.ispSelUI(); Tools.ispThumbSel(); Tools._ispBtns();
+      return;
+    }
+    if(d.t === 'new'){
+      const b = st.boxes[d.i];
+      if(b && (b.w < 12 || b.h < 12)){ st.boxes.splice(d.i, 1); st.sel = -1; st.undo.pop(); }
+    }
+    Tools.ispRedraw(true);
+  },
+
+  // ---- box editing actions ----
+  ispDrawMode(){
+    const st = Tools._isp;
+    st.draw = !st.draw; if(st.draw) st.pick = false;
+    Tools._ispBtns(); Tools.ispStatus();
+  },
+  ispAdd(){
+    const st = Tools._isp;
+    if(!st.img) return;
+    Tools._ispSnap(); Tools._ispManual();
+    const m = Math.min(st.iw, st.ih);
+    let w = m * 0.35, h = m * 0.45;
+    if(st.ratio) h = w / st.ratio;
+    if(h > st.ih){ h = st.ih * 0.9; if(st.ratio) w = h * st.ratio; }
+    if(w > st.iw){ w = st.iw * 0.9; if(st.ratio) h = w / st.ratio; }
+    const off = (st.boxes.length % 6) * m * 0.04;
+    st.boxes.push({ x: Tools._ispC((st.iw - w)/2 + off, 0, st.iw - w), y: Tools._ispC((st.ih - h)/2 + off, 0, st.ih - h), w, h, on: true, rot: 0, ang: 0 });
+    st.sel = st.boxes.length - 1;
+    Tools.ispRedraw(true);
+  },
+  ispDel(){ Tools.ispDelAt(Tools._isp.sel); },
+  ispDelAt(i){
+    const st = Tools._isp;
+    if(i < 0 || !st.boxes[i]) return;
+    Tools._ispSnap(); Tools._ispManual();
+    st.boxes.splice(i, 1); st.sel = -1;
+    Tools.ispRedraw(true);
+  },
+  ispUndo(){
+    const st = Tools._isp;
+    if(!st.undo.length) return;
+    st.boxes = JSON.parse(st.undo.pop());
+    if(st.sel >= st.boxes.length) st.sel = -1;
+    Tools._ispManual();
+    Tools.ispRedraw(true);
+  },
+  ispGrow(d){
+    const st = Tools._isp;
+    if(!st.boxes.length) return;
+    Tools._ispSnap(); Tools._ispManual();
+    st.boxes.forEach(b => {
+      const x0 = Tools._ispC(b.x - d, 0, st.iw), y0 = Tools._ispC(b.y - d, 0, st.ih);
+      const x1 = Tools._ispC(b.x + b.w + d, 0, st.iw), y1 = Tools._ispC(b.y + b.h + d, 0, st.ih);
+      if(x1 - x0 >= 10 && y1 - y0 >= 10){ b.x = x0; b.y = y0; b.w = x1 - x0; b.h = y1 - y0; }
+    });
+    Tools.ispRedraw(true);
+  },
+  ispSameSize(){
+    const st = Tools._isp, s = st.boxes[st.sel];
+    if(!s) return;
+    Tools._ispSnap(); Tools._ispManual();
+    st.boxes.forEach(b => {
+      if(b === s) return;
+      const cx = b.x + b.w/2, cy = b.y + b.h/2;
+      b.w = Math.min(s.w, st.iw); b.h = Math.min(s.h, st.ih);
+      b.x = Tools._ispC(cx - b.w/2, 0, st.iw - b.w); b.y = Tools._ispC(cy - b.h/2, 0, st.ih - b.h);
+    });
+    Tools.ispRedraw(true);
+  },
+  ispRatio(){
+    const st = Tools._isp, v = Tools._ispEl('isp-ratio').value;
+    if(v === '0') st.ratio = 0;
+    else { const [a, b] = v.split(':').map(Number); st.ratio = a / b; }
+    const bx = st.boxes[st.sel];
+    if(!bx || !st.ratio) return;
+    Tools._ispSnap(); Tools._ispManual();
+    const cx = bx.x + bx.w/2, cy = bx.y + bx.h/2;
+    let w = bx.w, h = w / st.ratio;
+    if(h > st.ih){ h = st.ih; w = h * st.ratio; }
+    if(w > st.iw){ w = st.iw; h = w / st.ratio; }
+    bx.w = w; bx.h = h;
+    bx.x = Tools._ispC(cx - w/2, 0, st.iw - w); bx.y = Tools._ispC(cy - h/2, 0, st.ih - h);
+    Tools.ispRedraw(true);
+  },
+  ispSelUI(numbersOnly){
+    const st = Tools._isp, box = Tools._ispEl('isp-sel');
+    if(!box) return;
+    const b = st.boxes[st.sel];
+    if(!b){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    Tools._ispEl('isp-sel-n').textContent = '#' + (st.sel + 1);
+    Tools._ispEl('isp-x').value = Math.round(b.x); Tools._ispEl('isp-y').value = Math.round(b.y);
+    Tools._ispEl('isp-w').value = Math.round(b.w); Tools._ispEl('isp-h').value = Math.round(b.h);
+    Tools._ispEl('isp-ang').value = b.ang || 0; Tools._ispEl('isp-ang-v').textContent = b.ang || 0;
+  },
+  ispSelEdit(){
+    const st = Tools._isp, b = st.boxes[st.sel];
+    if(!b) return;
+    const n = id => parseFloat(Tools._ispEl(id).value);
+    Tools._ispSnap(); Tools._ispManual();
+    const w = Tools._ispC(isNaN(n('isp-w')) ? b.w : n('isp-w'), 10, st.iw);
+    const h = Tools._ispC(isNaN(n('isp-h')) ? b.h : n('isp-h'), 10, st.ih);
+    b.w = w; b.h = h;
+    b.x = Tools._ispC(isNaN(n('isp-x')) ? b.x : n('isp-x'), 0, st.iw - w);
+    b.y = Tools._ispC(isNaN(n('isp-y')) ? b.y : n('isp-y'), 0, st.ih - h);
+    Tools.ispRedraw(false);
+    Tools.ispThumbOne(st.sel);
+  },
+  ispAng(v){
+    const st = Tools._isp, b = st.boxes[st.sel];
+    if(!b) return;
+    Tools._ispManual();
+    b.ang = parseFloat(v) || 0;
+    Tools._ispEl('isp-ang-v').textContent = b.ang;
+    Tools.ispStatus();
+    Tools.ispThumbOne(st.sel);
+  },
+  ispRot(i){
+    const st = Tools._isp, b = st.boxes[i];
+    if(!b) return;
+    Tools._ispManual();
+    b.rot = ((b.rot || 0) + 90) % 360;
+    Tools.ispThumbOne(i);
+    Tools.ispStatus();
+  },
+  ispToggle(i, on){
+    const st = Tools._isp, b = st.boxes[i];
+    if(!b) return;
+    Tools._ispManual();
+    b.on = !!on;
+    if(st.thumbs[i]) st.thumbs[i].t.classList.toggle('off', !b.on);
+    Tools.ispDraw(); Tools.ispStatus();
+  },
+  ispSelect(i){
+    const st = Tools._isp;
+    st.sel = i;
+    Tools.ispDraw(); Tools.ispSelUI(); Tools.ispThumbSel(); Tools._ispBtns();
+    const stg = Tools._ispEl('isp-stage');
+    if(stg && stg.scrollIntoView) stg.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  },
+
+  // ---- rendering a box (thumbnails + export) ----
+  _ispRenderBox(b, cv, maxSide, fillWhite, full){
+    const st = Tools._isp;
+    const src = full ? st.img : st.psrc, sc = full ? 1 : st.psc;
+    const rot = (((b.rot || 0) % 360) + 360) % 360;
+    const sw = Math.max(1, Math.round(b.w)), sh = Math.max(1, Math.round(b.h));
+    const swap = (rot === 90 || rot === 270);
+    const ow = swap ? sh : sw, oh = swap ? sw : sh;
+    const k = maxSide ? Math.min(1, maxSide / Math.max(ow, oh)) : 1;
+    cv.width = Math.max(1, Math.round(ow * k)); cv.height = Math.max(1, Math.round(oh * k));
+    const x = cv.getContext('2d');
+    x.imageSmoothingQuality = 'high';
+    if(fillWhite){ x.fillStyle = '#ffffff'; x.fillRect(0, 0, cv.width, cv.height); }
+    x.save();
+    x.translate(cv.width / 2, cv.height / 2);
+    x.rotate(rot * Math.PI / 180);
+    x.rotate((b.ang || 0) * Math.PI / 180);
+    x.scale(k / sc, k / sc);
+    x.drawImage(src, -(b.x + b.w/2) * sc, -(b.y + b.h/2) * sc);
+    x.restore();
+    return { w: ow, h: oh };
+  },
+  ispThumbs(){
+    const st = Tools._isp, g = Tools._ispEl('isp-thumbs');
+    g.innerHTML = ''; st.thumbs = [];
+    st.boxes.forEach((b, i) => {
+      const t = document.createElement('div');
+      t.className = 'isp-tile' + (b.on ? '' : ' off') + (i === st.sel ? ' sel' : '');
+      const wrap = document.createElement('div'); wrap.className = 'isp-tile-img';
+      const cv = document.createElement('canvas'); wrap.appendChild(cv);
+      const meta = document.createElement('div'); meta.className = 'isp-tile-meta';
+      const lab = document.createElement('label'); lab.className = 'isp-chk';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = b.on;
+      cb.onclick = ev => ev.stopPropagation();
+      cb.onchange = () => Tools.ispToggle(i, cb.checked);
+      lab.appendChild(cb); lab.appendChild(document.createTextNode('#' + (i + 1)));
+      lab.onclick = ev => ev.stopPropagation();
+      const sz = document.createElement('span'); sz.className = 'isp-sz';
+      meta.appendChild(lab); meta.appendChild(sz);
+      const btns = document.createElement('div'); btns.className = 'isp-tile-btns';
+      const mk = (txt, fn) => { const bt = document.createElement('button'); bt.type = 'button'; bt.textContent = txt; bt.onclick = ev => { ev.stopPropagation(); fn(); }; return bt; };
+      btns.appendChild(mk('↻', () => Tools.ispRot(i)));
+      btns.appendChild(mk('⬇', () => Tools.ispSaveOne(i)));
+      btns.appendChild(mk('🗑', () => Tools.ispDelAt(i)));
+      t.appendChild(wrap); t.appendChild(meta); t.appendChild(btns);
+      t.onclick = () => Tools.ispSelect(i);
+      g.appendChild(t);
+      st.thumbs[i] = { cv, sz, t };
+      Tools.ispThumbOne(i);
+    });
+    Tools._ispEl('isp-thumbs-wrap').style.display = st.boxes.length ? 'block' : 'none';
+  },
+  ispThumbOne(i){
+    const st = Tools._isp, b = st.boxes[i], th = st.thumbs[i];
+    if(!b || !th) return;
+    const d = Tools._ispRenderBox(b, th.cv, 240, false, false);
+    th.sz.textContent = d.w + '×' + d.h;
+  },
+  ispThumbSel(){
+    const st = Tools._isp;
+    st.thumbs.forEach((th, i) => th.t.classList.toggle('sel', i === st.sel));
+  },
+
+  // ---- export ----
+  _ispName(i){
+    const p = (Tools._ispEl('isp-prefix').value || 'photo').trim() || 'photo';
+    const f = Tools._ispEl('isp-fmt').value;
+    const ext = f === 'image/png' ? 'png' : (f === 'image/webp' ? 'webp' : 'jpg');
+    return p + '-' + String(i + 1).padStart(2, '0') + '.' + ext;
+  },
+  _ispBlob(i){
+    return new Promise(res => {
+      const c = document.createElement('canvas');
+      const f = Tools._ispEl('isp-fmt').value;
+      Tools._ispRenderBox(Tools._isp.boxes[i], c, 0, f !== 'image/png', true);
+      c.toBlob(bl => res(bl), f, parseFloat(Tools._ispEl('isp-q').value) || 0.92);
+    });
+  },
+  async ispSaveOne(i){
+    const bl = await Tools._ispBlob(i);
+    if(bl) await Tools.saveFile(Tools._ispName(i), bl);
+  },
+  async ispSaveAll(){
+    const st = Tools._isp, idx = [];
+    st.boxes.forEach((b, i) => { if(b.on) idx.push(i); });
+    const out = Tools._ispEl('isp-out');
+    out.style.display = 'block';
+    if(!idx.length){ out.textContent = I18N.isp_noselect[LANG]; return; }
+    if(st.busy) return;
+    st.busy = true; out.textContent = I18N.isp_saving[LANG];
+    try{
+      if(idx.length === 1 || typeof JSZip === 'undefined'){
+        for(const i of idx) await Tools.ispSaveOne(i);
+      } else {
+        const zip = new JSZip();
+        for(const i of idx){ const bl = await Tools._ispBlob(i); if(bl) zip.file(Tools._ispName(i), bl); }
+        const z = await zip.generateAsync({ type: 'blob' });
+        await Tools.saveFile((Tools._ispEl('isp-prefix').value || 'photo') + '-split.zip', z);
+      }
+      out.textContent = idx.length + ' ' + I18N.isp_saved[LANG];
+    }catch(e){ out.textContent = String((e && e.message) || e); }
+    st.busy = false;
+  },
+
+  // ===== Fitrana (Sadaqat al-Fitr) =====
+  _fitDefaults: { wheat:1.75, barley:3.5, dates:3.5, raisins:3.5 },
+  _fitItem: 'wheat',
+  fitrana(){
+    const item = document.getElementById('fit-item').value;
+    const qtyEl = document.getElementById('fit-qty');
+    if(item !== Tools._fitItem){ Tools._fitItem = item; qtyEl.value = Tools._fitDefaults[item]; }
+    const n = parseFloat(document.getElementById('fit-persons').value);
+    const qty = parseFloat(qtyEl.value);
+    const price = parseFloat(document.getElementById('fit-price').value);
+    const box = document.getElementById('fit-out');
+    if(!(n > 0) || !(qty > 0)){ box.style.display = 'none'; return; }
+    const fmt = x => x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if(!(price > 0)){
+      box.innerHTML = `<div class="muted">${I18N.fit_total_qty[LANG]}</div><span class="big">${fmt(n * qty)}</span> <span class="muted">kg</span><br><span class="muted">${I18N.fit_need_price[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    box.innerHTML = `<div class="muted">${I18N.fit_total[LANG]}</div><span class="big">${fmt(n * qty * price)}</span>`
+      + `<br><span class="muted">${I18N.fit_per_person[LANG]}: ${fmt(qty * price)} · ${I18N.fit_total_qty[LANG]}: ${fmt(n * qty)} kg</span>`;
+    box.style.display = 'block';
+  },
+
+  // ===== Ushr (agricultural produce) =====
+  ushr(){
+    const qty = parseFloat(document.getElementById('ushr-qty').value);
+    const unit = parseFloat(document.getElementById('ushr-unit').value);
+    const rate = parseFloat(document.getElementById('ushr-type').value);
+    const price = parseFloat(document.getElementById('ushr-price').value);
+    const box = document.getElementById('ushr-out');
+    if(!(qty > 0)){ box.style.display = 'none'; return; }
+    const kg = qty * unit * rate;
+    const fmt = x => x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    let html = `<div class="muted">${I18N.ushr_due[LANG]} (${+(rate * 100).toFixed(1)}%)</div><span class="big">${fmt(kg)}</span> <span class="muted">kg</span>`
+      + `<br><span class="muted">\u2248 ${fmt(kg / 40)} ${LANG === 'ur' ? 'من' : 'maund'} (40 kg)</span>`;
+    if(price > 0) html += `<br><span class="muted">${I18N.ushr_value[LANG]}: ${fmt(kg * price)}</span>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Committee (BC) =====
+  bc(){
+    const n = parseInt(document.getElementById('bc-members').value);
+    const amt = parseFloat(document.getElementById('bc-amount').value);
+    const turnRaw = document.getElementById('bc-turn').value;
+    const turn = turnRaw === '' ? 0 : parseInt(turnRaw);
+    const start = document.getElementById('bc-start').value;   // yyyy-mm
+    const box = document.getElementById('bc-out');
+    if(!(n >= 2) || n > 100 || !(amt > 0)){ box.style.display = 'none'; return; }
+    const fmt = x => x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if(turnRaw !== '' && (!(turn >= 1) || turn > n)){
+      box.innerHTML = `<span class="muted">${I18N.bc_bad_turn[LANG]}</span>`;
+      box.style.display = 'block';
+      return;
+    }
+    const monthLabel = i => {
+      if(!/^\d{4}-\d{2}$/.test(start)) return `${I18N.bc_month_word[LANG]} ${i + 1}`;
+      const y = parseInt(start.slice(0, 4)), m = parseInt(start.slice(5, 7)) - 1;
+      const d = new Date(y, m + i, 1);
+      try{ return d.toLocaleDateString(LANG === 'ur' ? 'ur-PK-u-nu-latn' : 'en-GB', { month:'short', year:'numeric' }); }
+      catch(e){ return d.toLocaleDateString('en-GB', { month:'short', year:'numeric' }); }
+    };
+    const pot = n * amt;
+    let html = `<div class="muted">${I18N.bc_pot[LANG]}</div><span class="big">${fmt(pot)}</span>`
+      + `<br><span class="muted">${I18N.bc_duration[LANG]}: ${n} ${I18N.bc_months[LANG]} · ${I18N.bc_total_pay[LANG]}: ${fmt(pot)}</span>`;
+    if(turn){
+      html += `<br><span class="muted">${I18N.bc_before[LANG]}: ${turn - 1} · ${I18N.bc_after[LANG]}: ${n - turn}</span>`;
+    }
+    let rows = '';
+    for(let i = 0; i < n; i++){
+      const me = (i + 1 === turn);
+      rows += `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid var(--border);${me ? 'font-weight:700;' : ''}">`
+        + `<span>${i + 1}. ${monthLabel(i)}${me ? ' \u2190 ' + I18N.bc_you[LANG] : ''}</span><span>${fmt(pot)}</span></div>`;
+    }
+    html += `<div style="margin-top:10px;max-height:220px;overflow:auto;font-size:12px">${rows}</div>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Tile / Paint / Flooring =====
+  tilePaint(){
+    const mode = document.getElementById('tp-mode').value;
+    const sizeSel = document.getElementById('tp-tilesize').value;
+    document.getElementById('tp-tile-fields').style.display = mode === 'tile' ? 'block' : 'none';
+    document.getElementById('tp-paint-fields').style.display = mode === 'paint' ? 'block' : 'none';
+    document.getElementById('tp-custom-fields').style.display = (mode === 'tile' && sizeSel === 'custom') ? 'flex' : 'none';
+    const f = document.getElementById('tp-unit').value === 'm' ? 3.28084 : 1;   // metres -> feet
+    const L = parseFloat(document.getElementById('tp-len').value) * f;
+    const W = parseFloat(document.getElementById('tp-wid').value) * f;
+    const box = document.getElementById('tp-out');
+    if(!(L > 0) || !(W > 0)){ box.style.display = 'none'; return; }
+    const fmt = x => x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const floor = L * W;
+    let html;
+    if(mode === 'tile'){
+      let tl, tw;
+      if(sizeSel === 'custom'){ tl = parseFloat(document.getElementById('tp-tl').value); tw = parseFloat(document.getElementById('tp-tw').value); }
+      else { const p = sizeSel.split('x'); tl = parseFloat(p[0]); tw = parseFloat(p[1]); }
+      if(!(tl > 0) || !(tw > 0)){ box.style.display = 'none'; return; }
+      const waste = Math.max(0, parseFloat(document.getElementById('tp-waste').value) || 0);
+      const perBox = parseFloat(document.getElementById('tp-box').value);
+      const tileFt2 = tl * tw / 144;
+      const tiles = Math.ceil(floor / tileFt2 * (1 + waste / 100) - 1e-9);
+      html = `<div class="muted">${I18N.tp_tiles_needed[LANG]}</div><span class="big">${tiles}</span> <span class="muted">${I18N.tp_tile_word[LANG]}</span>`
+        + (perBox > 0 ? `<br><span class="muted">\u2248 ${Math.ceil(tiles / perBox)} ${I18N.tp_boxes[LANG]}</span>` : '')
+        + `<br><span class="muted">${I18N.tp_area[LANG]}: ${fmt(floor)} ${I18N.tp_sqft[LANG]} (${fmt(floor / 10.7639)} m\u00b2)</span>`;
+    } else {
+      const H = parseFloat(document.getElementById('tp-hei').value) * f;
+      if(!(H > 0)){ box.style.display = 'none'; return; }
+      const coats = Math.max(1, parseFloat(document.getElementById('tp-coats').value) || 1);
+      const doors = Math.max(0, parseFloat(document.getElementById('tp-doors').value) || 0);
+      const wins = Math.max(0, parseFloat(document.getElementById('tp-windows').value) || 0);
+      const cover = parseFloat(document.getElementById('tp-cover').value) || 108;
+      const ceil = document.getElementById('tp-ceiling').value === '1' ? floor : 0;
+      const area = Math.max(0, 2 * (L + W) * H - doors * 21 - wins * 15) + ceil;
+      const litres = area * coats / cover;
+      html = `<div class="muted">${I18N.tp_paint_needed[LANG]}</div><span class="big">${fmt(litres)}</span> <span class="muted">L</span>`
+        + `<br><span class="muted">\u2248 ${Math.ceil(litres / 4 - 1e-9)} \u00d7 ${I18N.tp_cans[LANG]}</span>`
+        + `<br><span class="muted">${I18N.tp_paint_area[LANG]}: ${fmt(area)} ${I18N.tp_sqft[LANG]}</span>`;
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Profit / Margin =====
+  profit(){
+    const mode = document.getElementById('pm-mode').value;
+    document.getElementById('pm-sell-wrap').style.display = mode === 'profit' ? 'block' : 'none';
+    document.getElementById('pm-pct-wrap').style.display = mode === 'price' ? 'block' : 'none';
+    document.getElementById('pm-basis-wrap').style.display = mode === 'price' ? 'block' : 'none';
+    const cost = parseFloat(document.getElementById('pm-cost').value);
+    const qty = parseFloat(document.getElementById('pm-qty').value);
+    const box = document.getElementById('pm-out');
+    if(!(cost > 0)){ box.style.display = 'none'; return; }
+    const fmt = x => x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    let sell;
+    if(mode === 'profit'){
+      sell = parseFloat(document.getElementById('pm-sell').value);
+      if(isNaN(sell) || sell < 0){ box.style.display = 'none'; return; }
+    } else {
+      const pct = parseFloat(document.getElementById('pm-pct').value);
+      if(isNaN(pct)){ box.style.display = 'none'; return; }
+      if(document.getElementById('pm-basis').value === 'margin'){
+        if(pct >= 100){
+          box.innerHTML = `<span class="muted">${I18N.pm_bad_margin[LANG]}</span>`;
+          box.style.display = 'block';
+          return;
+        }
+        sell = cost / (1 - pct / 100);
+      } else {
+        sell = cost * (1 + pct / 100);
+      }
+    }
+    const profit = sell - cost;
+    const loss = profit < 0;
+    const margin = sell > 0 ? profit / sell * 100 : 0;
+    const markup = profit / cost * 100;
+    let html = `<div class="muted">${I18N.pm_sell_out[LANG]}</div><span class="big">${fmt(sell)}</span>`
+      + `<br><span class="muted">${loss ? I18N.pm_loss[LANG] : I18N.pm_profit[LANG]}: ${fmt(Math.abs(profit))}</span>`
+      + `<br><span class="muted">${I18N.pm_margin[LANG]}: ${fmt(margin)}% \u00b7 ${I18N.pm_markup[LANG]}: ${fmt(markup)}%</span>`;
+    if(qty > 0 && qty !== 1){
+      html += `<br><span class="muted">${loss ? I18N.pm_total_loss[LANG] : I18N.pm_total_profit[LANG]}: ${fmt(Math.abs(profit) * qty)}</span>`;
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+  },
+
+  // ===== Committee draw (qurah andazi) =====
+  _bcdDrawn: [],
+  _bcdLast: -1,
+  _bcdError: false,
+  _bcdOrgFixed: false,   // true when the organizer was placed at turn 1
+  _bcdRand(n){
+    if(window.crypto && crypto.getRandomValues){
+      const a = new Uint32Array(1), lim = Math.floor(0x100000000 / n) * n;
+      let x;
+      do { crypto.getRandomValues(a); x = a[0]; } while(x >= lim);
+      return x % n;
+    }
+    return Math.floor(Math.random() * n);
+  },
+  _bcdNames(){
+    return document.getElementById('bcd-names').value.split(/[\n,\u060c]+/).map(x => x.trim()).filter(Boolean).slice(0, 100);
+  },
+  // Rebuild the organizer dropdown from the typed names (keeps the current choice if that name is still there)
+  bcdOrgRefresh(){
+    const sel = document.getElementById('bcd-org');
+    if(!sel) return;
+    const cur = sel.value;
+    while(sel.options.length > 1) sel.remove(1);
+    Array.from(new Set(Tools._bcdNames())).forEach(n => {
+      const o = document.createElement('option');
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    sel.value = Array.from(sel.options).some(o => o.value === cur) ? cur : '';
+  },
+  _bcdMonth(i){
+    const start = document.getElementById('bcd-start').value;
+    if(!/^\d{4}-\d{2}$/.test(start)) return `${I18N.bc_month_word[LANG]} ${i + 1}`;
+    const d = new Date(parseInt(start.slice(0, 4)), parseInt(start.slice(5, 7)) - 1 + i, 1);
+    try{ return d.toLocaleDateString(LANG === 'ur' ? 'ur-PK-u-nu-latn' : 'en-GB', { month:'short', year:'numeric' }); }
+    catch(e){ return d.toLocaleDateString('en-GB', { month:'short', year:'numeric' }); }
+  },
+  bcdSave(){
+    try{
+      localStorage.setItem('toolkit_bcdraw', JSON.stringify({
+        names: document.getElementById('bcd-names').value,
+        start: document.getElementById('bcd-start').value,
+        amt: document.getElementById('bcd-amt').value,
+        org: document.getElementById('bcd-org').value,
+        orgFixed: Tools._bcdOrgFixed,
+        drawn: Tools._bcdDrawn
+      }));
+    }catch(e){}
+  },
+  bcdLoad(){
+    try{
+      const d = JSON.parse(localStorage.getItem('toolkit_bcdraw') || 'null');
+      if(d){
+        document.getElementById('bcd-names').value = d.names || '';
+        document.getElementById('bcd-start').value = d.start || '';
+        document.getElementById('bcd-amt').value = d.amt || '';
+        Tools._bcdDrawn = Array.isArray(d.drawn) ? d.drawn : [];
+        Tools._bcdOrgFixed = !!d.orgFixed;
+        Tools.bcdOrgRefresh();
+        document.getElementById('bcd-org').value = d.org || '';
+        if(document.getElementById('bcd-org').value !== (d.org || '')) document.getElementById('bcd-org').value = '';
+      }
+    }catch(e){}
+    Tools.bcdRender();
+  },
+  _bcdUndoTo(prev, prevFixed){
+    Tools.pushUndo(()=>{ Tools._bcdDrawn = prev; Tools._bcdOrgFixed = prevFixed; Tools._bcdLast = -1; Tools.bcdSave(); Tools.bcdRender(); });
+  },
+  bcdAll(){
+    const names = Tools._bcdNames();
+    if(names.length < 2){ Tools._bcdError = true; Tools.bcdRender(); return; }
+    Tools._bcdError = false;
+    const prev = Tools._bcdDrawn.slice(), prevFixed = Tools._bcdOrgFixed;
+    const org = document.getElementById('bcd-org').value;
+    const arr = names.slice();
+    let first = null;
+    if(org){ const k = arr.indexOf(org); if(k >= 0){ first = arr.splice(k, 1)[0]; } }
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Tools._bcdRand(i + 1);
+      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    Tools._bcdDrawn = first !== null ? [first].concat(arr) : arr;
+    Tools._bcdOrgFixed = first !== null;
+    Tools._bcdLast = -1;
+    if(prev.length) Tools._bcdUndoTo(prev, prevFixed);
+    Tools.bcdSave(); Tools.bcdRender();
+  },
+  bcdNext(){
+    const names = Tools._bcdNames();
+    if(names.length < 2 && !Tools._bcdDrawn.length){ Tools._bcdError = true; Tools.bcdRender(); return; }
+    Tools._bcdError = false;
+    const remaining = names.slice();
+    Tools._bcdDrawn.forEach(d => { const k = remaining.indexOf(d); if(k >= 0) remaining.splice(k, 1); });
+    if(remaining.length){
+      const org = document.getElementById('bcd-org').value;
+      let pick;
+      if(!Tools._bcdDrawn.length && org && remaining.indexOf(org) >= 0){
+        pick = org; Tools._bcdOrgFixed = true;    // organizer takes turn 1, no draw needed
+      } else {
+        pick = remaining[Tools._bcdRand(remaining.length)];
+        if(!Tools._bcdDrawn.length) Tools._bcdOrgFixed = false;
+      }
+      Tools._bcdDrawn.push(pick);
+      Tools._bcdLast = Tools._bcdDrawn.length - 1;
+    }
+    Tools.bcdSave(); Tools.bcdRender();
+  },
+  bcdReset(){
+    const prev = Tools._bcdDrawn.slice(), prevFixed = Tools._bcdOrgFixed;
+    Tools._bcdDrawn = []; Tools._bcdLast = -1; Tools._bcdError = false; Tools._bcdOrgFixed = false;
+    if(prev.length) Tools._bcdUndoTo(prev, prevFixed);
+    Tools.bcdSave(); Tools.bcdRender();
+  },
+  _bcdText(){
+    const drawn = Tools._bcdDrawn;
+    const amt = parseFloat(document.getElementById('bcd-amt').value);
+    const total = Math.max(Tools._bcdNames().length, drawn.length);
+    let lines = [I18N.tool_bcdraw_title[LANG]];
+    if(amt > 0) lines.push(`${I18N.bc_pot[LANG]}: ${(amt * total).toLocaleString()}`);
+    drawn.forEach((n, i) => lines.push(`${i + 1}. ${Tools._bcdMonth(i)} \u2014 ${n}${(i === 0 && Tools._bcdOrgFixed) ? ' (' + I18N.bcd_org_tag[LANG] + ')' : ''}`));
+    return lines.join('\n');
+  },
+  bcdCopy(btn){ Tools.copyText(Tools._bcdText(), btn); },
+  bcdShare(){ window.open('https://wa.me/?text=' + encodeURIComponent(Tools._bcdText()), '_blank', 'noopener'); },
+  bcdRender(){
+    const box = document.getElementById('bcd-out');
+    const act = document.getElementById('bcd-actions');
+    if(!box) return;
+    const drawn = Tools._bcdDrawn;
+    if(Tools._bcdError){
+      box.innerHTML = `<span class="muted">${I18N.bcd_need_names[LANG]}</span>`;
+      box.style.display = 'block'; act.style.display = 'none';
+      return;
+    }
+    if(!drawn.length){ box.style.display = 'none'; act.style.display = 'none'; return; }
+    const esc = Tools._escapeHtml;
+    const amt = parseFloat(document.getElementById('bcd-amt').value);
+    const total = Math.max(Tools._bcdNames().length, drawn.length);
+    let html = '';
+    if(amt > 0) html += `<div class="muted">${I18N.bc_pot[LANG]}: ${(amt * total).toLocaleString()}</div>`;
+    let rows = '';
+    drawn.forEach((n, i) => {
+      const hl = (i === Tools._bcdLast);
+      const tag = (i === 0 && Tools._bcdOrgFixed) ? ` <span class="muted" style="font-weight:400">(${I18N.bcd_org_tag[LANG]})</span>` : '';
+      rows += `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border);${hl ? 'font-weight:700;font-size:15px;' : ''}">`
+        + `<span>${i + 1}. ${esc(n)}${tag}</span><span class="muted">${esc(Tools._bcdMonth(i))}</span></div>`;
+    });
+    html += `<div style="max-height:300px;overflow:auto">${rows}</div>`;
+    const left = total - drawn.length;
+    html += `<div class="muted" style="margin-top:8px">${left > 0 ? I18N.bcd_remaining[LANG] + ': ' + left : I18N.bcd_done[LANG]}</div>`;
+    box.innerHTML = html;
+    box.style.display = 'block';
+    act.style.display = 'flex';
+  },
+
   // ===== Daily Quote / Hadith / Quran verse =====
   // o = original text (Arabic or Urdu verse), ur / en = translations, su / se = source (Urdu / English)
   _quotes: [
@@ -6065,6 +7874,7 @@ document.getElementById('prayer-date').valueAsDate = new Date();
 Tools.loadTasbih();
 Tools.bodyFatGender();
 Tools.quoteToday();
+Tools.bcdLoad();
 
 // ===== Hints for info (?) button =====
 const HINTS = {
@@ -6109,6 +7919,15 @@ const HINTS = {
   pomodoro: { en:'A 25/5-minute focus timer.', ur:'25/5 منٹ کا فوکس ٹائمر۔' },
   stopwatch: { en:'A simple start/stop/reset stopwatch.', ur:'ایک سادہ اسٹاپ واچ۔' },
   notes: { en:'Quick notes that save automatically in this browser.', ur:'خودکار محفوظ ہونے والے نوٹس۔' },
+  fitrana: { en:'Works out sadaqat al-fitr for your household from the number of people and the current price per kg.', ur:'افراد کی تعداد اور فی کلو ریٹ سے گھر کا صدقہ فطر نکالتا ہے۔' },
+  ushr: { en:'Calculates ushr on crops: 10% for rain-fed land, 5% for paid irrigation, 7.5% for mixed.', ur:'فصل پر عشر نکالتا ہے: بارانی زمین پر 10%، خرچ سے آبپاشی پر 5%، دونوں پر 7.5%۔' },
+  bc: { en:'Committee (BC) planner: monthly pot, total duration, and how many installments you pay before and after your turn.', ur:'کمیٹی کا حساب: ماہانہ رقم، کل مدت اور آپ کے نمبر سے پہلے اور بعد کی قسطیں۔' },
+  tilepaint: { en:'Estimates how many tiles (with wastage) or how much wall paint a room needs from its measurements.', ur:'کمرے کی پیمائش سے ٹائلز (ویسٹیج سمیت) یا دیواروں کے پینٹ کی مقدار کا اندازہ لگاتا ہے۔' },
+  profit: { en:'Finds profit, margin and markup from cost and selling price, or the price to charge for a target profit %.', ur:'لاگت اور فروخت کی قیمت سے منافع، مارجن اور مارک اپ نکالتا ہے، یا مطلوبہ منافع % کے لیے قیمت بتاتا ہے۔' },
+  imgsplit: { en:'Splits one scanned image into separate photos (passport size or any other). Auto-detects, cuts a grid, or lets you draw boxes — with a live preview of every result before saving.', ur:'ایک اسکین شدہ تصویر کو الگ الگ تصاویر (پاسپورٹ سائز یا کوئی بھی) میں بانٹتا ہے۔ خودکار شناخت، گرڈ یا دستی باکس — اور محفوظ کرنے سے پہلے ہر نتیجے کا لائیو پریویو۔' },
+  excel2pdf: { en:'Converts an Excel/CSV sheet into a clean PDF table, with a sheet picker and portrait/landscape option.', ur:'ایکسل/CSV شیٹ کو صاف ستھرے PDF ٹیبل میں بدلتا ہے، شیٹ چننے اور صفحہ کی سمت کے آپشن کے ساتھ۔' },
+  pdf2excel: { en:'Best-effort extraction of tables from a PDF into an Excel file, one sheet per page.', ur:'PDF سے ٹیبل کا اندازہ لگا کر Excel فائل بناتا ہے (بہترین کوشش)، ہر صفحہ الگ شیٹ میں۔' },
+  bcdraw: { en:'Type the committee members, then draw lots to decide who gets the committee in which month. Result can be copied or shared.', ur:'کمیٹی ممبرز کے نام لکھیں اور قرعہ اندازی سے معلوم کریں کہ کس کو کس مہینے کمیٹی ملے گی۔ نتیجہ کاپی یا شیئر ہو سکتا ہے۔' },
   zakat: { en:'Calculates zakat due on gold, silver, and cash against the nisab threshold.', ur:'سونے، چاندی اور نقدی پر واجب زکوٰۃ نصاب کے مطابق نکالتا ہے۔' },
   gpa: { en:'Calculates weighted GPA from credit hours and grades.', ur:'کریڈٹ آورز اور گریڈز سے وزنی GPA نکالتا ہے۔' },
   fuel: { en:'Calculates fuel average (km/litre) and cost per km.', ur:'فیول ایوریج (کلومیٹر فی لیٹر) اور لاگت فی کلومیٹر نکالتا ہے۔' },
@@ -6214,7 +8033,12 @@ const LIVE_CALC = [
   { ids:['iw-gender','iw-height','iw-weight','iw-exercise'], fn:()=>Tools.idealWeight() },
   { ids:['bf-gender','bf-height','bf-weight','bf-neck','bf-waist','bf-hip'], fn:()=>Tools.bodyFat() },
   { ids:['gold-val','gold-from','gold-to','gold-price'], fn:()=>Tools.goldConvert() },
-  { ids:['wapp-cc','wapp-phone','wapp-msg'], fn:()=>Tools.wappBuild() }
+  { ids:['wapp-cc','wapp-phone','wapp-msg'], fn:()=>Tools.wappBuild() },
+  { ids:['fit-persons','fit-item','fit-qty','fit-price'], fn:()=>Tools.fitrana() },
+  { ids:['ushr-qty','ushr-unit','ushr-type','ushr-price'], fn:()=>Tools.ushr() },
+  { ids:['bc-members','bc-amount','bc-turn','bc-start'], fn:()=>Tools.bc() },
+  { ids:['pm-mode','pm-cost','pm-sell','pm-pct','pm-basis','pm-qty'], fn:()=>Tools.profit() },
+  { ids:['tp-mode','tp-unit','tp-len','tp-wid','tp-tilesize','tp-tl','tp-tw','tp-waste','tp-box','tp-hei','tp-coats','tp-doors','tp-windows','tp-ceiling','tp-cover'], fn:()=>Tools.tilePaint() }
 ];
 LIVE_CALC.forEach(group=>{
   group.ids.forEach(id=>{
