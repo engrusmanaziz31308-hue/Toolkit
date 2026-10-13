@@ -512,9 +512,149 @@
   .isp-sz{ color:var(--text-muted); font-size:10px; direction:ltr; }
   .isp-tile-btns{ display:flex; gap:4px; margin-top:6px; }
   .isp-tile-btns button{ flex:1; padding:5px 0; border:1px solid var(--border); background:var(--surface-2); color:var(--text); border-radius:6px; cursor:pointer; font-size:13px; }
+
+  /* ===== Card layout (home = category cards, category = tool cards) ===== */
+  .page-layout{ display:block; }
+  .sidebar-group{ width:100%; max-width:900px; margin:0 auto; position:static; }
+  .main-content{ max-width:900px; margin:0 auto; }
+  .search-row{ margin-bottom:18px; }
+
+  nav.cats{
+    display:grid !important; grid-template-columns:1fr 1fr; gap:16px;
+    overflow:visible; margin-bottom:8px; padding-bottom:0;
+  }
+  nav.cats button{
+    flex-direction:column; justify-content:center; align-items:center; text-align:center;
+    gap:8px; width:100%; min-height:200px; padding:22px 16px; border-radius:18px;
+    border:3px solid var(--text); background:var(--surface); color:var(--text);
+    white-space:normal; box-shadow:none; transform:none;
+  }
+  nav.cats button:hover{ filter:none; transform:none; border-color:var(--text); }
+  nav.cats button.active{ transform:none; box-shadow:none; }
+  nav.cats .card-icon{ font-size:54px; line-height:1; height:66px; display:flex; align-items:center; justify-content:center; }
+  nav.cats .card-title{ font-family:var(--font-head); font-size:22px; font-weight:800; line-height:1.2; }
+  nav.cats .card-desc{ font-size:13.5px; line-height:1.6; color:var(--text-muted); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  html[lang="ur"] nav.cats .card-title{ font-family:var(--font-ur); font-size:22px; }
+  html[lang="ur"] nav.cats .card-desc{ font-size:14.5px; line-height:2; }
+  body[data-view="cat"] nav.cats{ display:none !important; }
+
+  body[data-view="home"] section.category{ display:none !important; }
+  body[data-view="cat"] section.category.active,
+  body[data-view="cat"] section.category[style*="display: block"]{
+    display:grid !important; grid-template-columns:1fr 1fr; gap:16px; align-items:start;
+  }
+  body[data-view="cat"] section.category > .cat-head,
+  body[data-view="cat"] section.category > .cat-desc{ grid-column:1 / -1; }
+  body[data-view="cat"] section.category > .cat-desc{ margin:0 0 6px; }
+
+  body[data-view="cat"] section.category .tool{
+    margin:0; border:3px solid var(--text); border-left-width:3px; border-radius:18px; box-shadow:none;
+  }
+  body[data-view="cat"] section.category .tool-head{
+    flex-direction:column; justify-content:center; text-align:center; gap:8px;
+    min-height:170px; padding:20px 14px; color:var(--text) !important;
+  }
+  body[data-view="cat"] section.category .tool-head > span:first-child{ flex:none; font-size:18px; }
+  html[lang="ur"] body[data-view="cat"] section.category .tool-head{ font-size:19px; }
+  .tool-card-desc{
+    font-size:13px; line-height:1.6; color:var(--text-muted); text-align:center;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  html[lang="ur"] .tool-card-desc{ font-size:14px; line-height:1.9; }
+  body[data-view="cat"] section.category .tool-head .plus{ align-self:center; }
+
+  /* a tool is open: only that card remains */
+  body[data-view="cat"] section.category:has(.tool.open) .tool:not(.open){ display:none !important; }
+  body[data-view="cat"] section.category:has(.tool.open) > .cat-desc{ display:none; }
+  body[data-view="cat"] section.category .tool.open{ grid-column:1 / -1; }
+  body[data-view="cat"] section.category .tool.open .tool-head{ flex-direction:row; min-height:0; text-align:start; padding:16px 18px; }
+  body[data-view="cat"] section.category .tool.open .tool-card-desc{ display:none; }
+  body[data-view="cat"] section.category .tool.open .tool-body{ border-top-color:var(--border); }
+
+  .back-btn{
+    display:none; align-items:center; gap:6px; margin:0 0 18px; padding:10px 16px;
+    background:var(--surface); color:var(--text); border:2px solid var(--text); border-radius:12px;
+    font-family:var(--font-head); font-size:14px; font-weight:700; cursor:pointer;
+  }
+  html[lang="ur"] .back-btn{ font-family:var(--font-ur); font-size:15px; }
+  body[data-view="cat"] .back-btn{ display:inline-flex; }
+
+  @media (max-width: 380px){
+    nav.cats .card-title{ font-size:19px; }
+    nav.cats button{ min-height:170px; padding:16px 10px; }
+  }
+  /* ===== Uniform sizes, margins and text fit (overrides) ===== */
+  nav.cats{ align-items:stretch; }
+  nav.cats button{ height:100%; min-height:200px; padding:20px 14px; box-sizing:border-box; }
+
+  body[data-view="cat"] section.category{ align-items:stretch !important; gap:14px; }
+  body[data-view="cat"] section.category .tool{
+    display:flex; flex-direction:column; min-width:0; box-sizing:border-box;
+  }
+  body[data-view="cat"] section.category .tool-head{
+    flex:1 1 auto; min-height:170px; box-sizing:border-box;
+    padding:18px 14px; margin:0; width:100%;
+    justify-content:center; align-items:center;
+  }
+  body[data-view="cat"] section.category .tool-head > span:first-child{
+    flex:0 1 auto; max-width:100%; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.3;
+  }
+  body[data-view="cat"] section.category .tool-head .plus{ margin-top:2px; }
+
+  /* open tool: same padding on head and body, title never cut */
+  body[data-view="cat"] section.category .tool.open .tool-head{
+    flex-direction:row; align-items:center; justify-content:flex-start; text-align:start;
+    min-height:0; padding:16px 18px; gap:10px;
+  }
+  body[data-view="cat"] section.category .tool.open .tool-head > span:first-child{
+    flex:1 1 0; min-width:0; white-space:normal; overflow-wrap:anywhere;
+  }
+  body[data-view="cat"] section.category .tool.open .tool-body,
+  body[data-view="cat"] section.category .tool .tool-body{
+    padding:16px 18px 20px; box-sizing:border-box;
+  }
+  body[data-view="cat"] section.category .tool.open .tool-body{ border-top:1px solid var(--border); }
+  body[data-view="cat"] section.category .tool.open .tool-body > *:first-child{ margin-top:0; }
+
+  .back-btn{ padding:8px 14px; font-size:13.5px; margin:0 0 16px; }
+  html[lang="ur"] .back-btn{ font-size:14.5px; }
+  .main-content{ padding:0; }
+  /* ===== Search: icon on the far right, hidden once a tool is open ===== */
+  .search-row .search-icon{
+    left:auto !important; right:14px !important;
+  }
+  .search-row input{
+    padding-left:16px !important; padding-right:44px !important;
+  }
+  body[data-view="cat"]:has(.tool.open) .search-row{ display:none !important; }
+  /* ===== Colourful tool cards + nav row ===== */
+  .nav-row{ display:none; gap:10px; align-items:center; margin:0 0 16px; }
+  body[data-view="cat"] .nav-row{ display:flex; }
+  .nav-row .back-btn{ margin:0; }
+  .home-btn{ width:42px; height:42px; padding:0; justify-content:center; font-size:19px; line-height:1; }
+  .home-btn:hover, .back-btn:hover{ filter:brightness(1.05); }
+
+  body[data-view="cat"] section.category[data-cat="text"] .tool{ border-color:var(--amber); }
+  body[data-view="cat"] section.category[data-cat="calc"] .tool{ border-color:var(--blue); }
+  body[data-view="cat"] section.category[data-cat="convert"] .tool{ border-color:var(--green); }
+  body[data-view="cat"] section.category[data-cat="image"] .tool{ border-color:var(--coral); }
+  body[data-view="cat"] section.category[data-cat="prod"] .tool{ border-color:var(--violet); }
+
+  body[data-view="cat"] section.category[data-cat="text"] .tool-head{ color:var(--amber) !important; background:var(--amber-bg); }
+  body[data-view="cat"] section.category[data-cat="calc"] .tool-head{ color:var(--blue) !important; background:var(--blue-bg); }
+  body[data-view="cat"] section.category[data-cat="convert"] .tool-head{ color:var(--green) !important; background:var(--green-bg); }
+  body[data-view="cat"] section.category[data-cat="image"] .tool-head{ color:var(--coral) !important; background:var(--coral-bg); }
+  body[data-view="cat"] section.category[data-cat="prod"] .tool-head{ color:var(--violet) !important; background:var(--violet-bg); }
+
+  body[data-view="cat"] section.category .tool-card-desc{ color:var(--text); opacity:.8; }
+  /* ===== Tool heads: no info / plus icons; hint shows inside the opened tool ===== */
+  .tool-head .info-btn,
+  .tool-head .plus{ display:none !important; }
+  body[data-view="cat"] section.category .tool.open .tool-hint{ display:block; padding:14px 18px 0; font-size:12.5px; }
+  html[lang="ur"] body[data-view="cat"] section.category .tool.open .tool-hint{ font-size:14px; line-height:1.9; }
 </style>
 </head>
-<body>
+<body data-view="home">
 <div id="splash"><div class="splash-mark">TK</div></div>
 <div class="wrap">
 
@@ -540,18 +680,22 @@
   </div>
 
   <nav class="cats" id="catNav">
-    <button data-cat="favorites">⭐ <span data-i18n="nav_favorites">Favorites</span></button>
-    <button data-cat="text" class="active"><span class="dot" style="background:var(--amber)"></span><span data-i18n="nav_text">ٹیکسٹ</span></button>
-    <button data-cat="calc"><span class="dot" style="background:var(--blue)"></span><span data-i18n="nav_calc">کیلکولیٹرز</span></button>
-    <button data-cat="convert"><span class="dot" style="background:var(--green)"></span><span data-i18n="nav_convert">کنورٹرز</span></button>
-    <button data-cat="image"><span class="dot" style="background:var(--coral)"></span><span data-i18n="nav_image">امیج</span></button>
-    <button data-cat="prod"><span class="dot" style="background:var(--violet)"></span><span data-i18n="nav_prod">پروڈکٹیوٹی</span></button>
+    <button data-cat="favorites"><span class="card-icon">⭐</span><span class="card-title" data-i18n="nav_favorites">Favorites</span><span class="card-desc" data-i18n="nav_fav_desc">آپ کے پسندیدہ ٹولز ایک جگہ</span></button>
+    <button data-cat="text"><span class="card-icon">📝</span><span class="card-title" data-i18n="nav_text">ٹیکسٹ</span><span class="card-desc" data-i18n="cat1_desc">لکھائی سے متعلق ٹولز</span></button>
+    <button data-cat="calc"><span class="card-icon">🧮</span><span class="card-title" data-i18n="nav_calc">کیلکولیٹرز</span><span class="card-desc" data-i18n="cat2_desc">روزمرہ حساب کتاب کے لیے فوری کیلکولیٹرز۔</span></button>
+    <button data-cat="convert"><span class="card-icon">🔄</span><span class="card-title" data-i18n="nav_convert">کنورٹرز</span><span class="card-desc" data-i18n="cat3_desc">یونٹس بدلیں، پاسورڈ بنائیں، QR کوڈز اور رنگ پیلٹ۔</span></button>
+    <button data-cat="image"><span class="card-icon">🖼️</span><span class="card-title" data-i18n="nav_image">امیج</span><span class="card-desc" data-i18n="cat4_desc">امیج کمپریس، کراپ، واٹرمارک اور مزید۔</span></button>
+    <button data-cat="prod"><span class="card-icon">🗂️</span><span class="card-title" data-i18n="nav_prod">پروڈکٹیوٹی</span><span class="card-desc" data-i18n="cat5_desc">روزانہ کام آسان بنانے والے ٹولز۔</span></button>
   </nav>
 
   <p class="muted" id="favorites-empty" style="display:none; text-align:center; padding:20px 10px;" data-i18n="no_favorites">ابھی کوئی پسندیدہ ٹول شامل نہیں — کسی بھی ٹول کے ⭐ پر کلک کریں</p>
   </div>
 
   <div class="main-content">
+  <div class="nav-row">
+    <button type="button" id="backBtn" class="back-btn" data-i18n="nav_back">واپس</button>
+    <button type="button" id="homeBtn" class="back-btn home-btn" title="Home" aria-label="Home">🏠</button>
+  </div>
   <!-- ============ TEXT ============ -->
   <section class="category active" data-cat="text">
     <div class="cat-head">
@@ -2181,6 +2325,60 @@
       </div>
     </div>
 
+    <div class="tool" data-tool="bgremove">
+      <button class="tool-head"><span data-i18n="tool_bgr_title">بیک گراؤنڈ ہٹائیں / تبدیل کریں</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="muted" data-i18n="bgr_help">تصویر کا پس منظر خودکار طور پر ہٹائیں، برش سے کنارے ٹھیک کریں، اور چاہیں تو نیا بیک گراؤنڈ لگائیں۔</div>
+        <label data-i18n="img_select_label">امیج منتخب کریں</label>
+        <input type="file" id="bgr-file" accept="image/*" onchange="BgRemove.load(event)">
+        <div id="bgr-wrap" style="display:none">
+          <div class="row">
+            <div><label data-i18n="bgr_keycolor">پس منظر کا رنگ</label><input type="color" id="bgr-keycolor" value="#ffffff" onpointerdown="BgRemove.remember()" oninput="BgRemove.setKey(this.value)"></div>
+            <div style="align-self:center"><button type="button" class="btn secondary small" onclick="BgRemove.remember(); BgRemove.autoColor()" data-i18n="isp_autobg">🪄 خودکار رنگ</button></div>
+            <div style="align-self:center"><button type="button" class="btn secondary small" id="bgr-pickbtn" onclick="BgRemove.togglePick()" data-i18n="isp_pickbg">🎯 تصویر سے چنیں</button></div>
+          </div>
+          <div><label><span data-i18n="bgr_tol">برداشت (ٹالرنس)</span>: <span id="bgr-tol-v">60</span></label>
+            <input type="range" id="bgr-tol" min="0" max="160" step="1" value="60" onpointerdown="BgRemove.remember()" oninput="document.getElementById('bgr-tol-v').textContent=this.value; BgRemove.recompute()"></div>
+          <label data-i18n="bgr_brushmode">برش</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px 16px; margin:6px 0;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-brushmode" value="erase" checked><span data-i18n="bgr_erase">ہٹائیں</span></label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-brushmode" value="restore"><span data-i18n="bgr_restore">بحال کریں</span></label>
+          </div>
+          <div><label><span data-i18n="bgr_bsize">برش سائز</span>: <span id="bgr-bsize-v">20</span></label>
+            <input type="range" id="bgr-bsize" min="2" max="150" step="1" value="20" oninput="document.getElementById('bgr-bsize-v').textContent=this.value"></div>
+          <span class="muted" data-i18n="bgr_brush_hint">تصویر پر کھینچ کر کنارے ٹھیک کریں۔</span>
+          <div style="text-align:center; margin-top:10px;">
+            <canvas id="bgr-canvas" style="display:inline-block; max-width:100%; max-height:360px; border-radius:8px; touch-action:none; cursor:crosshair;"></canvas>
+          </div>
+          <label data-i18n="bgr_newbg">نیا بیک گراؤنڈ</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px 16px; margin:6px 0;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-mode" value="transparent" onchange="BgRemove.onMode()"><span data-i18n="bgr_transparent">شفاف (Transparent)</span></label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-mode" value="color" checked onchange="BgRemove.onMode()"><span data-i18n="bgr_color_label">ٹھوس رنگ</span></label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-mode" value="image" onchange="BgRemove.onMode()"><span data-i18n="bgr_image">تصویر</span></label>
+          </div>
+          <div id="bgr-newcolor-row" style="display:flex; align-items:center; gap:8px;">
+            <label data-i18n="bgr_color_label">ٹھوس رنگ</label><input type="color" id="bgr-newcolor" value="#ffffff" oninput="BgRemove.render()">
+          </div>
+          <div id="bgr-newimg-row" style="display:none">
+            <label data-i18n="bgr_newbg_file">بیک گراؤنڈ کے لیے تصویر منتخب کریں</label>
+            <input type="file" id="bgr-bgfile" accept="image/*" onchange="BgRemove.loadBg(event)">
+          </div>
+          <label data-i18n="bgr_format">فارمیٹ</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px 16px; margin:6px 0;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-format" value="png" checked><span>PNG</span></label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-format" value="jpg"><span>JPG</span></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="BgRemove.download()" data-i18n="watermark_download_btn">محفوظ کریں</button>
+            <button class="btn secondary" id="bgr-undo" onclick="BgRemove.undo()" disabled data-i18n="bgr_undo">ان ڈو</button>
+            <button class="btn secondary" onclick="BgRemove.remember(); BgRemove.resetManual()" data-i18n="bgr_reset">ہاتھ کے نشان صاف کریں</button>
+            <button class="btn ghost" onclick="BgRemove.clear()" data-i18n="clear_btn">صاف کریں</button>
+          </div>
+        </div>
+        <div class="result" id="bgr-out" style="display:none"></div>
+      </div>
+    </div>
+
     <div class="tool" data-tool="memegen">
       <button class="tool-head"><span data-i18n="tool_memegen_title">میم جنریٹر</span><span class="plus">+</span></button>
       <div class="tool-body">
@@ -2703,6 +2901,27 @@ const I18N = {
   imgrotate_error: { ur: 'تصویر محفوظ نہیں ہو سکی', en: 'Could not save the image' },
 
   tool_watermark_title: { ur: 'واٹرمارک شامل کریں', en: 'Add Watermark' },
+  tool_bgr_title: { ur: 'بیک گراؤنڈ ہٹائیں / تبدیل کریں', en: 'Remove / Replace Background' },
+  bgr_help: { ur: 'تصویر کا پس منظر خودکار طور پر ہٹائیں، برش سے کنارے ٹھیک کریں، اور چاہیں تو نیا بیک گراؤنڈ لگائیں۔ سب کچھ آپ کے براؤزر میں ہوتا ہے۔', en: 'Remove the background automatically, fix edges with a brush, and optionally add a new background. Everything runs in your browser.' },
+  bgr_keycolor: { ur: 'پس منظر کا رنگ', en: 'Background colour' },
+  bgr_tol: { ur: 'برداشت (ٹالرنس)', en: 'Tolerance' },
+  bgr_brushmode: { ur: 'برش', en: 'Brush' },
+  bgr_erase: { ur: 'ہٹائیں', en: 'Erase' },
+  bgr_restore: { ur: 'بحال کریں', en: 'Restore' },
+  bgr_bsize: { ur: 'برش سائز', en: 'Brush size' },
+  bgr_brush_hint: { ur: 'تصویر پر کھینچ کر کنارے ٹھیک کریں۔ پہلے پس منظر کا رنگ درست کریں۔', en: 'Drag on the image to fix edges. Set the background colour first.' },
+  bgr_reset: { ur: 'ہاتھ کے نشان صاف کریں', en: 'Reset manual edits' },
+  bgr_newbg: { ur: 'نیا بیک گراؤنڈ', en: 'New background' },
+  bgr_transparent: { ur: 'شفاف (Transparent)', en: 'Transparent' },
+  bgr_color_label: { ur: 'ٹھوس رنگ', en: 'Solid colour' },
+  bgr_image: { ur: 'تصویر', en: 'Image' },
+  bgr_newbg_file: { ur: 'بیک گراؤنڈ کے لیے تصویر منتخب کریں', en: 'Choose a background image' },
+  bgr_format: { ur: 'فارمیٹ', en: 'Format' },
+  bgr_done: { ur: 'تصویر محفوظ ہو گئی', en: 'Image saved' },
+  bgr_error: { ur: 'تصویر محفوظ نہیں ہو سکی', en: 'Could not save the image' },
+  bgr_undo: { ur: 'ان ڈو', en: 'Undo' },
+  nav_back: { ur: 'واپس', en: 'Back' },
+  nav_fav_desc: { ur: 'آپ کے پسندیدہ ٹولز ایک جگہ', en: 'Your starred tools in one place' },
   watermark_text_label: { ur: 'واٹرمارک ٹیکسٹ', en: 'Watermark text' },
   watermark_size_label: { ur: 'فونٹ سائز:', en: 'Font size:' },
   watermark_opacity_label: { ur: 'شفافیت:', en: 'Opacity:' },
@@ -7882,6 +8101,7 @@ const HINTS = {
   case: { en:'Converts your text to UPPERCASE, lowercase, Title Case, or Sentence case.', ur:'ٹیکسٹ کو بڑے، چھوٹے، ٹائٹل یا سینٹنس کیس میں بدلتا ہے۔' },
   findreplace: { en:'Find and replace one or several words at once (comma-separated).', ur:'ایک یا کئی الفاظ ایک ساتھ تلاش اور تبدیل کریں۔' },
   cleanspace: { en:'Removes extra spaces and blank lines from your text.', ur:'اضافی اسپیس اور خالی لائنیں ہٹاتا ہے۔' },
+  bgremove: { en:'Removes the background from a chosen colour, lets you fix edges with a brush, and swaps in a transparent, solid or image background.', ur:'منتخب رنگ کی بنیاد پر پس منظر ہٹاتا ہے، برش سے کنارے ٹھیک کرنے دیتا ہے، اور شفاف، ٹھوس رنگ یا تصویر والا نیا بیک گراؤنڈ لگاتا ہے۔' },
   duplines: { en:'Removes duplicate lines, keeping the first occurrence.', ur:'دہرائی گئی لائنیں ہٹاتا ہے۔' },
   reverse: { en:'Reverses your text by characters or by words.', ur:'حروف یا الفاظ کو الٹا کرتا ہے۔' },
   slug: { en:'Turns a title into a URL-friendly slug.', ur:'ٹائٹل کو URL کے قابل سلگ میں بدلتا ہے۔' },
@@ -8097,6 +8317,342 @@ window.addEventListener('load', ()=>{
   setTimeout(()=>{ const s = document.getElementById('splash'); if(s) s.classList.add('hide'); }, 500);
 });
 setTimeout(()=>{ const s = document.getElementById('splash'); if(s) s.classList.add('hide'); }, 2000);
+</script>
+<script>
+// ===== Background remover / replacer =====
+const BgRemove = {
+  MAX: 2000, HIST_MAX: 15,
+  bgImg: null, W: 0, H: 0,
+  orig: null, auto: null, manual: null,
+  color: [255, 255, 255],
+  pick: false, drawing: false, lastPt: null,
+  hist: [],
+  $(id){ return document.getElementById(id); },
+  t(key){ return (I18N[key] && I18N[key][LANG]) || key; },
+  radio(name){ const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; },
+  hex(v){ return '#' + v.map(c => c.toString(16).padStart(2, '0')).join(''); },
+
+  load(e){
+    const file = e.target.files[0];
+    this.$('bgr-out').style.display = 'none';
+    if(!file){ this.clear(); return; }
+    const im = new Image();
+    im.onload = ()=>{
+      const s = Math.min(1, this.MAX / Math.max(im.naturalWidth, im.naturalHeight));
+      const W = Math.max(1, Math.round(im.naturalWidth * s));
+      const H = Math.max(1, Math.round(im.naturalHeight * s));
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const cx = c.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(im, 0, 0, W, H);
+      this.W = W; this.H = H;
+      this.orig = cx.getImageData(0, 0, W, H);
+      this.manual = new Uint8Array(W * H);
+      this.hist = [];
+      const cv = this.$('bgr-canvas'); cv.width = W; cv.height = H;
+      this.$('bgr-wrap').style.display = 'block';
+      this.autoColor();
+      this.syncUndo();
+    };
+    im.onerror = ()=>this.showMsg(this.t('bgr_error'));
+    im.src = URL.createObjectURL(file);
+  },
+
+  showMsg(msg){
+    const out = this.$('bgr-out');
+    out.textContent = msg;
+    out.style.display = 'block';
+  },
+
+  // ----- Undo -----
+  remember(){
+    if(!this.manual) return;
+    this.hist.push({ manual: this.manual.slice(), color: this.color.slice(), tol: +this.$('bgr-tol').value });
+    if(this.hist.length > this.HIST_MAX) this.hist.shift();
+    this.syncUndo();
+  },
+  undo(){
+    const s = this.hist.pop();
+    if(!s) return;
+    this.manual = s.manual;
+    this.color = s.color;
+    this.$('bgr-keycolor').value = this.hex(s.color);
+    this.$('bgr-tol').value = s.tol;
+    this.$('bgr-tol-v').textContent = s.tol;
+    this.recompute();
+    this.syncUndo();
+  },
+  syncUndo(){ this.$('bgr-undo').disabled = this.hist.length === 0; },
+
+  // ----- Colour detection -----
+  autoColor(){
+    if(!this.orig) return;
+    const { W, H } = this, d = this.orig.data;
+    const bw = Math.max(1, Math.round(Math.min(W, H) * 0.02));
+    const R = [], G = [], B = [];
+    const add = (x, y)=>{ const i = (y * W + x) * 4; R.push(d[i]); G.push(d[i+1]); B.push(d[i+2]); };
+    for(let y = 0; y < H; y++){
+      if(y < bw || y >= H - bw){ for(let x = 0; x < W; x++) add(x, y); }
+      else { for(let x = 0; x < bw; x++) add(x, y); for(let x = W - bw; x < W; x++) add(x, y); }
+    }
+    const med = a => { a.sort((p, q)=>p - q); return a[a.length >> 1]; };
+    this.setKey([med(R), med(G), med(B)]);
+  },
+
+  setKey(v){
+    if(typeof v === 'string'){
+      const n = parseInt(v.slice(1), 16);
+      v = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    this.color = v;
+    this.$('bgr-keycolor').value = this.hex(v);
+    this.recompute();
+  },
+
+  // Remove pixels close to the chosen colour that are connected to the image edge.
+  recompute(){
+    if(!this.orig) return;
+    const { W, H } = this, d = this.orig.data, n = W * H;
+    const tol = +this.$('bgr-tol').value, t2 = tol * tol;
+    const [kr, kg, kb] = this.color;
+    const auto = new Uint8Array(n).fill(255);
+    const vis = new Uint8Array(n), q = new Int32Array(n);
+    let qh = 0, qt = 0;
+    const push = p => {
+      if(vis[p]) return;
+      vis[p] = 1;
+      const i = p * 4, dr = d[i] - kr, dg = d[i+1] - kg, db = d[i+2] - kb;
+      if(dr * dr + dg * dg + db * db <= t2) q[qt++] = p;
+    };
+    for(let x = 0; x < W; x++){ push(x); push((H - 1) * W + x); }
+    for(let y = 0; y < H; y++){ push(y * W); push(y * W + W - 1); }
+    while(qh < qt){
+      const p = q[qh++];
+      auto[p] = 0;
+      const x = p % W, y = (p - x) / W;
+      if(x > 0) push(p - 1);
+      if(x < W - 1) push(p + 1);
+      if(y > 0) push(p - W);
+      if(y < H - 1) push(p + W);
+    }
+    this.auto = auto;
+    this.render();
+  },
+
+  // ----- Drawing -----
+  fgCanvas(){
+    const { W, H } = this;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const cx = c.getContext('2d');
+    const id = cx.createImageData(W, H), o = id.data, s = this.orig.data;
+    for(let p = 0; p < W * H; p++){
+      const i = p * 4, m = this.manual[p];
+      o[i] = s[i]; o[i+1] = s[i+1]; o[i+2] = s[i+2];
+      o[i+3] = m === 2 ? 255 : (m === 1 ? 0 : this.auto[p]);
+    }
+    cx.putImageData(id, 0, 0);
+    return c;
+  },
+
+  paintBg(cx, forExport){
+    const { W, H } = this, mode = this.radio('bgr-mode');
+    if(mode === 'transparent'){
+      if(forExport) return;
+      const s = Math.max(8, Math.round(Math.min(W, H) / 40));
+      cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = '#d9dde2';
+      for(let y = 0; y * s < H; y++)
+        for(let x = 0; x * s < W; x++)
+          if((x + y) % 2) cx.fillRect(x * s, y * s, s, s);
+      return;
+    }
+    if(mode === 'image' && this.bgImg){
+      const k = Math.max(W / this.bgImg.naturalWidth, H / this.bgImg.naturalHeight);
+      const dw = this.bgImg.naturalWidth * k, dh = this.bgImg.naturalHeight * k;
+      cx.drawImage(this.bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      return;
+    }
+    cx.fillStyle = this.$('bgr-newcolor').value;
+    cx.fillRect(0, 0, W, H);
+  },
+
+  render(){
+    if(!this.orig) return;
+    const cx = this.$('bgr-canvas').getContext('2d');
+    cx.clearRect(0, 0, this.W, this.H);
+    this.paintBg(cx, false);
+    cx.drawImage(this.fgCanvas(), 0, 0);
+  },
+
+  togglePick(force){
+    this.pick = typeof force === 'boolean' ? force : !this.pick;
+    this.$('bgr-pickbtn').textContent = this.pick ? this.t('isp_pickbg_on') : this.t('isp_pickbg');
+    this.$('bgr-canvas').style.cursor = this.pick ? 'copy' : 'crosshair';
+  },
+
+  pt(e){
+    const cv = this.$('bgr-canvas'), r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height];
+  },
+
+  onDown(e){
+    if(!this.orig) return;
+    const [x, y] = this.pt(e);
+    if(this.pick){
+      const px = Math.min(this.W - 1, Math.max(0, Math.floor(x)));
+      const py = Math.min(this.H - 1, Math.max(0, Math.floor(y)));
+      const i = (py * this.W + px) * 4, d = this.orig.data;
+      this.remember();
+      this.togglePick(false);
+      this.setKey([d[i], d[i+1], d[i+2]]);
+      return;
+    }
+    this.remember();
+    this.drawing = true;
+    this.lastPt = null;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    this.stroke(x, y);
+  },
+
+  onMove(e){
+    if(!this.drawing) return;
+    const [x, y] = this.pt(e);
+    this.stroke(x, y);
+  },
+
+  onUp(){ this.drawing = false; this.lastPt = null; },
+
+  stroke(x, y){
+    const val = this.radio('bgr-brushmode') === 'restore' ? 2 : 1;
+    const r = +this.$('bgr-bsize').value;
+    const from = this.lastPt || [x, y];
+    const dist = Math.hypot(x - from[0], y - from[1]);
+    const steps = Math.max(1, Math.ceil(dist / Math.max(1, r / 3)));
+    for(let s = 0; s <= steps; s++){
+      this.dab(from[0] + (x - from[0]) * s / steps, from[1] + (y - from[1]) * s / steps, r, val);
+    }
+    this.lastPt = [x, y];
+    this.render();
+  },
+
+  dab(cx0, cy0, r, val){
+    const { W, H } = this, r2 = r * r;
+    const x0 = Math.max(0, Math.floor(cx0 - r)), x1 = Math.min(W - 1, Math.ceil(cx0 + r));
+    const y0 = Math.max(0, Math.floor(cy0 - r)), y1 = Math.min(H - 1, Math.ceil(cy0 + r));
+    for(let y = y0; y <= y1; y++)
+      for(let x = x0; x <= x1; x++){
+        const dx = x + 0.5 - cx0, dy = y + 0.5 - cy0;
+        if(dx * dx + dy * dy <= r2) this.manual[y * W + x] = val;
+      }
+  },
+
+  resetManual(){
+    if(!this.manual) return;
+    this.manual.fill(0);
+    this.render();
+  },
+
+  onMode(){
+    const m = this.radio('bgr-mode');
+    this.$('bgr-newcolor-row').style.display = m === 'color' ? 'flex' : 'none';
+    this.$('bgr-newimg-row').style.display = m === 'image' ? 'block' : 'none';
+    this.render();
+  },
+
+  loadBg(e){
+    const f = e.target.files[0];
+    if(!f){ this.bgImg = null; this.render(); return; }
+    const im = new Image();
+    im.onload = ()=>{ this.bgImg = im; this.render(); };
+    im.src = URL.createObjectURL(f);
+  },
+
+  async download(){
+    if(!this.orig) return;
+    try{
+      const png = this.radio('bgr-mode') === 'transparent' || this.radio('bgr-format') === 'png';
+      const c = document.createElement('canvas'); c.width = this.W; c.height = this.H;
+      const cx = c.getContext('2d');
+      this.paintBg(cx, true);
+      cx.drawImage(this.fgCanvas(), 0, 0);
+      const blob = await new Promise(res => c.toBlob(res, png ? 'image/png' : 'image/jpeg', 0.92));
+      if(!blob) throw new Error('toBlob returned null');
+      await Tools.saveFile(png ? 'no-bg.png' : 'no-bg.jpg', blob);
+      this.showMsg(this.t('bgr_done'));
+    }catch(err){
+      this.showMsg(this.t('bgr_error') + (err && err.message ? ' (' + err.message + ')' : ''));
+    }
+  },
+
+  clear(){
+    this.orig = null; this.auto = null; this.manual = null; this.bgImg = null;
+    this.hist = [];
+    this.$('bgr-file').value = '';
+    this.$('bgr-bgfile').value = '';
+    this.$('bgr-wrap').style.display = 'none';
+    this.$('bgr-out').style.display = 'none';
+    this.togglePick(false);
+    this.syncUndo();
+  },
+};
+
+(()=>{
+  const cv = document.getElementById('bgr-canvas');
+  cv.addEventListener('pointerdown', e => BgRemove.onDown(e));
+  cv.addEventListener('pointermove', e => BgRemove.onMove(e));
+  cv.addEventListener('pointerup', ()=> BgRemove.onUp());
+  cv.addEventListener('pointercancel', ()=> BgRemove.onUp());
+  document.addEventListener('keydown', e => {
+    if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && BgRemove.hist.length && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+      e.preventDefault(); BgRemove.undo();
+    }
+  });
+  BgRemove.syncUndo();
+})();
+</script>
+<script>
+// ===== Card layout wiring =====
+function setView(v){ document.body.dataset.view = v; }
+document.getElementById('catNav').addEventListener('click', e=>{
+  if(e.target.closest('button[data-cat]')) setView('cat');
+});
+document.getElementById('search-input').addEventListener('input', e=>{
+  setView(e.target.value.trim() ? 'cat' : 'home');
+});
+function goHome(){
+  const search = document.getElementById('search-input');
+  if(search) search.value = '';
+  Tools.performSearch('');
+  document.querySelectorAll('.tool.open').forEach(t=>t.classList.remove('open'));
+  document.querySelectorAll('#catNav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('section.category').forEach(sec=>{ sec.classList.remove('active'); sec.style.display=''; });
+  setView('home');
+}
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  const open = document.querySelector('.tool.open');
+  if(open){ open.classList.remove('open'); return; }
+  goHome();
+});
+document.getElementById('homeBtn').addEventListener('click', goHome);
+// short description on each tool card (follows the language)
+function syncToolCardDesc(){
+  document.querySelectorAll('.tool[data-tool]').forEach(tool=>{
+    const head = tool.querySelector('.tool-head');
+    const hint = HINTS[tool.dataset.tool];
+    if(!head || !hint) return;
+    let d = head.querySelector('.tool-card-desc');
+    if(!d){
+      d = document.createElement('div');
+      d.className = 'tool-card-desc';
+      head.querySelector(':scope > span:first-child').after(d);
+    }
+    d.textContent = hint[LANG];
+  });
+}
+const _applyLangBeforeCards = applyLang;
+applyLang = function(){ _applyLangBeforeCards(); syncToolCardDesc(); };
+syncToolCardDesc();
+// a restored last-opened category should open in category view
+if(document.querySelector('section.category.active')) setView('cat');
 </script>
 </body>
 </html>
