@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ٹول کِٹ — All-in-One Toolbox</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.12.3/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/legacy/build/pdf.min.js" onerror="window.__pdfjsLoadFailed=true"></script>
@@ -652,6 +652,56 @@
   .tool-head .plus{ display:none !important; }
   body[data-view="cat"] section.category .tool.open .tool-hint{ display:block; padding:14px 18px 0; font-size:12.5px; }
   html[lang="ur"] body[data-view="cat"] section.category .tool.open .tool-hint{ font-size:14px; line-height:1.9; }
+  /* ===== Per-category card palettes (light + dark) ===== */
+  :root{
+    --pal-text-bg:#FFF1D6; --pal-text-fg:#7A4300; --pal-text-bd:#E09A2B;
+    --pal-calc-bg:#E2EFFF; --pal-calc-fg:#0A4A96; --pal-calc-bd:#3B82F6;
+    --pal-conv-bg:#E2F7EA; --pal-conv-fg:#11632B; --pal-conv-bd:#22A05A;
+    --pal-img-bg:#FFE6E1;  --pal-img-fg:#962816;  --pal-img-bd:#E0604A;
+    --pal-prod-bg:#EEE6FF; --pal-prod-fg:#4F24A0; --pal-prod-bd:#8B5CF6;
+    --pal-desc:#3A3A3A;
+  }
+  :root[data-theme="dark"]{
+    --pal-text-bg:#3B2A0C; --pal-text-fg:#FFD27A; --pal-text-bd:#F0A830;
+    --pal-calc-bg:#12294A; --pal-calc-fg:#8ACBFF; --pal-calc-bd:#4C9BFF;
+    --pal-conv-bg:#10332A; --pal-conv-fg:#7CF0B0; --pal-conv-bd:#34C27A;
+    --pal-img-bg:#3F1D19;  --pal-img-fg:#FFA993;  --pal-img-bd:#F07A62;
+    --pal-prod-bg:#2B1F4A; --pal-prod-fg:#CDB4FF; --pal-prod-bd:#A37BFF;
+    --pal-desc:#F0F0F0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --pal-text-bg:#3B2A0C; --pal-text-fg:#FFD27A; --pal-text-bd:#F0A830;
+      --pal-calc-bg:#12294A; --pal-calc-fg:#8ACBFF; --pal-calc-bd:#4C9BFF;
+      --pal-conv-bg:#10332A; --pal-conv-fg:#7CF0B0; --pal-conv-bd:#34C27A;
+      --pal-img-bg:#3F1D19;  --pal-img-fg:#FFA993;  --pal-img-bd:#F07A62;
+      --pal-prod-bg:#2B1F4A; --pal-prod-fg:#CDB4FF; --pal-prod-bd:#A37BFF;
+      --pal-desc:#F0F0F0;
+    }
+  }
+
+  body[data-view="cat"] section.category[data-cat="text"] .tool{ background:var(--pal-text-bg); border-color:var(--pal-text-bd); }
+  body[data-view="cat"] section.category[data-cat="calc"] .tool{ background:var(--pal-calc-bg); border-color:var(--pal-calc-bd); }
+  body[data-view="cat"] section.category[data-cat="convert"] .tool{ background:var(--pal-conv-bg); border-color:var(--pal-conv-bd); }
+  body[data-view="cat"] section.category[data-cat="image"] .tool{ background:var(--pal-img-bg); border-color:var(--pal-img-bd); }
+  body[data-view="cat"] section.category[data-cat="prod"] .tool{ background:var(--pal-prod-bg); border-color:var(--pal-prod-bd); }
+
+  body[data-view="cat"] section.category[data-cat="text"] .tool-head{ background:transparent; color:var(--pal-text-fg) !important; }
+  body[data-view="cat"] section.category[data-cat="calc"] .tool-head{ background:transparent; color:var(--pal-calc-fg) !important; }
+  body[data-view="cat"] section.category[data-cat="convert"] .tool-head{ background:transparent; color:var(--pal-conv-fg) !important; }
+  body[data-view="cat"] section.category[data-cat="image"] .tool-head{ background:transparent; color:var(--pal-img-fg) !important; }
+  body[data-view="cat"] section.category[data-cat="prod"] .tool-head{ background:transparent; color:var(--pal-prod-fg) !important; }
+
+  body[data-view="cat"] section.category .tool-head > span:first-child{ font-weight:800; letter-spacing:.2px; }
+  body[data-view="cat"] section.category .tool-card-desc{ color:var(--pal-desc); opacity:.92; }
+  body[data-view="cat"] section.category .tool-head .fav-star,
+  body[data-view="cat"] section.category .tool-head button{ filter:none; }
+  /* ===== No overflow inside cards ===== */
+  .tool-card-desc, nav.cats .card-desc, nav.cats .card-title,
+  body[data-view="cat"] section.category .tool-head > span:first-child{ overflow-wrap:anywhere; word-break:break-word; min-width:0; }
+  body[data-view="cat"] section.category .tool{ overflow:hidden; }
+  .tool-body input, .tool-body textarea, .tool-body select, .tool-body button{ max-width:100%; box-sizing:border-box; }
+  .tool-body label, .tool-body .muted, .tool-body .result{ overflow-wrap:anywhere; }
 </style>
 </head>
 <body data-view="home">
@@ -804,6 +854,188 @@
           <button class="btn secondary" onclick="Tools.copy('reverse-output')" data-i18n="copy_btn">کاپی کریں</button>
           <button class="btn ghost" onclick="Tools.clearIds(['reverse-input','reverse-output'])" data-i18n="clear_btn">صاف کریں</button>
         </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="linerev">
+      <button class="tool-head"><span data-i18n="tool_linerev_title">الٹا ٹیکسٹ</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="linerev-input" placeholder="Type or paste text here..."></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.flipText()" data-i18n="linerev_chars_btn">الٹا ٹیکسٹ بنائیں</button>
+          <button class="btn secondary" onclick="Tools.flipTextKeepOrder()" data-i18n="linerev_keep_btn">ترتیب وہی رکھیں، صرف الٹا کریں</button>
+        </div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="linerev-output" readonly></textarea>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="Tools.copy('linerev-output')" data-i18n="copy_btn">کاپی کریں</button>
+          <button class="btn ghost" onclick="Tools.clearIds(['linerev-input','linerev-output'])" data-i18n="clear_btn">صاف کریں</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="smscount">
+      <button class="tool-head"><span data-i18n="tool_smscount">smscount</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label"></label>
+        <textarea id="sms-input" placeholder="Type your message..." oninput="Extra.smsCount()"></textarea>
+        <div class="result" id="sms-out" style="display:block"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="sortlines">
+      <button class="tool-head"><span data-i18n="tool_sortlines">sortlines</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label"></label>
+        <textarea id="sort-input" placeholder=""></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra.sortLines('asc')" data-i18n="x_sort_az"></button><button class="btn secondary" onclick="Extra.sortLines('desc')" data-i18n="x_sort_za"></button><button class="btn secondary" onclick="Extra.numberLines()" data-i18n="x_num_btn"></button></div>
+        <label data-i18n="case_result_label"></label>
+        <textarea id="sort-output" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('sort-output')" data-i18n="copy_btn"></button><button class="btn ghost" onclick="Tools.clearIds(['sort-input','sort-output'])" data-i18n="clear_btn"></button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="wordfreq">
+      <button class="tool-head"><span data-i18n="tool_wordfreq">wordfreq</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label"></label>
+        <textarea id="wf-input" placeholder=""></textarea>
+        <div class="btn-row"><button class="btn" onclick="Extra.wordFreq()" data-i18n="x_wf_btn"></button></div>
+        <label data-i18n="case_result_label"></label>
+        <textarea id="wf-output" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('wf-output')" data-i18n="copy_btn"></button><button class="btn ghost" onclick="Tools.clearIds(['wf-input','wf-output'])" data-i18n="clear_btn"></button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="b64">
+      <button class="tool-head"><span data-i18n="tool_b64">b64</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="b64-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('b64','enc')" data-i18n="x2_enc">x</button><button class="btn secondary" onclick="Extra2.run('b64','dec')" data-i18n="x2_dec">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="b64-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('b64-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="urlenc">
+      <button class="tool-head"><span data-i18n="tool_urlenc">urlenc</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="urlenc-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('urlenc','enc')" data-i18n="x2_enc">x</button><button class="btn secondary" onclick="Extra2.run('urlenc','dec')" data-i18n="x2_dec">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="urlenc-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('urlenc-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="hash">
+      <button class="tool-head"><span data-i18n="tool_hash">hash</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="hash-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('hash','sha256')" data-i18n="x2_sha256">x</button><button class="btn secondary" onclick="Extra2.run('hash','sha512')" data-i18n="x2_sha512">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="hash-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('hash-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="json">
+      <button class="tool-head"><span data-i18n="tool_json">json</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="json-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('json','fmt')" data-i18n="x2_format">x</button><button class="btn secondary" onclick="Extra2.run('json','min')" data-i18n="x2_minify">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="json-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('json-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="striphtml">
+      <button class="tool-head"><span data-i18n="tool_striphtml">striphtml</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="striphtml-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('striphtml','strip')" data-i18n="x2_strip">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="striphtml-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('striphtml-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="urlext">
+      <button class="tool-head"><span data-i18n="tool_urlext">urlext</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="urlext-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('urlext','extract')" data-i18n="x2_extract">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="urlext-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('urlext-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="urdudigit">
+      <button class="tool-head"><span data-i18n="tool_urdudigit">urdudigit</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="urdudigit-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('urdudigit','toen')" data-i18n="x2_toEn">x</button><button class="btn secondary" onclick="Extra2.run('urdudigit','tour')" data-i18n="x2_toUr">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="urdudigit-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('urdudigit-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="nodiacritics">
+      <button class="tool-head"><span data-i18n="tool_nodiacritics">nodiacritics</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="nodiacritics-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('nodiacritics','remove')" data-i18n="x2_remove">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="nodiacritics-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('nodiacritics-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="hashtag">
+      <button class="tool-head"><span data-i18n="tool_hashtag">hashtag</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="hashtag-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('hashtag','generate')" data-i18n="x2_generate">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="hashtag-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('hashtag-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="readtime">
+      <button class="tool-head"><span data-i18n="tool_readtime">readtime</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
+        <textarea id="readtime-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('readtime','calc')" data-i18n="x2_calc">x</button></div>
+        <label data-i18n="case_result_label">نتیجہ</label>
+        <textarea id="readtime-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('readtime-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -961,6 +1193,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.bmi()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="bmi-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -981,6 +1214,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.idealWeight()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="iw-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="iw_hint">نوٹ: یہ عمومی اندازہ ہے، طبی مشورہ نہیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1007,6 +1241,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.bodyFat()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="bf-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="bf_hint">نوٹ: یہ اندازہ ہے، طبی پیمائش نہیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1027,6 +1262,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.percentValue()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="pc-out2" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1041,6 +1277,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.tip()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="tip-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1053,6 +1290,7 @@
         <input type="date" id="age-end">
         <div class="btn-row"><button class="btn" onclick="Tools.age()" data-i18n="age_btn">عمر معلوم کریں</button></div>
         <div class="result" id="age-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1067,6 +1305,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.loanEmi()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="loan-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1079,6 +1318,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.discount()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="discount-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1096,6 +1336,7 @@
         </select>
         <div class="btn-row"><button class="btn" onclick="Tools.gst()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="gst-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1113,6 +1354,7 @@
           <button class="btn secondary" onclick="Tools.interest('compound')" data-i18n="interest_compound_btn">مرکب سود</button>
         </div>
         <div class="result" id="interest-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1125,6 +1367,7 @@
         <input type="date" id="datediff-end">
         <div class="btn-row"><button class="btn" onclick="Tools.dateDiff()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="datediff-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1152,6 +1395,7 @@
         </select>
         <div class="btn-row"><button class="btn" onclick="Tools.bmr()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="bmr-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1218,6 +1462,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.zakat()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="zakat-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="zakat_hint">نوٹ: یہ اندازاً حساب ہے — قیمتیں مقامی مارکیٹ کے مطابق خود درج کریں اور حتمی مسئلے میں اپنے مقامی عالم دین سے رہنمائی لیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1243,6 +1488,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.fitrana()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="fit-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="fit_hint">نوٹ: مقدار میں علماء کے ہاں معمولی فرق ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1271,6 +1517,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.ushr()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="ushr-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="ushr_hint">نوٹ: مسالک کے لحاظ سے احکام میں فرق ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1288,6 +1535,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.bc()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="bc-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="bc_hint">نوٹ: فرض کیا گیا ہے کہ ہر ماہ ایک ممبر کی کمیٹی نکلتی ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1387,6 +1635,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.tilePaint()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="tp-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="tp_hint">نوٹ: ٹائل میں عموماً 5 سے 10 فیصد ویسٹیج رکھی جاتی ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1415,6 +1664,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.profit()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="pm-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="pm_hint">نوٹ: مارک اپ = منافع ÷ لاگت، مارجن = منافع ÷ فروخت کی قیمت۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1442,6 +1692,7 @@
         <input type="number" id="fuel-price" placeholder="0">
         <div class="btn-row"><button class="btn" onclick="Tools.fuelAvg()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="fuel-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1459,6 +1710,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.retirementPlan()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="ret-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="ret_hint">نوٹ: یہ اندازہ ہے، اصل منافع مارکیٹ کے حالات پر منحصر ہوگا۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1475,6 +1727,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.incomeTax()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="incometax-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="incometax_hint">نوٹ: یہ حساب صرف تنخواہ دار افراد کے لیے ہے (Tax Year 2027 / FY 2026-27، Finance Act 2026 کے مطابق)۔ غیر تنخواہ دار/کاروباری آمدنی پر مختلف اور عموماً زیادہ (زیادہ سے زیادہ 45%) شرحیں لاگو ہوتی ہیں — قطعی رقم کے لیے FBR یا ٹیکس کنسلٹنٹ سے رجوع کریں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1492,6 +1745,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.electricityBill()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="elecbill-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="elecbill_hint">نوٹ: یہ صرف تخمینہ ہے — اصل بل میں سلیب ریٹس، فیول ایڈجسٹمنٹ اور دیگر سرچارجز شامل ہو سکتے ہیں۔ فی یونٹ ریٹ اپنے DISCO کے موجودہ نرخ نامے سے لیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
   </section>
@@ -1527,6 +1781,7 @@
         <input type="number" id="unit-val" placeholder="1">
         <div class="btn-row"><button class="btn" onclick="Tools.unitConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="unit-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1546,6 +1801,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.genPassword()" data-i18n="pw_btn">پاسورڈ بنائیں</button></div>
         <input type="text" id="pw-out" readonly style="margin-top:10px;font-size:15px;text-align:center">
         <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('pw-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1597,6 +1853,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.hijriConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="hijri-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="hijri_hint">نوٹ: یہ حسابی اسلامی کیلنڈر ہے — چاند دیکھنے پر مبنی سرکاری اعلان سے ایک دن آگے پیچھے ہو سکتا ہے۔ دیسی مہینہ تخمینی تاریخوں پر مبنی ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1628,6 +1885,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.prayerTimes()" data-i18n="calc_btn">حساب کریں</button></div>
         <table class="worldclock-table" id="prayer-table" style="display:none"></table>
         <div class="muted" style="margin-top:6px" data-i18n="prayer_hint">نوٹ: یہ فلکیاتی حساب سے اندازاً اوقات ہیں (فجر/عشاء زاویہ: 18°) — مقامی مسجد کے اعلان کردہ اوقات کو ترجیح دیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1642,6 +1900,7 @@
         <input type="number" id="speed-val" placeholder="1">
         <div class="btn-row"><button class="btn" onclick="Tools.speedConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="speed-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1668,6 +1927,7 @@
         <input type="number" id="ds-val" placeholder="1">
         <div class="btn-row"><button class="btn" onclick="Tools.dataStorageConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="ds-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1682,6 +1942,7 @@
         <input type="text" id="roman-input" placeholder="MCMXCIV" style="text-transform:uppercase">
         <div class="btn-row"><button class="btn secondary" onclick="Tools.romanToNum()" data-i18n="roman_to_num_btn">عدد میں بدلیں</button></div>
         <div class="result" id="roman-out2" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1693,6 +1954,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.genPalette()" data-i18n="pal_btn">پیلٹ بنائیں</button></div>
         <div class="swatches" id="pal-out"></div>
         <div class="muted" style="margin-top:6px" data-i18n="pal_hint">کسی بھی رنگ پر کلک کر کے کوڈ کاپی کریں</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1744,6 +2006,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.currencyConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="currency-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="currency_hint">نوٹ: یہ اندازاً/فکسڈ ریٹس ہیں، لائیو مارکیٹ ریٹ نہیں — درست ترین ریٹ کے لیے کسی بینک یا لائیو کرنسی سائٹ سے تصدیق کریں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1754,6 +2017,7 @@
         <input type="number" id="numwords-input" placeholder="12345">
         <div class="btn-row"><button class="btn" onclick="Tools.numToWords()" data-i18n="numwords_btn">الفاظ میں بدلیں</button></div>
         <div class="result" id="numwords-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1796,6 +2060,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.timezoneConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="tz-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1833,6 +2098,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.baseConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="base-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1850,6 +2116,7 @@
         </div>
         <div class="btn-row"><button class="btn" onclick="Tools.genRandom()" data-i18n="randnum_btn">نمبر بنائیں</button></div>
         <div class="result" id="rand-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1902,6 +2169,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.areaConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="area-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="areaconv_hint">نوٹ: 1 مرلہ = 225 مربع فٹ، 1 کنال = 20 مرلہ (پاکستان کا عام معیاری حساب) — کچھ علاقوں میں مقامی فرق ہو سکتا ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1943,6 +2211,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.goldConvert()" data-i18n="fr_btn">تبدیل کریں</button></div>
         <div class="result" id="gold-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="gold_hint">نوٹ: 1 تولہ = 11.664 گرام = 12 ماشہ، 1 ماشہ = 8 رتی۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1974,6 +2243,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.qiblaCalc()" data-i18n="calc_btn">حساب کریں</button></div>
         <div class="result" id="qibla-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="qibla_hint">نوٹ: زاویہ شمال (North) سے گھڑی کی سمت میں ناپا گیا ہے — قطب نما (compass) کے ساتھ ملائیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1984,6 +2254,7 @@
         <input type="text" id="cnic-input" inputmode="numeric" maxlength="13" placeholder="3520112345671" oninput="Tools.formatCNIC()">
         <input type="text" id="cnic-out" readonly style="margin-top:10px;font-size:15px;text-align:center">
         <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('cnic-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -1995,6 +2266,7 @@
         <div class="btn-row"><button class="btn" onclick="Tools.detectNetwork()" data-i18n="mobnet_btn">نیٹ ورک معلوم کریں</button></div>
         <div class="result" id="mobnet-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="mobnet_hint">نوٹ: پورٹ (منتقل) شدہ نمبروں کا اصل نیٹ ورک مختلف ہو سکتا ہے — یہ صرف اصل جاری کنندہ نیٹ ورک کا اندازہ ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -2017,6 +2289,125 @@
         <div id="vcardqrbox"></div>
       </div>
     </div>
+    <div class="tool" data-tool="fracdec">
+      <button class="tool-head"><span data-i18n="tool_fracdec">fracdec</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_frac_label"></label>
+        <input type="text" id="frac-in" placeholder="3/8" oninput="Extra.fracConvert()">
+        <div class="result" id="frac-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="colorconv">
+      <button class="tool-head"><span data-i18n="tool_colorconv">colorconv</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_col_in"></label>
+        <input type="text" id="col-in" value="#3B82F6" oninput="Extra.colorFromText()">
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;"><input type="color" id="col-pick" value="#3b82f6" oninput="Extra.colorFromPicker()" style="width:56px; height:44px; padding:2px;"><span data-i18n="x_col_pick">یا رنگ منتخب کریں</span></div>
+        <div id="col-swatch" style="height:64px; border-radius:12px; border:2px solid var(--border); background:#3B82F6; margin:6px 0;"></div>
+        <label data-i18n="x_col_hex">HEX</label><input type="text" id="col-hex" readonly>
+        <label data-i18n="x_col_rgb">RGB</label><input type="text" id="col-rgb" readonly>
+        <label data-i18n="x_col_hsl">HSL</label><input type="text" id="col-hsl" readonly>
+        <div class="result" id="col-err" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="timeconv">
+      <button class="tool-head"><span data-i18n="tool_timeconv"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_value"></label>
+        <input type="number" id="cv-timeconv-in" step="any" oninput="Conv3.run('timeconv')">
+        <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-timeconv-from" onchange="Conv3.run('timeconv')"><option value="sec" data-i18n="cvu_timeconv_sec"></option><option value="min" data-i18n="cvu_timeconv_min"></option><option value="hour" selected data-i18n="cvu_timeconv_hour"></option><option value="day" data-i18n="cvu_timeconv_day"></option><option value="week" data-i18n="cvu_timeconv_week"></option><option value="month" data-i18n="cvu_timeconv_month"></option><option value="year" data-i18n="cvu_timeconv_year"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-timeconv-to" onchange="Conv3.run('timeconv')"><option value="sec" data-i18n="cvu_timeconv_sec"></option><option value="min" selected data-i18n="cvu_timeconv_min"></option><option value="hour" data-i18n="cvu_timeconv_hour"></option><option value="day" data-i18n="cvu_timeconv_day"></option><option value="week" data-i18n="cvu_timeconv_week"></option><option value="month" data-i18n="cvu_timeconv_month"></option><option value="year" data-i18n="cvu_timeconv_year"></option></select></div></div>
+        <div class="result" id="cv-timeconv-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pkweight">
+      <button class="tool-head"><span data-i18n="tool_pkweight"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_value"></label>
+        <input type="number" id="cv-pkweight-in" step="any" oninput="Conv3.run('pkweight')">
+        <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-pkweight-from" onchange="Conv3.run('pkweight')"><option value="gram" data-i18n="cvu_pkweight_gram"></option><option value="kg" selected data-i18n="cvu_pkweight_kg"></option><option value="tola" data-i18n="cvu_pkweight_tola"></option><option value="masha" data-i18n="cvu_pkweight_masha"></option><option value="seer" data-i18n="cvu_pkweight_seer"></option><option value="maund" data-i18n="cvu_pkweight_maund"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-pkweight-to" onchange="Conv3.run('pkweight')"><option value="gram" data-i18n="cvu_pkweight_gram"></option><option value="kg" data-i18n="cvu_pkweight_kg"></option><option value="tola" data-i18n="cvu_pkweight_tola"></option><option value="masha" data-i18n="cvu_pkweight_masha"></option><option value="seer" selected data-i18n="cvu_pkweight_seer"></option><option value="maund" data-i18n="cvu_pkweight_maund"></option></select></div></div>
+        <div class="result" id="cv-pkweight-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="pressure">
+      <button class="tool-head"><span data-i18n="tool_pressure"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_value"></label>
+        <input type="number" id="cv-pressure-in" step="any" oninput="Conv3.run('pressure')">
+        <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-pressure-from" onchange="Conv3.run('pressure')"><option value="pa" data-i18n="cvu_pressure_pa"></option><option value="kpa" data-i18n="cvu_pressure_kpa"></option><option value="bar" selected data-i18n="cvu_pressure_bar"></option><option value="atm" data-i18n="cvu_pressure_atm"></option><option value="psi" data-i18n="cvu_pressure_psi"></option><option value="mmhg" data-i18n="cvu_pressure_mmhg"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-pressure-to" onchange="Conv3.run('pressure')"><option value="pa" data-i18n="cvu_pressure_pa"></option><option value="kpa" data-i18n="cvu_pressure_kpa"></option><option value="bar" data-i18n="cvu_pressure_bar"></option><option value="atm" data-i18n="cvu_pressure_atm"></option><option value="psi" selected data-i18n="cvu_pressure_psi"></option><option value="mmhg" data-i18n="cvu_pressure_mmhg"></option></select></div></div>
+        <div class="result" id="cv-pressure-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="angle">
+      <button class="tool-head"><span data-i18n="tool_angle"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_value"></label>
+        <input type="number" id="cv-angle-in" step="any" oninput="Conv3.run('angle')">
+        <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-angle-from" onchange="Conv3.run('angle')"><option value="deg" selected data-i18n="cvu_angle_deg"></option><option value="rad" data-i18n="cvu_angle_rad"></option><option value="grad" data-i18n="cvu_angle_grad"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-angle-to" onchange="Conv3.run('angle')"><option value="deg" data-i18n="cvu_angle_deg"></option><option value="rad" selected data-i18n="cvu_angle_rad"></option><option value="grad" data-i18n="cvu_angle_grad"></option></select></div></div>
+        <div class="result" id="cv-angle-out" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="cooking">
+      <button class="tool-head"><span data-i18n="tool_cooking"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_type"></label>
+        <select id="cv-cook-type" onchange="Conv3.cookType()">
+          <option value="cookv" selected data-i18n="cv_vol"></option>
+          <option value="cookw" data-i18n="cv_wt"></option>
+        </select>
+        <label data-i18n="cv_value"></label>
+        <input type="number" id="cv-cook-in" step="any" oninput="Conv3.run('cook')">
+        <div id="cv-cook-cookv-wrap" style="display:block">
+          <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-cookv-from" onchange="Conv3.run('cookv')"><option value="ml" data-i18n="cvu_cookv_ml"></option><option value="l" data-i18n="cvu_cookv_l"></option><option value="cup" selected data-i18n="cvu_cookv_cup"></option><option value="tsp" data-i18n="cvu_cookv_tsp"></option><option value="tbsp" data-i18n="cvu_cookv_tbsp"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-cookv-to" onchange="Conv3.run('cookv')"><option value="ml" selected data-i18n="cvu_cookv_ml"></option><option value="l" data-i18n="cvu_cookv_l"></option><option value="cup" data-i18n="cvu_cookv_cup"></option><option value="tsp" data-i18n="cvu_cookv_tsp"></option><option value="tbsp" data-i18n="cvu_cookv_tbsp"></option></select></div></div>
+        </div>
+        <div id="cv-cook-cookw-wrap" style="display:none">
+          <div class="row"><div><label data-i18n="cv_from"></label><select id="cv-cookw-from" onchange="Conv3.run('cookw')"><option value="g" selected data-i18n="cvu_cookw_g"></option><option value="kg" data-i18n="cvu_cookw_kg"></option></select></div><div><label data-i18n="cv_to"></label><select id="cv-cookw-to" onchange="Conv3.run('cookw')"><option value="g" data-i18n="cvu_cookw_g"></option><option value="kg" selected data-i18n="cvu_cookw_kg"></option></select></div></div>
+        </div>
+        <div class="result" id="cv-cook-out" style="display:none"></div>
+        <span class="muted" data-i18n="cv_cook_note"></span>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="paper">
+      <button class="tool-head"><span data-i18n="tool_paper"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="cv_paper_size"></label>
+        <select id="paper-size" onchange="Conv3.paper()"><option value="0">A0</option><option value="1">A1</option><option value="2">A2</option><option value="3">A3</option><option value="4" selected>A4</option><option value="5">A5</option><option value="6">A6</option><option value="7">Letter</option><option value="8">Legal</option><option value="9">Tabloid</option></select>
+        <div class="result" id="paper-out" style="display:block"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="shoe">
+      <button class="tool-head"><span data-i18n="tool_shoe"></span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <div class="row">
+          <div><label data-i18n="cv_system"></label>
+            <select id="shoe-sys" onchange="Conv3.shoeSys()">
+              <option value="0" selected data-i18n="cv_uk"></option>
+              <option value="1" data-i18n="cv_us"></option>
+              <option value="2" data-i18n="cv_eu"></option>
+            </select></div>
+          <div><label data-i18n="cv_size"></label><select id="shoe-size" onchange="Conv3.shoe()"></select></div>
+        </div>
+        <div class="result" id="shoe-out" style="display:block"></div>
+        <span class="muted" data-i18n="cv_shoe_note"></span>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
     <div class="tool" data-tool="wapp">
       <button class="tool-head"><span data-i18n="tool_wapp_title">واٹس ایپ چیٹ لنک جنریٹر</span><span class="plus">+</span></button>
       <div class="tool-body">
@@ -2061,6 +2452,7 @@
         </div>
         <div class="result" id="wapp-err" style="display:none"><span class="muted" data-i18n="wapp_invalid">درست فون نمبر درج کریں۔</span></div>
         <div class="muted" style="margin-top:6px" data-i18n="wapp_hint">نوٹ: نمبر 0300 1234567 کی طرح لکھ سکتے ہیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
   </section>
@@ -2343,6 +2735,7 @@
           <div style="display:flex; flex-wrap:wrap; gap:6px 16px; margin:6px 0;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-brushmode" value="erase" checked><span data-i18n="bgr_erase">ہٹائیں</span></label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-brushmode" value="restore"><span data-i18n="bgr_restore">بحال کریں</span></label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-brushmode" value="protect"><span data-i18n="bgr_protect">محفوظ رکھیں</span></label>
           </div>
           <div><label><span data-i18n="bgr_bsize">برش سائز</span>: <span id="bgr-bsize-v">20</span></label>
             <input type="range" id="bgr-bsize" min="2" max="150" step="1" value="20" oninput="document.getElementById('bgr-bsize-v').textContent=this.value"></div>
@@ -2368,8 +2761,10 @@
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-format" value="png" checked><span>PNG</span></label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bgr-format" value="jpg"><span>JPG</span></label>
           </div>
+          <span class="muted" data-i18n="bgr_protect_hint">محفوظ رکھیں</span>
           <div class="btn-row">
             <button class="btn" onclick="BgRemove.download()" data-i18n="watermark_download_btn">محفوظ کریں</button>
+            <button class="btn secondary" onclick="BgRemove.protectCentre()" data-i18n="bgr_protect_centre">درمیانی حصہ محفوظ کریں</button>
             <button class="btn secondary" id="bgr-undo" onclick="BgRemove.undo()" disabled data-i18n="bgr_undo">ان ڈو</button>
             <button class="btn secondary" onclick="BgRemove.remember(); BgRemove.resetManual()" data-i18n="bgr_reset">ہاتھ کے نشان صاف کریں</button>
             <button class="btn ghost" onclick="BgRemove.clear()" data-i18n="clear_btn">صاف کریں</button>
@@ -2540,6 +2935,78 @@
         <div class="btn-row"><button class="btn" onclick="Tools.pdfToExcel()" data-i18n="pdf2excel_btn">Excel بنائیں</button></div>
         <div class="result" id="pdf2excel-out" style="display:none"></div>
         <div class="muted" style="margin-top:6px" data-i18n="pdf2excel_hint">نوٹ: یہ "بہترین کوشش" ٹول ہے — PDF میں اصل میں کوئی ٹیبل/کالم نہیں ہوتا، ٹیکسٹ کی پوزیشن سے اندازہ لگایا جاتا ہے۔ سادہ، صاف ٹیبل والی PDF میں نتیجہ اچھا آتا ہے؛ پیچیدہ لے آؤٹ یا اسکین شدہ (تصویری) PDF میں نتیجہ ناقص ہو سکتا ہے۔ ہر صفحہ الگ شیٹ میں آتا ہے۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="passport">
+      <button class="tool-head"><span data-i18n="tool_passport">passport</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_choose_img"></label>
+        <input type="file" id="pp-file" accept="image/*" onchange="Extra.passportLoad(event)">
+        <label data-i18n="x_pp_size"></label>
+        <div style="display:flex; flex-wrap:wrap; gap:10px 16px; margin:6px 0;"><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-size" value="413x531" checked onchange="Extra.passportRender()"><span data-i18n="x_pp_s1">35 × 45 ملی میٹر</span></label><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-size" value="600x600" onchange="Extra.passportRender()"><span data-i18n="x_pp_s2">2 × 2 انچ</span></label><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-size" value="295x413" onchange="Extra.passportRender()"><span data-i18n="x_pp_s3">25 × 35 ملی میٹر</span></label></div>
+        <label data-i18n="x_pp_bg"></label>
+        <div style="display:flex; flex-wrap:wrap; gap:10px 16px; margin:6px 0; align-items:center;"><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-bg" value="#FFFFFF" checked onchange="Extra.passportRender()"><span data-i18n="x_pp_white">سفید</span></label><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-bg" value="#438EDB" onchange="Extra.passportRender()"><span data-i18n="x_pp_blue">نیلا</span></label><label style="display:flex; gap:6px; align-items:center;"><input type="radio" name="pp-bg" value="custom" onchange="Extra.passportRender()"><span data-i18n="x_pp_custom">اپنا رنگ</span></label><input type="color" id="pp-custom" value="#E8F4FF" oninput="Extra.passportRender()"></div>
+        <span class="muted" data-i18n="x_pp_note">اگر فوٹو کا بیک گراؤنڈ شفاف (PNG) ہو تو اس کی جگہ یہ رنگ لگے گا۔</span>
+        <div style="text-align:center; margin-top:10px;"><canvas id="pp-canvas" style="max-width:100%; max-height:360px; border-radius:8px; border:1px solid var(--border);"></canvas></div>
+        <div class="btn-row"><button class="btn" onclick="Extra.passportSave()" data-i18n="watermark_download_btn"></button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="imgfilter">
+      <button class="tool-head"><span data-i18n="tool_imgfilter">imgfilter</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_choose_img"></label>
+        <input type="file" id="flt-file" accept="image/*" onchange="Extra.filterLoad(event)">
+        <label><span data-i18n="x_flt_bright">چمک</span>: <span id="flt-b-v">100</span>%</label><input type="range" id="flt-b" min="0" max="200" value="100" oninput="document.getElementById('flt-b-v').textContent=this.value; Extra.filterRender()">
+        <label><span data-i18n="x_flt_contrast">کنٹراسٹ</span>: <span id="flt-c-v">100</span>%</label><input type="range" id="flt-c" min="0" max="200" value="100" oninput="document.getElementById('flt-c-v').textContent=this.value; Extra.filterRender()">
+        <label><span data-i18n="x_flt_sat">رنگوں کی شدت</span>: <span id="flt-s-v">100</span>%</label><input type="range" id="flt-s" min="0" max="200" value="100" oninput="document.getElementById('flt-s-v').textContent=this.value; Extra.filterRender()">
+        <label style="display:flex; gap:8px; align-items:center; margin:8px 0;"><input type="checkbox" id="flt-g" onchange="Extra.filterRender()"><span data-i18n="x_flt_gray">سیاہ و سفید</span></label>
+        <div style="text-align:center; margin-top:8px;"><canvas id="flt-canvas" style="max-width:100%; max-height:360px; border-radius:8px; border:1px solid var(--border);"></canvas></div>
+        <div class="btn-row"><button class="btn" onclick="Extra.filterSave()" data-i18n="watermark_download_btn"></button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="colorpick">
+      <button class="tool-head"><span data-i18n="tool_colorpick">colorpick</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_choose_img"></label>
+        <input type="file" id="cp-file" accept="image/*" onchange="Extra.pickLoad(event)">
+        <span class="muted" data-i18n="x_pick_hint">تصویر پر کلک کریں</span>
+        <div style="text-align:center; margin-top:8px;"><canvas id="cp-canvas" style="max-width:100%; max-height:360px; border-radius:8px; cursor:crosshair; border:1px solid var(--border);" onclick="Extra.pickAt(event)"></canvas></div>
+        <div id="cp-swatch" style="height:56px; border-radius:12px; border:2px solid var(--border); background:#fff; margin:10px 0;"></div>
+        <label data-i18n="x_col_hex">HEX</label><input type="text" id="cp-hex" readonly>
+        <label data-i18n="x_col_rgb">RGB</label><input type="text" id="cp-rgb" readonly>
+        <label data-i18n="x_col_hsl">HSL</label><input type="text" id="cp-hsl" readonly>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="ocr">
+      <button class="tool-head"><span data-i18n="tool_ocr">ocr</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_choose_img"></label>
+        <input type="file" id="ocr-file" accept="image/*" onchange="">
+        <div class="btn-row"><button class="btn" onclick="Extra.ocrRun()" data-i18n="x_ocr_btn"></button></div>
+        <div class="result" id="ocr-status" style="display:none"></div>
+        <label data-i18n="case_result_label"></label>
+        <textarea id="ocr-output" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('ocr-output')" data-i18n="copy_btn"></button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="exifstrip">
+      <button class="tool-head"><span data-i18n="tool_exifstrip">exifstrip</span><span class="plus">+</span></button>
+      <div class="tool-body">
+        <label data-i18n="x_choose_img"></label>
+        <input type="file" id="exif-file" accept="image/*" onchange="">
+        <div class="btn-row"><button class="btn" onclick="Extra.exifSave()" data-i18n="x_exif_btn"></button></div>
+        <div class="result" id="exif-status" style="display:none"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -2551,6 +3018,7 @@
         <label data-i18n="b64_output_label">بیس64 آؤٹ پٹ</label>
         <textarea id="b64-out" readonly style="min-height:100px"></textarea>
         <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('b64-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
   </section>
@@ -2571,6 +3039,7 @@
           <button class="btn" style="flex:none" onclick="Tools.addTodo()" data-i18n="todo_add_btn">شامل کریں</button>
         </div>
         <div id="todo-list" style="margin-top:10px"></div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
 
@@ -2650,6 +3119,7 @@
           <button class="btn secondary" onclick="Tools.quoteShare()" data-i18n="quote_share_btn">واٹس ایپ پر شیئر کریں</button>
         </div>
         <div class="muted" style="margin-top:6px" data-i18n="quote_hint">نوٹ: احادیث کے حوالے کتاب کے نام کے ساتھ دیے گئے ہیں۔</div>
+        <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
   </section>
@@ -2920,8 +3390,152 @@ const I18N = {
   bgr_done: { ur: 'تصویر محفوظ ہو گئی', en: 'Image saved' },
   bgr_error: { ur: 'تصویر محفوظ نہیں ہو سکی', en: 'Could not save the image' },
   bgr_undo: { ur: 'ان ڈو', en: 'Undo' },
+  bgr_protect: { ur: 'محفوظ رکھیں', en: 'Protect' },
+  bgr_protect_centre: { ur: 'درمیانی حصہ محفوظ کریں', en: 'Protect centre' },
+  bgr_protect_hint: { ur: 'چہرے اور جسم پر "محفوظ رکھیں" برش چلائیں، تاکہ وہ نہ ہٹیں۔ "درمیانی حصہ محفوظ کریں" پہلا قدم ہے۔', en: 'Paint "Protect" over the face and body so they are not removed. "Protect centre" is a good first step.' },
+  bgr_warn_busy: { ur: 'پس منظر یکرنگ نہیں ہے (مثلاً لکڑی، دیوار کا رنگ یا روشنی کا فرق)۔ اس تصویر میں چہرہ یا بال بھی ہٹ سکتے ہیں۔ بہتر نتیجے کے لیے سادہ سفید یا نیلے پس منظر کی تصویر لیں، یا پہلے کسی آن لائن ٹول سے بیک گراؤنڈ ہٹا کر PNG بنائیں اور پاسپورٹ ٹول میں ڈالیں۔ ہٹ جانے والے حصے ہاتھ سے بحال کرنے کے لیے "بحال کریں" برش استعمال کریں۔', en: 'The background is not a single colour (for example wood, a wall or uneven light). Hair or face may be removed too. For a better result use a photo with a plain white or blue background, or remove the background in another app first, save it as PNG and use the Passport tool. Use the Restore brush to bring back parts that were removed.' },
   nav_back: { ur: 'واپس', en: 'Back' },
   nav_fav_desc: { ur: 'آپ کے پسندیدہ ٹولز ایک جگہ', en: 'Your starred tools in one place' },
+  tool_linerev_title: { ur: 'الٹا ٹیکسٹ', en: 'Upside-Down Text' },
+  linerev_lines_btn: { ur: 'لائنوں کی ترتیب الٹیں', en: 'Reverse line order' },
+  linerev_words_btn: { ur: 'ہر لائن کے الفاظ الٹیں', en: 'Reverse words in each line' },
+  linerev_chars_btn: { ur: 'الٹا ٹیکسٹ بنائیں', en: 'Make upside-down text' },
+  linerev_keep_btn: { ur: 'ترتیب وہی رکھیں، صرف الٹا کریں', en: 'Keep word order, flip only' },
+  tool_timeconv: { ur: 'وقت کنورٹر', en: 'Time Converter' },
+  tool_pkweight: { ur: 'پاکستانی وزن (سیر، من، تولہ)', en: 'Pakistani Weights (seer, maund, tola)' },
+  tool_pressure: { ur: 'دباؤ (Pressure)', en: 'Pressure' },
+  tool_angle: { ur: 'زاویہ (Angle)', en: 'Angle' },
+  tool_paper: { ur: 'کاغذ کے سائز', en: 'Paper Sizes' },
+  tool_cooking: { ur: 'کھانا پکانے کی پیمائش', en: 'Cooking Measures' },
+  tool_shoe: { ur: 'جوتوں کے سائز', en: 'Shoe Sizes' },
+  cv_value: { ur: 'قدر', en: 'Value' },
+  cv_from: { ur: 'سے', en: 'From' },
+  cv_to: { ur: 'میں', en: 'To' },
+  cv_result: { ur: 'نتیجہ', en: 'Result' },
+  cv_type: { ur: 'قسم', en: 'Type' },
+  cv_vol: { ur: 'مائع (حجم)', en: 'Liquid (volume)' },
+  cv_wt: { ur: 'خشک اجزاء (وزن)', en: 'Dry ingredients (weight)' },
+  cv_cook_note: { ur: 'تقریباً؛ اجزاء کی کثافت کے مطابق فرق ہو سکتا ہے', en: 'Approximate; the result depends on the ingredient' },
+  cv_paper_size: { ur: 'کاغذ کا سائز', en: 'Paper size' },
+  cv_mm: { ur: 'ملی میٹر', en: 'Millimetres' },
+  cv_inch: { ur: 'انچ', en: 'Inches' },
+  cv_system: { ur: 'سائز کا نظام', en: 'Size system' },
+  cv_size: { ur: 'سائز', en: 'Size' },
+  cv_shoe_note: { ur: 'تقریباً؛ مردانہ سائز کا عام چارٹ۔ پاکستانی سائز عموماً یورپی (EU) سائز کے برابر ہوتا ہے۔', en: 'Approximate men\'s chart. Pakistani sizes usually match the EU size.' },
+  cv_uk: { ur: 'UK', en: 'UK' },
+  cv_us: { ur: 'US', en: 'US' },
+  cv_eu: { ur: 'EU / پاکستانی', en: 'EU / Pakistani' },
+  cvu_timeconv_sec: { ur: 'سیکنڈ', en: 'Second' },
+  cvu_timeconv_min: { ur: 'منٹ', en: 'Minute' },
+  cvu_timeconv_hour: { ur: 'گھنٹہ', en: 'Hour' },
+  cvu_timeconv_day: { ur: 'دن', en: 'Day' },
+  cvu_timeconv_week: { ur: 'ہفتہ', en: 'Week' },
+  cvu_timeconv_month: { ur: 'مہینہ (تقریباً 30.44 دن)', en: 'Month (about 30.44 days)' },
+  cvu_timeconv_year: { ur: 'سال (365.25 دن)', en: 'Year (365.25 days)' },
+  cvu_pkweight_gram: { ur: 'گرام', en: 'Gram' },
+  cvu_pkweight_kg: { ur: 'کلوگرام', en: 'Kilogram' },
+  cvu_pkweight_tola: { ur: 'تولہ', en: 'Tola' },
+  cvu_pkweight_masha: { ur: 'ماشہ', en: 'Masha' },
+  cvu_pkweight_seer: { ur: 'سیر (تقریباً 933 گرام)', en: 'Seer (about 933 g)' },
+  cvu_pkweight_maund: { ur: 'من (40 سیر)', en: 'Maund (40 seer)' },
+  cvu_pressure_pa: { ur: 'پاسکل (Pa)', en: 'Pascal (Pa)' },
+  cvu_pressure_kpa: { ur: 'کلو پاسکل (kPa)', en: 'Kilopascal (kPa)' },
+  cvu_pressure_bar: { ur: 'بار (bar)', en: 'Bar' },
+  cvu_pressure_atm: { ur: 'ATM', en: 'ATM' },
+  cvu_pressure_psi: { ur: 'PSI', en: 'PSI' },
+  cvu_pressure_mmhg: { ur: 'mmHg', en: 'mmHg' },
+  cvu_angle_deg: { ur: 'ڈگری', en: 'Degree' },
+  cvu_angle_rad: { ur: 'ریڈیئن', en: 'Radian' },
+  cvu_angle_grad: { ur: 'گریڈ (Gradian)', en: 'Gradian' },
+  cvu_cookv_ml: { ur: 'ملی لیٹر', en: 'Millilitre' },
+  cvu_cookv_l: { ur: 'لیٹر', en: 'Litre' },
+  cvu_cookv_cup: { ur: 'کپ (240 ml)', en: 'Cup (240 ml)' },
+  cvu_cookv_tsp: { ur: 'چائے کا چمچ (5 ml)', en: 'Teaspoon (5 ml)' },
+  cvu_cookv_tbsp: { ur: 'کھانے کا چمچ (15 ml)', en: 'Tablespoon (15 ml)' },
+  cvu_cookw_g: { ur: 'گرام', en: 'Gram' },
+  cvu_cookw_kg: { ur: 'کلوگرام', en: 'Kilogram' },
+  tool_smscount: { ur: 'SMS کاؤنٹر', en: 'SMS Counter' },
+  tool_sortlines: { ur: 'لائنیں ترتیب دیں', en: 'Sort Lines' },
+  tool_wordfreq: { ur: 'الفاظ کی تعدد', en: 'Word Frequency' },
+  tool_fracdec: { ur: 'کسر / اعشاریہ کنورٹر', en: 'Fraction / Decimal Converter' },
+  tool_colorconv: { ur: 'HEX / RGB / HSL کنورٹر', en: 'HEX / RGB / HSL Converter' },
+  tool_passport: { ur: 'پاسپورٹ سائز فوٹو', en: 'Passport Size Photo' },
+  tool_imgfilter: { ur: 'امیج فلٹرز', en: 'Image Filters' },
+  tool_colorpick: { ur: 'تصویر سے رنگ چنیں', en: 'Pick Colour from Image' },
+  tool_ocr: { ur: 'تصویر سے ٹیکسٹ نکالیں (OCR)', en: 'Image to Text (OCR)' },
+  tool_exifstrip: { ur: 'EXIF / میٹا ڈیٹا ہٹائیں', en: 'Remove EXIF Metadata' },
+  x_sms_chars: { ur: 'حروف', en: 'Characters' },
+  x_sms_parts: { ur: 'پیغام', en: 'Messages' },
+  x_sms_unicode: { ur: 'یونیکوڈ (اردو وغیرہ)', en: 'Unicode (Urdu etc.)' },
+  x_sms_std: { ur: 'عام (انگریزی)', en: 'Standard (English)' },
+  x_sms_left: { ur: 'آخری پیغام میں باقی', en: 'Left in last message' },
+  x_sort_az: { ur: 'A سے Z', en: 'A to Z' },
+  x_sort_za: { ur: 'Z سے A', en: 'Z to A' },
+  x_num_btn: { ur: 'لائنوں پر نمبر لگائیں', en: 'Number the lines' },
+  x_wf_btn: { ur: 'الفاظ گنیں', en: 'Count words' },
+  x_wf_empty: { ur: 'کوئی لفظ نہیں ملا', en: 'No words found' },
+  x_frac_label: { ur: 'کسر یا اعشاریہ لکھیں (مثلاً 3/8، 0.375، 1 1/2)', en: 'Type a fraction or decimal (e.g. 3/8, 0.375, 1 1/2)' },
+  x_frac_dec: { ur: 'اعشاریہ', en: 'Decimal' },
+  x_frac_fr: { ur: 'کسر (قریب ترین)', en: 'Fraction (closest)' },
+  x_invalid: { ur: 'غلط ان پٹ', en: 'Invalid input' },
+  x_col_in: { ur: 'HEX، RGB یا HSL لکھیں', en: 'Type HEX, RGB or HSL' },
+  x_col_pick: { ur: 'یا رنگ منتخب کریں', en: 'or pick a colour' },
+  x_pp_size: { ur: 'سائز', en: 'Size' },
+  x_pp_bg: { ur: 'پس منظر کا رنگ', en: 'Background colour' },
+  x_pp_white: { ur: 'سفید', en: 'White' },
+  x_pp_blue: { ur: 'نیلا', en: 'Blue' },
+  x_pp_custom: { ur: 'اپنا رنگ', en: 'Custom' },
+  x_pp_s1: { ur: '35 × 45 ملی میٹر', en: '35 × 45 mm' },
+  x_pp_s2: { ur: '2 × 2 انچ', en: '2 × 2 inch' },
+  x_pp_s3: { ur: '25 × 35 ملی میٹر', en: '25 × 35 mm' },
+  x_pp_note: { ur: 'اگر فوٹو کا بیک گراؤنڈ شفاف (PNG) ہو تو اس کی جگہ یہ رنگ لگے گا۔', en: 'Colour replaces a transparent (PNG) background only.' },
+  x_flt_bright: { ur: 'چمک', en: 'Brightness' },
+  x_flt_contrast: { ur: 'کنٹراسٹ', en: 'Contrast' },
+  x_flt_sat: { ur: 'رنگوں کی شدت', en: 'Saturation' },
+  x_flt_gray: { ur: 'سیاہ و سفید', en: 'Grayscale' },
+  x_pick_hint: { ur: 'تصویر پر کلک کریں', en: 'Click on the image' },
+  x_ocr_btn: { ur: 'ٹیکسٹ نکالیں', en: 'Extract text' },
+  x_ocr_loading: { ur: 'لائبریری لوڈ ہو رہی ہے… (انٹرنیٹ درکار ہے)', en: 'Loading library… (internet needed)' },
+  x_ocr_run: { ur: 'ٹیکسٹ پڑھا جا رہا ہے…', en: 'Reading text…' },
+  x_ocr_done: { ur: 'ہو گیا', en: 'Done' },
+  x_ocr_err: { ur: 'نہیں ہو سکا، انٹرنیٹ چیک کریں', en: 'Failed, please check your internet' },
+  x_exif_btn: { ur: 'میٹا ڈیٹا ہٹا کر محفوظ کریں', en: 'Remove metadata and save' },
+  x_exif_done: { ur: 'میٹا ڈیٹا ہٹا دیا گیا', en: 'Metadata removed' },
+  x_choose_img: { ur: 'تصویر منتخب کریں', en: 'Choose an image' },
+  x_choose_txt: { ur: 'متن / فائل منتخب کریں', en: 'Choose a file' },
+  tool_b64: { ur: 'Base64 انکوڈ / ڈی کوڈ', en: 'Base64 Encode / Decode' },
+  tool_urlenc: { ur: 'URL انکوڈ / ڈی کوڈ', en: 'URL Encode / Decode' },
+  tool_hash: { ur: 'ہیش جنریٹر (SHA)', en: 'Hash Generator (SHA)' },
+  tool_json: { ur: 'JSON فارمیٹر', en: 'JSON Formatter' },
+  tool_striphtml: { ur: 'HTML ٹیگ ہٹائیں', en: 'Remove HTML Tags' },
+  tool_urlext: { ur: 'URL نکالیں', en: 'URL Extractor' },
+  tool_urdudigit: { ur: 'اردو / انگریزی ہندسے', en: 'Urdu / Western Digits' },
+  tool_nodiacritics: { ur: 'اعراب ہٹائیں', en: 'Remove Diacritics' },
+  tool_hashtag: { ur: 'ہیش ٹیگ جنریٹر', en: 'Hashtag Generator' },
+  tool_readtime: { ur: 'پڑھنے کا وقت', en: 'Reading Time' },
+  x2_enc: { ur: 'انکوڈ کریں', en: 'Encode' },
+  x2_dec: { ur: 'ڈی کوڈ کریں', en: 'Decode' },
+  x2_sha256: { ur: 'SHA-256', en: 'SHA-256' },
+  x2_sha512: { ur: 'SHA-512', en: 'SHA-512' },
+  x2_format: { ur: 'فارمیٹ کریں', en: 'Format' },
+  x2_minify: { ur: 'ایک لائن میں کریں', en: 'Minify' },
+  x2_strip: { ur: 'ٹیگ ہٹائیں', en: 'Strip tags' },
+  x2_extract: { ur: 'لنک نکالیں', en: 'Extract links' },
+  x2_toEn: { ur: 'انگریزی ہندسے', en: 'Western digits' },
+  x2_toUr: { ur: 'اردو ہندسے', en: 'Urdu digits' },
+  x2_remove: { ur: 'اعراب ہٹائیں', en: 'Remove diacritics' },
+  x2_generate: { ur: 'ہیش ٹیگ بنائیں', en: 'Generate hashtags' },
+  x2_calc: { ur: 'وقت نکالیں', en: 'Calculate time' },
+  x2_err: { ur: 'غلط ان پٹ', en: 'Invalid input' },
+  x2_nocrypto: { ur: 'یہ براؤزر ہیش سپورٹ نہیں کرتا', en: 'This browser does not support hashing' },
+  x2_stats: { ur: 'الفاظ', en: 'Words' },
+  x2_chars: { ur: 'حروف', en: 'Characters' },
+  x2_min: { ur: 'منٹ', en: 'min' },
+  x2_sec: { ur: 'سیکنڈ', en: 'sec' },
+  x2_none: { ur: 'کوئی لنک نہیں ملا', en: 'No links found' },
+  x_col_hex: { ur: 'HEX', en: 'HEX' },
+  x_col_rgb: { ur: 'RGB', en: 'RGB' },
+  x_col_hsl: { ur: 'HSL', en: 'HSL' },
   watermark_text_label: { ur: 'واٹرمارک ٹیکسٹ', en: 'Watermark text' },
   watermark_size_label: { ur: 'فونٹ سائز:', en: 'Font size:' },
   watermark_opacity_label: { ur: 'شفافیت:', en: 'Opacity:' },
@@ -3736,8 +4350,7 @@ const Tools = {
     const box = document.getElementById('qrbox');
     box.innerHTML = '';
     if(!val) return;
-    try{ new QRCode(box, { text: val, width: 180, height: 180, colorDark: fg, colorLight: bg }); }
-    catch(e){ box.innerHTML = '<span class="muted">Error generating QR</span>'; }
+    Tools.drawQR(box, val, fg, bg);
   },
   clearQR(){
     document.getElementById('qr-input').value = '';
@@ -3816,8 +4429,7 @@ const Tools = {
     if(phone) vcf += `TEL;TYPE=CELL:${phone}\n`;
     if(email) vcf += `EMAIL:${email}\n`;
     vcf += 'END:VCARD';
-    try{ new QRCode(box, { text: vcf, width: 180, height: 180 }); }
-    catch(e){ box.innerHTML = '<span class="muted">Error generating QR</span>'; }
+    Tools.drawQR(box, vcf, '#000000', '#ffffff');
   },
   clearVCardQR(){
     ['vcard-name','vcard-phone','vcard-email','vcard-org'].forEach(id => document.getElementById(id).value = '');
@@ -6173,6 +6785,25 @@ const Tools = {
     Tools.renderTodos();
   },
   saveTodos(){ try{ localStorage.setItem('toolkit_todos', JSON.stringify(Tools._todos)); }catch(e){} },
+  drawQR(box, text, fg, bg){
+    box.innerHTML = '';
+    if(!window.QRCode){
+      box.innerHTML = '<span class="muted">QR لائبریری لوڈ نہیں ہوئی، انٹرنیٹ چیک کریں / QR library failed to load, check your internet</span>';
+      return;
+    }
+    const payload = text;
+    // Try medium, then low error correction: the UTF-8 bytes of Urdu text make codes longer,
+    // and high correction can exceed the capacity of the QR size.
+    const levels = [QRCode.CorrectLevel.M, QRCode.CorrectLevel.L];
+    for(const lvl of levels){
+      try{
+        box.innerHTML = '';
+        new QRCode(box, { text: payload, width: 180, height: 180, correctLevel: lvl, colorDark: fg || '#000000', colorLight: bg || '#ffffff' });
+        return;
+      }catch(e){ /* try the next level */ }
+    }
+    box.innerHTML = '<span class="muted">Text is too long for a QR code. Shorten the name, organization or email.</span>';
+  },
   addTodo(){
     const input = document.getElementById('todo-input');
     const val = input.value.trim();
@@ -6952,8 +7583,7 @@ const Tools = {
     const qb = document.getElementById('wappqrbox');
     qb.innerHTML = '';
     if(!Tools._wappLink) return;
-    try{ new QRCode(qb, { text: Tools._wappLink, width: 180, height: 180 }); }
-    catch(e){ qb.innerHTML = '<span class="muted">Error generating QR</span>'; }
+    Tools.drawQR(qb, Tools._wappLink, '#000000', '#ffffff');
   },
 
   // ===== Image Splitter: live preview + auto / grid / manual boxes =====
@@ -8395,7 +9025,12 @@ const BgRemove = {
       else { for(let x = 0; x < bw; x++) add(x, y); for(let x = W - bw; x < W; x++) add(x, y); }
     }
     const med = a => { a.sort((p, q)=>p - q); return a[a.length >> 1]; };
+    // spread of the border colours: a busy background gives a large spread
+    const lum = R.map((r,i)=> 0.3*r + 0.59*G[i] + 0.11*B[i]);
+    const mean = lum.reduce((a,b)=>a+b,0) / lum.length;
+    const sd = Math.sqrt(lum.reduce((a,b)=>a+(b-mean)*(b-mean),0) / lum.length);
     this.setKey([med(R), med(G), med(B)]);
+    if(sd > 22){ this.showMsg(this.t('bgr_warn_busy')); }
   },
 
   setKey(v){
@@ -8420,6 +9055,7 @@ const BgRemove = {
     const push = p => {
       if(vis[p]) return;
       vis[p] = 1;
+      if(this.manual && this.manual[p] === 3) return; // protected: never removed, and blocks the flood
       const i = p * 4, dr = d[i] - kr, dg = d[i+1] - kg, db = d[i+2] - kb;
       if(dr * dr + dg * dg + db * db <= t2) q[qt++] = p;
     };
@@ -8447,7 +9083,7 @@ const BgRemove = {
     for(let p = 0; p < W * H; p++){
       const i = p * 4, m = this.manual[p];
       o[i] = s[i]; o[i+1] = s[i+1]; o[i+2] = s[i+2];
-      o[i+3] = m === 2 ? 255 : (m === 1 ? 0 : this.auto[p]);
+      o[i+3] = (m === 2 || m === 3) ? 255 : (m === 1 ? 0 : this.auto[p]);
     }
     cx.putImageData(id, 0, 0);
     return c;
@@ -8522,7 +9158,8 @@ const BgRemove = {
   onUp(){ this.drawing = false; this.lastPt = null; },
 
   stroke(x, y){
-    const val = this.radio('bgr-brushmode') === 'restore' ? 2 : 1;
+    const mode = this.radio('bgr-brushmode');
+    const val = mode === 'restore' ? 2 : (mode === 'protect' ? 3 : 1);
     const r = +this.$('bgr-bsize').value;
     const from = this.lastPt || [x, y];
     const dist = Math.hypot(x - from[0], y - from[1]);
@@ -8543,6 +9180,19 @@ const BgRemove = {
         const dx = x + 0.5 - cx0, dy = y + 0.5 - cy0;
         if(dx * dx + dy * dy <= r2) this.manual[y * W + x] = val;
       }
+  },
+
+  protectCentre(){
+    if(!this.orig) return;
+    this.remember();
+    const { W, H } = this;
+    const cx = W * 0.5, cy = H * 0.55, rx = W * 0.36, ry = H * 0.50;
+    for(let y = 0; y < H; y++)
+      for(let x = 0; x < W; x++){
+        const dx = (x - cx) / rx, dy = (y - cy) / ry;
+        if(dx * dx + dy * dy <= 1) this.manual[y * W + x] = 3;
+      }
+    this.recompute();
   },
 
   resetManual(){
@@ -8653,6 +9303,478 @@ applyLang = function(){ _applyLangBeforeCards(); syncToolCardDesc(); };
 syncToolCardDesc();
 // a restored last-opened category should open in category view
 if(document.querySelector('section.category.active')) setView('cat');
+</script>
+<script>
+// ===== Upside-down text (letters flipped and read in reverse, line by line) =====
+const FLIP_MAP = (()=>{
+  const lower = 'abcdefghijklmnopqrstuvwxyz', lowerFlip = 'ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz';
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', upperFlip = '∀𐐒ƆᗡƎĻ⅁HIſ⋊⅂WNOԀΌᴚS⊥∩ΛMX⅄Z';
+  const digit = '0123456789', digitFlip = '0ƖᄅƐㄣϛ9ㄥ86';
+  const m = {};
+  [...lower].forEach((c,i)=> m[c] = [...lowerFlip][i]);
+  [...upper].forEach((c,i)=> m[c] = [...upperFlip][i]);
+  [...digit].forEach((c,i)=> m[c] = [...digitFlip][i]);
+  return m;
+})();
+Tools.flipText = function(){
+  const v = document.getElementById('linerev-input').value;
+  document.getElementById('linerev-output').value =
+    v.split(/\r?\n/).map(line => Array.from(line).reverse().map(c => FLIP_MAP[c] ?? c).join('')).join('\n');
+};
+Tools.flipTextKeepOrder = function(){
+  const v = document.getElementById('linerev-input').value;
+  document.getElementById('linerev-output').value =
+    v.split(/\r?\n/).map(line => Array.from(line).map(c => FLIP_MAP[c] ?? c).join('')).join('\n');
+};
+HINTS.linerev = {
+  en: 'Flips your letters and digits upside down and reads them in reverse, like "ʇxǝʇ ʎlɹoʇsnu".',
+  ur: 'آپ کے حروف اور ہندسے الٹا کر دیتا ہے اور ترتیب بھی الٹ دیتا ہے، جیسے ʇxǝʇ ʎlɹoʇsnu۔'
+};
+syncToolCardDesc();
+</script>
+<script>
+// ===== Added tools: text, converters, image =====
+const Extra = {
+  $(id){ return document.getElementById(id); },
+  t(k){ return (I18N[k] && I18N[k][LANG]) || k; },
+  show(id, msg){ const el=this.$(id); el.textContent=msg; el.style.display='block'; },
+  loadImage(file){
+    return new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=URL.createObjectURL(file); });
+  },
+  save(name, canvas, type, q){
+    return new Promise(r=>canvas.toBlob(r,type,q)).then(b=>Tools.saveFile(name,b));
+  },
+  // ----- SMS counter -----
+  smsCount(){
+    const t=this.$('sms-input').value;
+    const len=[...t].length;
+    const uni=/[^\x00-\x7F]/.test(t);
+    const single=uni?70:160, multi=uni?67:153;
+    const parts = len===0 ? 0 : (len<=single ? 1 : Math.ceil(len/multi));
+    const left = len===0 ? single : (parts===1 ? single-len : parts*multi-len);
+    this.show('sms-out', `${this.t('x_sms_chars')}: ${len} | ${this.t('x_sms_parts')}: ${parts} | ${uni?this.t('x_sms_unicode'):this.t('x_sms_std')} | ${this.t('x_sms_left')}: ${left}`);
+  },
+  // ----- Sort / number lines -----
+  sortLines(dir){
+    const lines=this.$('sort-input').value.split(/\r?\n/);
+    const sorted=[...lines].sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+    if(dir==='desc') sorted.reverse();
+    this.$('sort-output').value=sorted.join('\n');
+  },
+  numberLines(){
+    const lines=this.$('sort-input').value.split(/\r?\n/);
+    this.$('sort-output').value=lines.map((l,i)=>`${i+1}. ${l}`).join('\n');
+  },
+  // ----- Word frequency -----
+  wordFreq(){
+    const words=(this.$('wf-input').value.toLowerCase().match(/[\p{L}\p{N}']+/gu))||[];
+    const map=new Map();
+    words.forEach(w=>map.set(w,(map.get(w)||0)+1));
+    const top=[...map.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,50);
+    this.$('wf-output').value = top.length ? top.map(([w,c])=>`${w} — ${c}`).join('\n') : this.t('x_wf_empty');
+  },
+  // ----- Fraction / decimal -----
+  fracConvert(){
+    const s=this.$('frac-in').value.trim();
+    const out=this.$('frac-out');
+    if(!s){ out.style.display='none'; return; }
+    let x=null, m;
+    if((m=s.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/))){
+      if(+m[4]===0) x=null; else { x=(+m[2]) + (+m[3])/(+m[4]); if(m[1]) x=-x; }
+    } else if((m=s.match(/^(-?\d+)\/(\d+)$/))){
+      x = (+m[2])===0 ? null : (+m[1])/(+m[2]);
+    } else if(/^-?\d*\.?\d+$/.test(s)){
+      x=parseFloat(s);
+    }
+    if(x===null || !isFinite(x)){ this.show('frac-out', this.t('x_invalid')); return; }
+    const sign = x<0 ? '-' : '';
+    const a=Math.abs(x);
+    let h1=1,h0=0,k1=0,k0=1,b=a;
+    for(let i=0;i<30;i++){
+      const aa=Math.floor(b);
+      [h1,h0]=[aa*h1+h0,h1];
+      [k1,k0]=[aa*k1+k0,k1];
+      if(Math.abs(a-h1/k1)<1e-9 || k1>1000) break;
+      const frac=b-aa; if(frac===0) break; b=1/frac;
+    }
+    let num=h1, den=k1;
+    if(den>1000){ den=1000; num=Math.round(a*1000); }
+    const whole=Math.floor(num/den), rem=num%den;
+    let fr = rem===0 ? `${sign}${whole}` : (whole? `${sign}${whole} ${rem}/${den}` : `${sign}${rem}/${den}`);
+    if(num===0) fr='0';
+    const dec=Number(x.toFixed(6)).toString();
+    out.innerHTML='';
+    const d1=document.createElement('div'); d1.textContent=`${this.t('x_frac_dec')}: ${dec}`;
+    const d2=document.createElement('div'); d2.textContent=`${this.t('x_frac_fr')}: ${fr}`;
+    out.appendChild(d1); out.appendChild(d2);
+    out.style.display='block';
+  },
+  // ----- Colour converter -----
+  rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let h=0,sat=0; const l=(mx+mn)/2;
+    if(mx!==mn){
+      const d=mx-mn; sat = l>0.5 ? d/(2-mx-mn) : d/(mx+mn);
+      if(mx===r) h=(g-b)/d + (g<b?6:0);
+      else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4;
+      h*=60;
+    }
+    return [Math.round(h), Math.round(sat*100), Math.round(l*100)];
+  },
+  hslToRgb(h,sPct,lPct){
+    const s=sPct/100, l=lPct/100;
+    const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+    return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+  },
+  parseColour(text){
+    const s=text.trim();
+    let m;
+    if((m=s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i))){
+      let h=m[1]; if(h.length===3) h=h.split('').map(c=>c+c).join('');
+      return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+    }
+    if((m=s.match(/^(?:rgb\(\s*)?(\d{1,3})\s*[, ]\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*\)?$/i))){
+      const v=[+m[1],+m[2],+m[3]]; return v.every(n=>n<=255) ? v : null;
+    }
+    if((m=s.match(/^(?:hsl\(\s*)?(\d{1,3})\s*[, ]\s*(\d{1,3})%?\s*[, ]\s*(\d{1,3})%?\s*\)?$/i))){
+      const h=+m[1], sa=+m[2], l=+m[3];
+      if(h>360||sa>100||l>100) return null;
+      return this.hslToRgb(h%360, sa, l);
+    }
+    return null;
+  },
+  colorFromText(){
+    const rgb=this.parseColour(this.$('col-in').value);
+    if(!rgb){ this.show('col-err', this.t('x_invalid')); return; }
+    this.$('col-err').style.display='none';
+    this.fillColour(rgb);
+  },
+  colorFromPicker(){
+    const v=this.$('col-pick').value; const n=parseInt(v.slice(1),16);
+    const rgb=[(n>>16)&255,(n>>8)&255,n&255];
+    this.$('col-in').value=v.toUpperCase();
+    this.fillColour(rgb);
+  },
+  fillColour(rgb){
+    const hex='#'+rgb.map(c=>c.toString(16).padStart(2,'0')).join('').toUpperCase();
+    const hsl=this.rgbToHsl(...rgb);
+    this.$('col-hex').value=hex;
+    this.$('col-rgb').value=`rgb(${rgb.join(', ')})`;
+    this.$('col-hsl').value=`hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+    this.$('col-swatch').style.background=hex;
+    this.$('col-pick').value=hex.toLowerCase();
+  },
+  // ----- Passport photo -----
+  passImg:null,
+  passportLoad(e){
+    const f=e.target.files[0]; if(!f) return;
+    this.loadImage(f).then(im=>{ this.passImg=im; this.passportRender(); });
+  },
+  passportRender(){
+    if(!this.passImg) return;
+    const size=document.querySelector('input[name="pp-size"]:checked').value.split('x').map(Number);
+    const [W,H]=size;
+    const bgSel=document.querySelector('input[name="pp-bg"]:checked').value;
+    const bg = bgSel==='custom' ? this.$('pp-custom').value : bgSel;
+    const cv=this.$('pp-canvas'); cv.width=W; cv.height=H;
+    const cx=cv.getContext('2d');
+    cx.fillStyle=bg; cx.fillRect(0,0,W,H);
+    const im=this.passImg, ratio=W/H;
+    let sw, sh;
+    if(im.naturalWidth/im.naturalHeight > ratio){ sh=im.naturalHeight; sw=sh*ratio; }
+    else { sw=im.naturalWidth; sh=sw/ratio; }
+    const sx=(im.naturalWidth-sw)/2, sy=Math.max(0,(im.naturalHeight-sh)*0.3);
+    cx.drawImage(im, sx, sy, sw, sh, 0, 0, W, H);
+  },
+  passportSave(){
+    if(!this.passImg) return;
+    this.passportRender();
+    this.save('passport-photo.jpg', this.$('pp-canvas'), 'image/jpeg', 0.95);
+  },
+  // ----- Image filters -----
+  fltImg:null,
+  filterLoad(e){
+    const f=e.target.files[0]; if(!f) return;
+    this.loadImage(f).then(im=>{
+      const s=Math.min(1, 2000/Math.max(im.naturalWidth, im.naturalHeight));
+      this.fltImg={ im, W:Math.round(im.naturalWidth*s), H:Math.round(im.naturalHeight*s) };
+      this.filterRender();
+    });
+  },
+  filterRender(){
+    if(!this.fltImg) return;
+    const {im,W,H}=this.fltImg;
+    const cv=this.$('flt-canvas'); cv.width=W; cv.height=H;
+    const cx=cv.getContext('2d');
+    const b=this.$('flt-b').value, c=this.$('flt-c').value, s=this.$('flt-s').value;
+    const g=this.$('flt-g').checked;
+    cx.filter=`brightness(${b}%) contrast(${c}%) saturate(${s}%)${g?' grayscale(100%)':''}`;
+    cx.drawImage(im,0,0,W,H);
+    cx.filter='none';
+  },
+  filterSave(){
+    if(!this.fltImg) return;
+    this.filterRender();
+    this.save('filtered.png', this.$('flt-canvas'), 'image/png');
+  },
+  // ----- Colour picker from image -----
+  pickLoad(e){
+    const f=e.target.files[0]; if(!f) return;
+    this.loadImage(f).then(im=>{
+      const s=Math.min(1, 2000/Math.max(im.naturalWidth, im.naturalHeight));
+      const W=Math.round(im.naturalWidth*s), H=Math.round(im.naturalHeight*s);
+      const cv=this.$('cp-canvas'); cv.width=W; cv.height=H;
+      cv.getContext('2d').drawImage(im,0,0,W,H);
+    });
+  },
+  pickAt(e){
+    const cv=this.$('cp-canvas'); const r=cv.getBoundingClientRect();
+    const x=Math.floor((e.clientX-r.left)*cv.width/r.width), y=Math.floor((e.clientY-r.top)*cv.height/r.height);
+    const d=cv.getContext('2d').getImageData(x,y,1,1).data;
+    const rgb=[d[0],d[1],d[2]];
+    const hex='#'+rgb.map(c=>c.toString(16).padStart(2,'0')).join('').toUpperCase();
+    const hsl=this.rgbToHsl(...rgb);
+    this.$('cp-swatch').style.background=hex;
+    this.$('cp-hex').value=hex;
+    this.$('cp-rgb').value=`rgb(${rgb.join(', ')})`;
+    this.$('cp-hsl').value=`hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+  },
+  // ----- OCR (needs internet for the first use) -----
+  async ocrRun(){
+    const f=this.$('ocr-file').files[0];
+    if(!f){ this.show('ocr-status', this.t('x_choose_img')); return; }
+    try{
+      this.show('ocr-status', this.t('x_ocr_loading'));
+      if(!window.Tesseract){
+        await new Promise((res,rej)=>{ const sc=document.createElement('script');
+          sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+          sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); });
+      }
+      this.show('ocr-status', this.t('x_ocr_run'));
+      const worker = await Tesseract.createWorker('urd+eng');
+      const { data:{ text } } = await worker.recognize(f);
+      await worker.terminate();
+      this.$('ocr-output').value=text.trim();
+      this.show('ocr-status', this.t('x_ocr_done'));
+    }catch(err){
+      this.show('ocr-status', this.t('x_ocr_err'));
+    }
+  },
+  // ----- EXIF / metadata removal (re-draw the image without metadata) -----
+  async exifSave(){
+    const f=this.$('exif-file').files[0];
+    if(!f){ this.show('exif-status', this.t('x_choose_img')); return; }
+    try{
+      const im=await this.loadImage(f);
+      const cv=document.createElement('canvas'); cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+      cv.getContext('2d').drawImage(im,0,0);
+      const isPng=f.type==='image/png';
+      const type = isPng ? 'image/png' : 'image/jpeg';
+      const base=f.name.replace(/\.[^.]+$/,'');
+      await this.save(`${base}-clean.${isPng?'png':'jpg'}`, cv, type, 0.95);
+      this.show('exif-status', this.t('x_exif_done'));
+    }catch(err){
+      this.show('exif-status', this.t('x_invalid'));
+    }
+  },
+};
+
+HINTS.smscount = { en:'Counts characters and SMS parts; Urdu text uses the shorter Unicode limit.', ur:'حروف اور SMS پیغامات گنتا ہے؛ اردو متن کی حد الگ ہوتی ہے۔' };
+HINTS.sortlines = { en:'Sorts lines A to Z or Z to A, or numbers each line.', ur:'لائنوں کو A سے Z یا Z سے A ترتیب دیتا ہے، یا ہر لائن پر نمبر لگاتا ہے۔' };
+HINTS.wordfreq = { en:'Shows which words appear most often in your text.', ur:'بتاتا ہے کہ متن میں کون سے الفاظ زیادہ بار آئے ہیں۔' };
+HINTS.fracdec = { en:'Converts a fraction to a decimal and a decimal to the closest fraction.', ur:'کسر کو اعشاریہ اور اعشاریہ کو قریب ترین کسر میں بدلتا ہے۔' };
+HINTS.colorconv = { en:'Converts a colour between HEX, RGB and HSL, with a live preview.', ur:'رنگ کو HEX، RGB اور HSL کے درمیان بدلتا ہے، ساتھ میں پیش نظارہ۔' };
+HINTS.passport = { en:'Crops a photo to passport size (35×45 mm, 2×2 inch, 25×35 mm) at print resolution.', ur:'فوٹو کو پاسپورٹ سائز (35×45 ملی میٹر، 2×2 انچ، 25×35 ملی میٹر) میں کراپ کرتا ہے۔' };
+HINTS.imgfilter = { en:'Adjust brightness, contrast, saturation or make the image black and white.', ur:'چمک، کنٹراسٹ، رنگوں کی شدت بدلیں یا سیاہ و سفید کریں۔' };
+HINTS.colorpick = { en:'Click any point of an image to get its colour in HEX, RGB and HSL.', ur:'تصویر کے کسی بھی حصے پر کلک کریں تو اس کا رنگ HEX، RGB اور HSL میں مل جاتا ہے۔' };
+HINTS.ocr = { en:'Reads the text in an image (Urdu and English). Needs internet the first time.', ur:'تصویر میں لکھا ہوا ٹیکسٹ (اردو اور انگریزی) پڑھتا ہے۔ پہلی بار انٹرنیٹ درکار ہے۔' };
+HINTS.exifstrip = { en:'Removes hidden information (location, camera details) from a photo before sharing.', ur:'شیئر کرنے سے پہلے تصویر سے چھپی معلومات (لوکیشن، کیمرہ) ہٹاتا ہے۔' };
+syncToolCardDesc();
+</script>
+<script>
+// ===== Clear button for every tool =====
+Extra.clearTool = function(btn){
+  const body = btn.closest('.tool-body');
+  if(!body) return;
+  body.querySelectorAll('input, textarea, select').forEach(el=>{
+    if(el.type==='checkbox' || el.type==='radio'){ el.checked = el.defaultChecked; }
+    else if(el.tagName==='SELECT'){ Array.from(el.options).forEach(o=>{ o.selected = o.defaultSelected; }); }
+    else if(el.type==='file'){ el.value=''; }
+    else { el.value = el.defaultValue; }
+  });
+  body.querySelectorAll('.result').forEach(el=>{ el.textContent=''; el.innerHTML=''; el.style.display='none'; });
+  body.querySelectorAll('[id$="-out"]:not(textarea), [id$="-status"], [id$="-err"]').forEach(el=>{ if(el.tagName!=='TEXTAREA'){ el.textContent=''; el.innerHTML=''; } });
+  body.querySelectorAll('canvas').forEach(c=>{ const cx=c.getContext('2d'); if(cx) cx.clearRect(0,0,c.width,c.height); });
+  if(body.querySelector('#todo-list')){
+    Tools._todos = [];
+    Tools.saveTodos();
+    Tools.renderTodos();
+  }
+};
+</script>
+<script>
+// ===== Ten more text tools =====
+const Extra2 = {
+  t(k){ return (I18N[k] && I18N[k][LANG]) || k; },
+  inp(id){ return document.getElementById(id+'-in').value; },
+  out(id, v){ document.getElementById(id+'-out').value = v; },
+  async hash(text, alg){
+    if(!(window.crypto && crypto.subtle)) return this.t('x2_nocrypto');
+    const buf = await crypto.subtle.digest(alg, new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  },
+  run(id, action){
+    const v = this.inp(id);
+    switch(id+':'+action){
+      case 'b64:enc': {
+        const bytes = new TextEncoder().encode(v); let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b));
+        return this.out(id, btoa(bin));
+      }
+      case 'b64:dec': {
+        try{ const bin=atob(v.replace(/\s/g,'')); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+          return this.out(id, new TextDecoder().decode(bytes)); }
+        catch(e){ return this.out(id, this.t('x2_err')); }
+      }
+      case 'urlenc:enc': return this.out(id, encodeURIComponent(v));
+      case 'urlenc:dec': {
+        try{ return this.out(id, decodeURIComponent(v)); } catch(e){ return this.out(id, this.t('x2_err')); }
+      }
+      case 'hash:sha256': return this.hash(v,'SHA-256').then(h=>this.out(id,h));
+      case 'hash:sha512': return this.hash(v,'SHA-512').then(h=>this.out(id,h));
+      case 'json:fmt': case 'json:min': {
+        try{
+          const obj = JSON.parse(v);
+          return this.out(id, action==='fmt' ? JSON.stringify(obj,null,2) : JSON.stringify(obj));
+        }catch(e){ return this.out(id, this.t('x2_err')+': '+e.message); }
+      }
+      case 'striphtml:strip': {
+        const doc = new DOMParser().parseFromString(v,'text/html');
+        doc.querySelectorAll('script,style').forEach(el=>el.remove());
+        return this.out(id, (doc.body.textContent||'').replace(/\n{3,}/g,'\n\n').trim());
+      }
+      case 'urlext:extract': {
+        const links = v.match(/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi) || [];
+        return this.out(id, links.length ? links.join('\n') : this.t('x2_none'));
+      }
+      case 'urdudigit:toen': return this.out(id, v.replace(/[\u06F0-\u06F9]/g, c=>String.fromCharCode(c.charCodeAt(0)-0x06F0+48)).replace(/[\u0660-\u0669]/g, c=>String.fromCharCode(c.charCodeAt(0)-0x0660+48)));
+      case 'urdudigit:tour': return this.out(id, v.replace(/[0-9]/g, c=>String.fromCharCode(c.charCodeAt(0)-48+0x06F0)));
+      case 'nodiacritics:remove': return this.out(id, v.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g,''));
+      case 'hashtag:generate': {
+        const stop = new Set(['the','a','an','and','or','of','to','in','on','for','with','is','are','was','it','this','that','at','by','from','اور','کا','کی','کے','میں','سے','کو','ہے','یہ','ہیں','پر','تو','بھی','کہ']);
+        const words = (v.toLowerCase().match(/[\p{L}\p{N}]+/gu)||[]).filter(w=>!stop.has(w) && w.length>1);
+        const uniq = [...new Set(words)].slice(0,20);
+        return this.out(id, uniq.map(w=>'#'+w).join(' '));
+      }
+      case 'readtime:calc': {
+        const words = (v.match(/[\p{L}\p{N}]+/gu)||[]).length;
+        const chars = [...v].length;
+        const secs = Math.round(words/200*60);
+        const m = Math.floor(secs/60), sc = secs%60;
+        return this.out(id, `${this.t('x2_stats')}: ${words} | ${this.t('x2_chars')}: ${chars} | ${m} ${this.t('x2_min')} ${sc} ${this.t('x2_sec')}`);
+      }
+    }
+  }
+};
+HINTS.b64 = { en:'Encodes text to Base64 and decodes it back, Urdu included.', ur:'متن کو Base64 میں بدلتا ہے اور واپس لاتا ہے، اردو سمیت۔' };
+HINTS.urlenc = { en:'Makes text safe for links (spaces, Urdu) and decodes it back.', ur:'لنک کے لیے متن کو محفوظ بناتا ہے (اسپیس، اردو) اور واپس لاتا ہے۔' };
+HINTS.hash = { en:'Creates a SHA-256 or SHA-512 fingerprint of your text.', ur:'متن کا SHA-256 یا SHA-512 فنگر پرنٹ بناتا ہے۔' };
+HINTS.json = { en:'Formats messy JSON neatly, or makes it one line, and shows errors.', ur:'خراب JSON کو درست شکل دیتا ہے یا ایک لائن میں کرتا ہے، اور غلطی بتاتا ہے۔' };
+HINTS.striphtml = { en:'Removes HTML tags so you get clean text from copied web content.', ur:'HTML ٹیگ ہٹا کر کاپی کیے گئے ویب متن کو صاف کرتا ہے۔' };
+HINTS.urlext = { en:'Pulls every link out of your text, one per line.', ur:'متن میں سے تمام لنک الگ الگ نکالتا ہے۔' };
+HINTS.urdudigit = { en:'Switches digits between Urdu (۰١٢٣) and Western (0123) forms.', ur:'ہندسوں کو اردو (۰١٢٣) اور انگریزی (0123) شکل میں بدلتا ہے۔' };
+HINTS.nodiacritics = { en:'Removes zer, zabar and pesh from Urdu or Arabic text.', ur:'اردو یا عربی متن سے زیر، زبر اور پیش ہٹاتا ہے۔' };
+HINTS.hashtag = { en:'Builds hashtags from the main words of your text.', ur:'متن کے اہم الفاظ سے ہیش ٹیگ بناتا ہے۔' };
+HINTS.readtime = { en:'Estimates how long your text takes to read, with word and character counts.', ur:'اندازہ لگاتا ہے کہ متن پڑھنے میں کتنا وقت لگے گا، الفاظ اور حروف کی گنتی کے ساتھ۔' };
+syncToolCardDesc();
+</script>
+<script>
+// ===== Extra converters: time, Pakistani weights, pressure, angle, cooking, paper, shoes =====
+const Conv3 = {
+  groups: {"timeconv": {"units": [["sec", 1], ["min", 60], ["hour", 3600], ["day", 86400], ["week", 604800], ["month", 2629800], ["year", 31557600]]}, "pkweight": {"units": [["gram", 1], ["kg", 1000], ["tola", 11.6638], ["masha", 0.971983], ["seer", 933.1], ["maund", 37324]]}, "pressure": {"units": [["pa", 1], ["kpa", 1000], ["bar", 100000], ["atm", 101325], ["psi", 6894.757], ["mmhg", 133.322]]}, "angle": {"units": [["deg", 1], ["rad", 57.29577951308232], ["grad", 0.9]]}, "cookv": {"units": [["ml", 1], ["l", 1000], ["cup", 240], ["tsp", 5], ["tbsp", 15]]}, "cookw": {"units": [["g", 1], ["kg", 1000]]}},
+  paperRows: [["A0", 841, 1189], ["A1", 594, 841], ["A2", 420, 594], ["A3", 297, 420], ["A4", 210, 297], ["A5", 148, 210], ["A6", 105, 148], ["Letter", 215.9, 279.4], ["Legal", 215.9, 355.6], ["Tabloid", 279.4, 431.8]],
+  shoeRows: [[5, 6, 38], [6, 7, 40], [7, 8, 41], [8, 9, 42], [9, 10, 43], [10, 11, 44], [11, 12, 46]],
+  fmt(x){
+    if(!isFinite(x)) return '';
+    if(x===0) return '0';
+    const abs=Math.abs(x);
+    if(abs>=1e9 || abs<1e-6) return x.toExponential(4);
+    return String(Number(x.toPrecision(7)));
+  },
+  run(prefix){
+    // the cooking tool has two unit groups (volume and weight) that share one input and output
+    const isCook = prefix==='cook' || prefix==='cookv' || prefix==='cookw';
+    const inEl  = document.getElementById(isCook ? 'cv-cook-in'  : 'cv-'+prefix+'-in');
+    const out   = document.getElementById(isCook ? 'cv-cook-out' : 'cv-'+prefix+'-out');
+    const key   = isCook ? document.getElementById('cv-cook-type').value : prefix;
+    const v = parseFloat(inEl.value);
+    if(isNaN(v)){ out.style.display='none'; out.textContent=''; return; }
+    const g = this.groups[key];
+    const f = document.getElementById('cv-'+key+'-from').value;
+    const t = document.getElementById('cv-'+key+'-to').value;
+    const fac = Object.fromEntries(g.units);
+    const res = v * fac[f] / fac[t];
+    out.textContent = this.fmt(res) + ' ' + (I18N['cvu_'+key+'_'+t]?.[LANG] || t);
+    out.style.display='block';
+  },
+  cookType(){
+    const type = document.getElementById('cv-cook-type').value;
+    document.getElementById('cv-cook-cookv-wrap').style.display = type==='cookv' ? 'block' : 'none';
+    document.getElementById('cv-cook-cookw-wrap').style.display = type==='cookw' ? 'block' : 'none';
+    this.run('cook');
+  },
+  paper(){
+    const i = +document.getElementById('paper-size').value;
+    const [name,w,h] = this.paperRows[i];
+    const out = document.getElementById('paper-out');
+    const inch = x => (x/25.4).toFixed(2);
+    out.textContent = `${name}: ${w} × ${h} ${I18N.cv_mm[LANG]} | ${inch(w)} × ${inch(h)} ${I18N.cv_inch[LANG]}`;
+    out.style.display='block';
+  },
+  shoeSys(){
+    const sys = +document.getElementById('shoe-sys').value;
+    const sel = document.getElementById('shoe-size');
+    sel.innerHTML = '';
+    this.shoeRows.forEach(row=>{
+      const o = document.createElement('option');
+      o.value = row[sys];
+      o.textContent = row[sys];
+      sel.appendChild(o);
+    });
+    this.shoe();
+  },
+  shoe(){
+    const sys = +document.getElementById('shoe-sys').value;
+    const val = +document.getElementById('shoe-size').value;
+    const row = this.shoeRows.find(r=>r[sys]===val);
+    const out = document.getElementById('shoe-out');
+    if(!row){ out.textContent=''; return; }
+    out.innerHTML='';
+    [['cv_uk',row[0]],['cv_us',row[1]],['cv_eu',row[2]]].forEach(([k,v])=>{
+      const d=document.createElement('div');
+      d.textContent = `${I18N[k][LANG]}: ${v}`;
+      out.appendChild(d);
+    });
+  },
+};
+(()=>{
+  try{
+    Conv3.paper();
+    Conv3.shoeSys();
+    Conv3.cookType();
+  }catch(e){ console.error('converter setup', e); }
+})();
+syncToolCardDesc();
+HINTS.timeconv = { en:'Converts between seconds, minutes, hours, days, weeks, months and years.', ur:'سیکنڈ، منٹ، گھنٹے، دن، ہفتے، مہینے اور سال کے درمیان تبدیلی۔' };
+HINTS.pkweight = { en:'Converts kilograms, seer, maund, tola and masha, the traditional Pakistani units.', ur:'کلو، سیر، من، تولہ اور ماشہ کے درمیان تبدیلی، روایتی پاکستانی اکائیاں۔' };
+HINTS.pressure = { en:'Converts pressure between Pa, kPa, bar, atm, PSI and mmHg.', ur:'دباؤ کو Pa، kPa، بار، ATM، PSI اور mmHg میں بدلتا ہے۔' };
+HINTS.angle = { en:'Converts angles between degrees, radians and gradians.', ur:'زاویہ ڈگری، ریڈیئن اور گریڈ میں بدلتا ہے۔' };
+HINTS.cooking = { en:'Converts cooking measures: cups, spoons, millilitres, grams and kilograms.', ur:'کھانا پکانے کی پیمائش: کپ، چمچ، ملی لیٹر، گرام اور کلوگرام۔' };
+HINTS.paper = { en:'Shows A, Letter and Legal paper sizes in millimetres and inches.', ur:'A، Letter اور Legal کاغذ کے سائز ملی میٹر اور انچ میں دکھاتا ہے۔' };
+HINTS.shoe = { en:'Converts shoe sizes between UK, US, EU and Pakistani (approximate men\'s chart).', ur:'جوتوں کا سائز UK، US، EU اور پاکستانی سائز کے درمیان بدلتا ہے (تقریباً مردانہ چارٹ)۔' };
+syncToolCardDesc();
 </script>
 </body>
 </html>
