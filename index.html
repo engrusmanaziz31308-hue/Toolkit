@@ -702,6 +702,74 @@
   body[data-view="cat"] section.category .tool{ overflow:hidden; }
   .tool-body input, .tool-body textarea, .tool-body select, .tool-body button{ max-width:100%; box-sizing:border-box; }
   .tool-body label, .tool-body .muted, .tool-body .result{ overflow-wrap:anywhere; }
+  /* ===== Beauty pass: background, motion, palettes, recent row, welcome, toast ===== */
+  :root{ --pal-a:#3b82f6; --pal-b:#8b5cf6; }
+  :root[data-palette="ocean"]{ --pal-a:#0ea5e9; --pal-b:#14b8a6; }
+  :root[data-palette="desert"]{ --pal-a:#f59e0b; --pal-b:#dc2626; }
+
+  body{
+    background-image:
+      radial-gradient(900px 500px at 0% -10%, color-mix(in srgb, var(--pal-a) 16%, transparent), transparent 60%),
+      radial-gradient(800px 480px at 100% 0%, color-mix(in srgb, var(--pal-b) 13%, transparent), transparent 55%);
+    background-attachment:fixed;
+  }
+  .btn:not(.secondary):not(.ghost){ background:linear-gradient(135deg, var(--pal-a), var(--pal-b)) !important; }
+
+  @keyframes tkFade { from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  @keyframes tkPop { from{ opacity:0; transform:translate(-50%, 12px); } to{ opacity:1; transform:translate(-50%, 0); } }
+  nav.cats button{ animation:tkFade .38s ease both; transition:transform .18s ease, box-shadow .18s ease; }
+  nav.cats button:nth-child(2){ animation-delay:.04s; } nav.cats button:nth-child(3){ animation-delay:.08s; }
+  nav.cats button:nth-child(4){ animation-delay:.12s; } nav.cats button:nth-child(5){ animation-delay:.16s; }
+  nav.cats button:nth-child(6){ animation-delay:.20s; }
+  nav.cats button:hover{ transform:translateY(-4px); box-shadow:0 14px 28px rgba(0,0,0,.14); }
+
+  body[data-view="cat"] section.category .tool{ transition:transform .18s ease, box-shadow .18s ease; }
+  body[data-view="cat"] section.category .tool:not(.open):hover{ transform:translateY(-3px); box-shadow:0 12px 24px rgba(0,0,0,.12); }
+  body[data-view="cat"] section.category .tool.open .tool-body{ animation:tkFade .28s ease both; }
+
+  #favorites-empty::before{ content:'⭐'; display:block; font-size:34px; margin-bottom:6px; }
+
+  #recentRow{ display:none; margin:0 0 14px; }
+  #recentRow.show{ display:block; animation:tkFade .3s ease both; }
+  #recentRow .rl{ font-size:13px; font-weight:700; color:var(--text-muted); margin:0 0 8px; }
+  #recentRow .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  #recentRow .chip{
+    padding:7px 12px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface);
+    color:var(--text); font-size:13px; font-weight:600; cursor:pointer;
+  }
+  #recentRow .chip:hover{ border-color:var(--pal-a); }
+  body[data-view="cat"] #recentRow{ display:none !important; }
+
+  #welcomeCard{
+    display:none; position:relative; margin:0 0 14px; padding:14px 42px 14px 16px; border-radius:14px;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--pal-a) 18%, var(--surface)), color-mix(in srgb, var(--pal-b) 14%, var(--surface)));
+    border:1px solid var(--border); animation:tkFade .35s ease both;
+  }
+  #welcomeCard.show{ display:block; }
+  #welcomeCard h4{ margin:0 0 4px; font-size:15px; }
+  #welcomeCard p{ margin:0 0 10px; font-size:13px; line-height:1.7; color:var(--text-muted); }
+  #welcomeCard .wc-ok{ padding:6px 14px; border-radius:999px; border:none; background:var(--pal-a); color:#fff; font-weight:700; cursor:pointer; font-size:13px; }
+  #welcomeCard .wc-x{ position:absolute; top:8px; inset-inline-end:10px; background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-muted); }
+  body[data-view="cat"] #welcomeCard{ display:none !important; }
+
+  #paletteRow{ display:flex; align-items:center; gap:10px; margin:0 0 14px; font-size:13px; color:var(--text-muted); }
+  #paletteRow button{
+    width:28px; height:28px; border-radius:50%; border:2px solid var(--surface); cursor:pointer; padding:0;
+    box-shadow:0 0 0 1.5px var(--border);
+  }
+  #paletteRow button.on{ box-shadow:0 0 0 2.5px var(--text); }
+  body[data-view="cat"] #paletteRow{ display:none !important; }
+
+  #toast{
+    position:fixed; left:50%; bottom:28px; transform:translate(-50%,0); z-index:999;
+    background:var(--text); color:var(--surface); padding:10px 18px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none;
+  }
+  #toast.show{ opacity:1; animation:tkPop .25s ease both; }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+  }
 </style>
 </head>
 <body data-view="home">
@@ -799,7 +867,12 @@
           <div><label data-i18n="fr_find_label">تلاش کریں (کوما سے کئی الفاظ لکھ سکتے ہیں)</label><input type="text" id="fr-find" data-i18n-ph="fr_find_ph" placeholder="مثلاً: لفظ1, لفظ2"></div>
           <div><label data-i18n="fr_replace_label">اس سے بدلیں (اسی ترتیب میں)</label><input type="text" id="fr-replace" data-i18n-ph="fr_replace_ph" placeholder="مثلاً: نیا1, نیا2"></div>
         </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px 18px; margin:8px 0;">
+          <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="fr-icase"><span data-i18n="fr_icase">بڑے/چھوٹے حروف کا فرق نظر انداز کریں</span></label>
+          <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="fr-whole"><span data-i18n="fr_whole">صرف پورے لفظ بدلیں</span></label>
+        </div>
         <div class="btn-row"><button class="btn" onclick="Tools.findReplace()" data-i18n="fr_btn">تبدیل کریں</button></div>
+        <span class="muted" id="fr-status" style="display:none"></span>
         <label data-i18n="fr_result_label">نتیجہ</label>
         <textarea id="fr-output" readonly></textarea>
         <div class="btn-row">
@@ -913,11 +986,11 @@
       <button class="tool-head"><span data-i18n="tool_b64">b64</span><span class="plus">+</span></button>
       <div class="tool-body">
         <label data-i18n="case_label">ان پٹ ٹیکسٹ</label>
-        <textarea id="b64-in" placeholder="..."></textarea>
-        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('b64','enc')" data-i18n="x2_enc">x</button><button class="btn secondary" onclick="Extra2.run('b64','dec')" data-i18n="x2_dec">x</button></div>
+        <textarea id="tb64-in" placeholder="..."></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Extra2.run('tb64','enc')" data-i18n="x2_enc">x</button><button class="btn secondary" onclick="Extra2.run('tb64','dec')" data-i18n="x2_dec">x</button></div>
         <label data-i18n="case_result_label">نتیجہ</label>
-        <textarea id="b64-out" readonly></textarea>
-        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('b64-out')" data-i18n="copy_btn">کاپی کریں</button></div>
+        <textarea id="tb64-out" readonly></textarea>
+        <div class="btn-row"><button class="btn secondary" onclick="Tools.copy('tb64-out')" data-i18n="copy_btn">کاپی کریں</button></div>
         <div class="btn-row"><button class="btn ghost" onclick="Extra.clearTool(this)" data-i18n="clear_btn">صاف کریں</button></div>
       </div>
     </div>
@@ -3131,7 +3204,7 @@
     <button onclick="Tools.undoLast()" data-i18n="undo_btn">Undo</button>
   </div>
 
-  <footer data-i18n="footer_text">84 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
+  <footer data-i18n="footer_text">ٹولز · کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے</footer>
 </div>
 
 <script>
@@ -3396,6 +3469,18 @@ const I18N = {
   bgr_warn_busy: { ur: 'پس منظر یکرنگ نہیں ہے (مثلاً لکڑی، دیوار کا رنگ یا روشنی کا فرق)۔ اس تصویر میں چہرہ یا بال بھی ہٹ سکتے ہیں۔ بہتر نتیجے کے لیے سادہ سفید یا نیلے پس منظر کی تصویر لیں، یا پہلے کسی آن لائن ٹول سے بیک گراؤنڈ ہٹا کر PNG بنائیں اور پاسپورٹ ٹول میں ڈالیں۔ ہٹ جانے والے حصے ہاتھ سے بحال کرنے کے لیے "بحال کریں" برش استعمال کریں۔', en: 'The background is not a single colour (for example wood, a wall or uneven light). Hair or face may be removed too. For a better result use a photo with a plain white or blue background, or remove the background in another app first, save it as PNG and use the Passport tool. Use the Restore brush to bring back parts that were removed.' },
   nav_back: { ur: 'واپس', en: 'Back' },
   nav_fav_desc: { ur: 'آپ کے پسندیدہ ٹولز ایک جگہ', en: 'Your starred tools in one place' },
+  fr_icase: { ur: 'بڑے/چھوٹے حروف کا فرق نظر انداز کریں', en: 'Ignore upper/lower case' },
+  fr_whole: { ur: 'صرف پورے لفظ بدلیں', en: 'Whole words only' },
+  fr_count: { ur: 'تبدیلیاں', en: 'replacements' },
+  recent_title: { ur: 'حال ہی میں استعمال کیے گئے', en: 'Recently used' },
+  welcome_title: { ur: 'خوش آمدید!', en: 'Welcome!' },
+  welcome_body: { ur: 'سرچ اوپر ہے، کی بورڈ پر / دبا کر بھی سرچ کھول سکتے ہیں۔ ⭐ سے ٹول پسندیدہ بنائیں اور 🏠 سے کسی بھی وقت ہوم پر واپس جائیں۔', en: 'Search is at the top (press / on a keyboard). Star a tool to save it, and tap 🏠 to go home any time.' },
+  welcome_ok: { ur: 'سمجھ گیا', en: 'Got it' },
+  toast_copied: { ur: 'کاپی ہو گیا ✓', en: 'Copied ✓' },
+  pal_label: { ur: 'رنگ', en: 'Colour' },
+  pal_default: { ur: 'ڈیفالٹ', en: 'Default' },
+  pal_ocean: { ur: 'سمندری', en: 'Ocean' },
+  pal_desert: { ur: 'صحرائی', en: 'Desert' },
   tool_linerev_title: { ur: 'الٹا ٹیکسٹ', en: 'Upside-Down Text' },
   linerev_lines_btn: { ur: 'لائنوں کی ترتیب الٹیں', en: 'Reverse line order' },
   linerev_words_btn: { ur: 'ہر لائن کے الفاظ الٹیں', en: 'Reverse words in each line' },
@@ -3578,7 +3663,7 @@ const I18N = {
   notes_ph: { ur: 'کچھ بھی لکھیں...', en: 'Write anything...' },
   notes_saved: { ur: 'محفوظ ہو گیا ✓', en: 'Saved ✓' },
 
-  footer_text: { ur: '84 ٹولز · 5 کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: '84 tools · 5 categories · everything runs in your browser' },
+  footer_text: { ur: 'ٹولز · کیٹگریز · ہر چیز آپ کے براؤزر میں چلتی ہے', en: 'tools · categories · everything runs in your browser' },
 
   search_ph: { ur: 'ٹولز تلاش کریں...', en: 'Search tools...' },
   nav_favorites: { ur: 'پسندیدہ', en: 'Favorites' },
@@ -4195,16 +4280,33 @@ const Tools = {
     const text = document.getElementById('fr-input').value;
     const findRaw = document.getElementById('fr-find').value;
     const replRaw = document.getElementById('fr-replace').value;
-    if(!findRaw){ document.getElementById('fr-output').value = text; return; }
-    const finds = findRaw.split(',').map(s=>s.trim()).filter(s=>s.length);
-    const repls = replRaw.split(',').map(s=>s.trim());
-    let out = text;
-    finds.forEach((f,i)=>{
-      const r = repls[i] !== undefined ? repls[i] : '';
-      if(f) out = out.split(f).join(r);
+    const icase = document.getElementById('fr-icase').checked;
+    const whole = document.getElementById('fr-whole').checked;
+    const out = document.getElementById('fr-output');
+    const status = document.getElementById('fr-status');
+    // pair each search word with the replacement at the same position (blank replacement = delete)
+    const finds = findRaw.split(',').map(x => x.trim());
+    const repls = replRaw.split(',').map(x => x.trim());
+    const pairs = [];
+    finds.forEach((f, i) => { if(f) pairs.push([f, repls[i] !== undefined ? repls[i] : '']); });
+    if(!pairs.length){ out.value = text; status.style.display = 'none'; return; }
+    const esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const map = new Map();
+    pairs.forEach(([f, r]) => map.set(icase ? f.toLowerCase() : f, r));
+    // longest words first, so "کتاب خانہ" wins over "کتاب"
+    const alts = [...pairs].sort((a, b) => b[0].length - a[0].length).map(([f]) => esc(f)).join('|');
+    const body = whole ? `(?<![\\p{L}\\p{N}])(?:${alts})(?![\\p{L}\\p{N}])` : `(?:${alts})`;
+    const re = new RegExp(body, 'gu' + (icase ? 'i' : ''));
+    let count = 0;
+    // one pass over the text, so a replacement is never changed again by a later word
+    const result = text.replace(re, m => {
+      count++;
+      const key = icase ? m.toLowerCase() : m;
+      return map.has(key) ? map.get(key) : m;
     });
-    document.getElementById('fr-output').value = out;
-    document.getElementById('fr-input').value = out;
+    out.value = result;
+    status.textContent = `${count} ${I18N.fr_count[LANG]}`;
+    status.style.display = 'block';
   },
   clearFindReplace(){
     const ids = ['fr-input','fr-find','fr-replace','fr-output'];
@@ -9629,11 +9731,11 @@ const Extra2 = {
   run(id, action){
     const v = this.inp(id);
     switch(id+':'+action){
-      case 'b64:enc': {
+      case 'tb64:enc': {
         const bytes = new TextEncoder().encode(v); let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b));
         return this.out(id, btoa(bin));
       }
-      case 'b64:dec': {
+      case 'tb64:dec': {
         try{ const bin=atob(v.replace(/\s/g,'')); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
           return this.out(id, new TextDecoder().decode(bytes)); }
         catch(e){ return this.out(id, this.t('x2_err')); }
@@ -9767,6 +9869,17 @@ const Conv3 = {
   }catch(e){ console.error('converter setup', e); }
 })();
 syncToolCardDesc();
+(()=>{
+  const n = new Set([...document.querySelectorAll('.tool[data-tool]')].map(t=>t.dataset.tool)).size;
+  const cats = document.querySelectorAll('section.category').length;
+  const f = document.querySelector('footer');
+  if(f) f.dataset.count = `${n}|${cats}`;
+  const set = () => { if(!f) return; const [a,b] = (f.dataset.count||'').split('|'); const word = LANG==='ur' ? `${a} ٹولز · ${b} کیٹگریز` : `${a} tools · ${b} categories`; f.textContent = word + (LANG==='ur' ? ' · ہر چیز آپ کے براؤزر میں چلتی ہے' : ' · everything runs in your browser'); };
+  set();
+  const _apply = applyLang;
+  applyLang = function(){ _apply(); set(); };
+})();
+HINTS.unit = { en:'Converts length, weight and temperature units.', ur:'لمبائی، وزن اور درجہ حرارت کی اکائیوں کی تبدیلی۔' };
 HINTS.timeconv = { en:'Converts between seconds, minutes, hours, days, weeks, months and years.', ur:'سیکنڈ، منٹ، گھنٹے، دن، ہفتے، مہینے اور سال کے درمیان تبدیلی۔' };
 HINTS.pkweight = { en:'Converts kilograms, seer, maund, tola and masha, the traditional Pakistani units.', ur:'کلو، سیر، من، تولہ اور ماشہ کے درمیان تبدیلی، روایتی پاکستانی اکائیاں۔' };
 HINTS.pressure = { en:'Converts pressure between Pa, kPa, bar, atm, PSI and mmHg.', ur:'دباؤ کو Pa، kPa، بار، ATM، PSI اور mmHg میں بدلتا ہے۔' };
@@ -9775,6 +9888,162 @@ HINTS.cooking = { en:'Converts cooking measures: cups, spoons, millilitres, gram
 HINTS.paper = { en:'Shows A, Letter and Legal paper sizes in millimetres and inches.', ur:'A، Letter اور Legal کاغذ کے سائز ملی میٹر اور انچ میں دکھاتا ہے۔' };
 HINTS.shoe = { en:'Converts shoe sizes between UK, US, EU and Pakistani (approximate men\'s chart).', ur:'جوتوں کا سائز UK، US، EU اور پاکستانی سائز کے درمیان بدلتا ہے (تقریباً مردانہ چارٹ)۔' };
 syncToolCardDesc();
+</script>
+<script>
+// ===== Beauty pass: welcome, recent tools, palettes, day/night theme, toast, shortcuts =====
+(()=>{
+  const root = document.documentElement;
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  const $ = id => document.getElementById(id);
+  const t = k => (I18N[k] && I18N[k][LANG]) || k;
+
+  // ---- day / night theme: automatic unless the user has chosen one ----
+  const savedTheme = store.get('tk-theme', null);
+  if(savedTheme === null){
+    const h = new Date().getHours();
+    root.setAttribute('data-theme', (h >= 6 && h < 18) ? 'light' : 'dark');
+  } else if(savedTheme === 'system'){ root.removeAttribute('data-theme'); }
+  else { root.setAttribute('data-theme', savedTheme); }
+  $('themeToggle').addEventListener('click', ()=>{
+    store.set('tk-theme', root.getAttribute('data-theme') || 'system');
+  });
+
+  // ---- toast + vibration ----
+  const toastEl = document.createElement('div');
+  toastEl.id = 'toast';
+  document.body.appendChild(toastEl);
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 1600);
+    if(navigator.vibrate) navigator.vibrate(18);
+  }
+  const origCopy = Tools.copy.bind(Tools);
+  Tools.copy = function(id){ origCopy(id); toast(t('toast_copied')); };
+
+  // ---- palettes ----
+  const palettes = [['default','#3b82f6','#8b5cf6'],['ocean','#0ea5e9','#14b8a6'],['desert','#f59e0b','#dc2626']];
+  const palRow = document.createElement('div');
+  palRow.id = 'paletteRow';
+  const palLabel = document.createElement('span');
+  palLabel.dataset.i18n = 'pal_label';
+  palRow.appendChild(palLabel);
+  let current = store.get('tk-palette', 'default');
+  function applyPalette(name){
+    current = name;
+    if(name === 'default') root.removeAttribute('data-palette'); else root.setAttribute('data-palette', name);
+    palRow.querySelectorAll('button').forEach(b=> b.classList.toggle('on', b.dataset.p === name));
+    store.set('tk-palette', name);
+  }
+  palettes.forEach(([name, a, b])=>{
+    const btn = document.createElement('button');
+    btn.dataset.p = name;
+    btn.title = t('pal_' + name);
+    btn.style.background = `linear-gradient(135deg, ${a}, ${b})`;
+    btn.addEventListener('click', ()=> applyPalette(name));
+    palRow.appendChild(btn);
+  });
+  applyPalette(current);
+
+  // ---- welcome card (once) ----
+  const welcome = document.createElement('div');
+  welcome.id = 'welcomeCard';
+  welcome.innerHTML = `<button class="wc-x" aria-label="close">×</button><h4 data-i18n="welcome_title"></h4><p data-i18n="welcome_body"></p><button class="wc-ok" data-i18n="welcome_ok"></button>`;
+  welcome.querySelector('.wc-ok').addEventListener('click', dismiss);
+  welcome.querySelector('.wc-x').addEventListener('click', dismiss);
+  function dismiss(){ welcome.classList.remove('show'); store.set('tk-welcome', true); }
+  if(!store.get('tk-welcome', false)) welcome.classList.add('show');
+
+  // ---- recent tools row ----
+  const recentRow = document.createElement('div');
+  recentRow.id = 'recentRow';
+  const nav = $('catNav');
+  nav.before(welcome, palRow, recentRow);
+
+  function toolTitle(tool){
+    const sp = tool.querySelector('.tool-head > span:first-child');
+    return sp ? sp.textContent.trim() : tool.dataset.tool;
+  }
+  function renderRecent(){
+    const ids = store.get('tk-recent', []).filter(id => document.querySelector(`.tool[data-tool="${id}"]`));
+    recentRow.innerHTML = '';
+    if(!ids.length){ recentRow.classList.remove('show'); return; }
+    const label = document.createElement('div');
+    label.className = 'rl';
+    label.textContent = t('recent_title');
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    ids.slice(0,5).forEach(id=>{
+      const tool = document.querySelector(`.tool[data-tool="${id}"]`);
+      const c = document.createElement('button');
+      c.className = 'chip';
+      c.textContent = toolTitle(tool);
+      c.addEventListener('click', ()=> openTool(id));
+      chips.appendChild(c);
+    });
+    recentRow.appendChild(label);
+    recentRow.appendChild(chips);
+    recentRow.classList.add('show');
+  }
+  function recordRecent(id){
+    const list = store.get('tk-recent', []).filter(x=>x!==id);
+    list.unshift(id);
+    store.set('tk-recent', list.slice(0,6));
+    renderRecent();
+  }
+  // record a tool when it is opened (click happens before the tool toggles)
+  document.addEventListener('click', e=>{
+    const head = e.target.closest('.tool-head');
+    if(!head) return;
+    const tool = head.closest('.tool[data-tool]');
+    if(tool && !tool.classList.contains('open')) recordRecent(tool.dataset.tool);
+  }, true);
+
+  // open a tool from anywhere (used by the recent row)
+  function openTool(id){
+    const tool = document.querySelector(`.tool[data-tool="${id}"]`);
+    if(!tool) return;
+    const sec = tool.closest('section.category');
+    setView('cat');
+    document.querySelectorAll('section.category').forEach(s=>{ s.classList.remove('active'); s.style.display=''; });
+    if(sec) sec.classList.add('active');
+    document.querySelectorAll('#catNav button').forEach(b=> b.classList.toggle('active', !!sec && b.dataset.cat === sec.dataset.cat));
+    document.querySelectorAll('.tool.open').forEach(x=>{ if(x!==tool) x.classList.remove('open'); });
+    if(!tool.classList.contains('open')) tool.querySelector('.tool-head').click();
+    tool.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  // refresh labels when the language changes
+  const _apply = applyLang;
+  applyLang = function(){
+    _apply();
+    palRow.querySelectorAll('button').forEach(b=> b.title = t('pal_' + b.dataset.p));
+    renderRecent();
+  };
+  applyLang();   // fill the labels of the elements added above
+
+  // ---- keyboard shortcuts: / opens search, Esc closes what is open ----
+  document.addEventListener('keydown', e=>{
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    const search = $('search-input');
+    if(e.key === '/' && !typing){
+      e.preventDefault();
+      if(search){ search.focus(); search.select(); }
+    } else if(e.key === 'Escape'){
+      if(document.activeElement === search){
+        search.value = ''; search.dispatchEvent(new Event('input')); search.blur();
+      } else {
+        const open = document.querySelector('.tool.open');
+        if(open) open.querySelector('.tool-head').click();
+      }
+    }
+  });
+})();
 </script>
 </body>
 </html>
